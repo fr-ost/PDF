@@ -40,10 +40,10 @@ const TONES: Record<Tone, { icon: LucideIcon; className: string }> = {
   danger: { icon: XCircle, className: 'bg-danger-soft border-danger-line text-fg [&_svg.alert-icon]:text-danger' },
 };
 
-export function Alert({ tone = 'info', title, children, action, className, icon }: { tone?: Tone; title?: ReactNode; children?: ReactNode; action?: ReactNode; className?: string; icon?: LucideIcon }) {
+export function Alert({ tone = 'info', title, children, action, className, icon, 'data-testid': testId }: { tone?: Tone; title?: ReactNode; children?: ReactNode; action?: ReactNode; className?: string; icon?: LucideIcon; 'data-testid'?: string }) {
   const Icon = icon ?? TONES[tone].icon;
   return (
-    <div role={tone === 'danger' ? 'alert' : 'status'} className={cn('flex gap-3 rounded-lg border px-3.5 py-3 text-sm', TONES[tone].className, className)}>
+    <div role={tone === 'danger' ? 'alert' : 'status'} data-testid={testId} className={cn('flex gap-3 rounded-lg border px-3.5 py-3 text-sm', TONES[tone].className, className)}>
       <Icon size={18} className="alert-icon mt-px shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
         {title ? <p className="font-medium leading-5">{title}</p> : null}

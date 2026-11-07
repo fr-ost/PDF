@@ -373,19 +373,16 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
               <IconButton key={t.id} icon={t.icon} label={`${t.label} (${t.key.toUpperCase()})`} active={toolKind === t.id} aria-pressed={toolKind === t.id} onClick={() => setToolKind(t.id)} data-testid={`tool-${t.id}`} />
             ))}
             <IconButton icon={ImagePlus} label="Insert image" onClick={() => imageInput.current?.click()} data-testid="tool-image" />
-            <Button size="sm" variant={mode === 'sign' ? 'primary' : 'ghost'} icon={Signature} onClick={() => (savedSignature && mode !== 'sign' ? placeSignature(savedSignature) : setSignatureOpen(true))} data-testid="tool-signature">
-              Signature
-            </Button>
+            {mode === 'sign' ? (
+              <Button size="sm" variant="primary" icon={Signature} onClick={() => setSignatureOpen(true)} data-testid="tool-signature">
+                Signature
+              </Button>
+            ) : (
+              <IconButton icon={Signature} label={savedSignature ? 'Place your signature again' : 'Add signature'} onClick={() => (savedSignature ? placeSignature(savedSignature) : setSignatureOpen(true))} data-testid="tool-signature" />
+            )}
             <span className="mx-1 h-6 w-px bg-line" aria-hidden />
             <IconButton icon={Undo2} label="Undo (Ctrl+Z)" disabled={!history.canUndo} onClick={history.undo} />
             <IconButton icon={Redo2} label="Redo (Ctrl+Shift+Z)" disabled={!history.canRedo} onClick={history.redo} />
-            <span className="ml-auto flex items-center gap-0.5">
-              <IconButton icon={ZoomOut} label="Zoom out" onClick={() => setZoom(Math.max(0.25, scale / 1.25))} />
-              <button type="button" className="h-8 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums text-fg-muted hover:bg-surface-2" onClick={() => setZoom('fit')} title="Fit to width">
-                {Math.round(scale * 100)}%
-              </button>
-              <IconButton icon={ZoomIn} label="Zoom in" onClick={() => setZoom(Math.min(4, scale * 1.25))} />
-            </span>
             <input ref={imageInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="sr-only" aria-label="Choose image to insert" onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = '';
@@ -491,9 +488,16 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-line px-3 py-1.5 text-xs text-fg-muted">
+          <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-1 text-xs text-fg-muted">
             <span>Page {page + 1} of {pageCount}</span>
-            <span className="hidden sm:inline">Double-click text to edit · Delete removes · Arrow keys nudge</span>
+            <span className="hidden truncate lg:inline">Double-click text to edit · Delete removes · Arrow keys nudge</span>
+            <span className="flex items-center gap-0.5">
+              <IconButton icon={ZoomOut} label="Zoom out" size="sm" onClick={() => setZoom(Math.max(0.25, scale / 1.25))} />
+              <button type="button" className="h-7 min-w-12 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2" onClick={() => setZoom('fit')} title="Fit to width">
+                {Math.round(scale * 100)}%
+              </button>
+              <IconButton icon={ZoomIn} label="Zoom in" size="sm" onClick={() => setZoom(Math.min(4, scale * 1.25))} />
+            </span>
           </div>
         </div>
       ) : null}

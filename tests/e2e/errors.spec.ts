@@ -69,3 +69,17 @@ test.describe('file handling and errors', () => {
     await expect(app.locator('h1')).toHaveText('Compress PDF');
   });
 });
+
+test('warns before modifying a digitally signed PDF', async ({ app }) => {
+  const { makeSignedFieldPdf } = await import('../helpers/fixtures');
+  await openTool(app, 'rotate');
+  await addFiles(app, [pdfFile('signed.pdf', await makeSignedFieldPdf())]);
+  await expect(app.getByTestId('signed-warning')).toBeVisible();
+});
+
+test('does not warn for ordinary PDFs', async ({ app }) => {
+  await openTool(app, 'rotate');
+  await addFiles(app, [pdfFile('plain.pdf', await makeTextPdf({ pages: 1 }))]);
+  await expect(app.getByTestId('page-card')).toHaveCount(1);
+  await expect(app.getByTestId('signed-warning')).toHaveCount(0);
+});

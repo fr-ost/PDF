@@ -119,3 +119,17 @@ export async function makeNestedTreePdf(): Promise<Uint8Array> {
   root.set(PDFName.of('Count'), PDFNumber.of(4));
   return doc.save({ useObjectStreams: false });
 }
+
+/** A PDF containing an (unsigned-value) digital signature field, as created by signing software. */
+export async function makeSignedFieldPdf(): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([595, 842]);
+  page.drawText('Signed agreement', { x: 50, y: 760, size: 18, font });
+  const ctx = doc.context;
+  const sigValue = ctx.register(ctx.obj({ Type: 'Sig', Filter: 'Adobe.PPKLite', SubFilter: 'adbe.pkcs7.detached' }));
+  const widget = ctx.register(ctx.obj({ Type: 'Annot', Subtype: 'Widget', FT: 'Sig', T: ctx.obj('Signature1'), Rect: [50, 50, 250, 100], F: 4, P: page.ref, V: sigValue }));
+  page.node.set(PDFName.of('Annots'), ctx.obj([widget]));
+  doc.catalog.set(PDFName.of('AcroForm'), ctx.obj({ Fields: [widget], SigFlags: 3 }));
+  return doc.save();
+}

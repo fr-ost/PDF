@@ -21,6 +21,8 @@ export interface FileEntry {
   /** Held in memory only for this session; never stored. */
   password?: string;
   encrypted?: boolean;
+  /** The PDF contains digital signature fields (editing invalidates them). */
+  signed?: boolean;
   large: boolean;
   width?: number;
   height?: number;
@@ -31,6 +33,17 @@ export interface UseFileListOptions {
   accept: FileKind[];
   multiple: boolean;
   max?: number;
+}
+
+async function hasSignatureFields(doc: { getFieldObjects(): Promise<unknown> }): Promise<boolean> {
+  try {
+    const fields = await doc.getFieldObjects();
+    if (!fields) return false;
+    const values = fields instanceof Map ? [...fields.values()] : Object.values(fields as Record<string, unknown>);
+    return values.flat().some((f) => (f as { type?: string } | null)?.type === 'signature');
+  } catch {
+    return false;
+  }
 }
 
 async function makeImagePreview(file: File): Promise<{ url: string; width: number; height: number }> {
@@ -84,7 +97,8 @@ export function useFileList({ accept, multiple, max }: UseFileListOptions) {
         } catch {
           /* metadata is optional */
         }
-        update(entry.id, { status: 'ready', pageCount: doc.numPages, encrypted, ...(password ? { password } : {}), error: undefined });
+        const signed = await hasSignatureFields(doc);
+        update(entry.id, { status: 'ready', pageCount: doc.numPages, encrypted, signed, ...(password ? { password } : {}), error: undefined });
       } catch (err) {
         if (err instanceof PdfToolError && (err.code === 'ENCRYPTED' || err.code === 'WRONG_PASSWORD')) {
           update(entry.id, { status: 'locked', encrypted: true, error: err.code === 'WRONG_PASSWORD' ? 'Incorrect password. Try again.' : undefined });

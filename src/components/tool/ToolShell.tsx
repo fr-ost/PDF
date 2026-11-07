@@ -111,6 +111,11 @@ export function ToolShell({
           </ul>
         </Alert>
       ) : null}
+      {tool.id !== 'pdf-to-images' && files.entries.some((e) => e.signed) && !showResult ? (
+        <Alert tone="warning" className="mt-5" title="This PDF is digitally signed" data-testid="signed-warning">
+          Any change creates a new file, and the existing digital signatures will no longer be valid in it. Your signed original stays untouched.
+        </Alert>
+      ) : null}
       {files.entries.some((e) => e.large) && !showResult ? (
         <Alert tone="info" className="mt-5" title="Large file">
           Large documents can take a while and use a lot of memory. Keep this tab open until processing finishes.
