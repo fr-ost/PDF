@@ -55,6 +55,7 @@ describe('metadata', () => {
     const meta = await readMetadata(source(await doc.save()));
     expect(meta.title.startsWith('<script>alert(1)</script>A')).toBe(true); // rendered as text by React
     expect(meta.title.length).toBe(2000);
+    // eslint-disable-next-line no-control-regex -- asserting control characters were removed
     expect(meta.title).not.toMatch(/[\u0000\u0007]/);
   });
 

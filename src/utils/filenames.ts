@@ -4,6 +4,7 @@ const RESERVED = /^(con|prn|aux|nul|com\d|lpt\d)$/i;
 export function sanitizeFileName(name: string, fallback = 'document'): string {
   let clean = name
     .normalize('NFC')
+    // eslint-disable-next-line no-control-regex -- intentionally removing control characters
     .replace(/[\u0000-\u001f\u007f<>:"/\\|?*]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

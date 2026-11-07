@@ -57,7 +57,7 @@ export async function loadPdf(source: PdfSource): Promise<LoadedPdf> {
 
   if (wasEncrypted) stripEncryption(doc);
 
-  let pageCount = 0;
+  let pageCount: number;
   try {
     pageCount = doc.getPageCount();
   } catch (err) {

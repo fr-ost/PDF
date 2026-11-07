@@ -86,7 +86,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setContainerWidth(el.clientWidth));
+    const ro = new ResizeObserver(() => setContainerWidth((w) => (Math.abs(w - el.clientWidth) >= 16 ? el.clientWidth : w)));
     ro.observe(el);
     return () => ro.disconnect();
   }, [entry]);
@@ -331,7 +331,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
                 </button>
               ))}
             </nav>
-            <div ref={scrollRef} className="flex-1 overflow-auto bg-surface-2 p-6">
+            <div ref={scrollRef} className="flex-1 overflow-auto bg-surface-2 p-6 [scrollbar-gutter:stable]">
               <div className="mx-auto w-fit">
                 <PageCanvas docId={entry.id} pageIndex={Math.min(page, Math.max(0, pageCount - 1))} zoom={scale} onInfo={setPageInfo}>
                   {(info) => (

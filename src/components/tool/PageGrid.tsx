@@ -81,7 +81,7 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
       <div
         ref={setNodeRef}
         style={style}
-        {...attributes}
+        {...(sortable ? attributes : {})}
         {...(sortable ? listeners : {})}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
@@ -179,6 +179,15 @@ export function PageGrid({
     onReorder(moveKeys(keys, moving, over));
   };
 
+  const labelOf = (id: string | number | undefined) => pages.find((p) => p.key === String(id))?.label ?? 'page';
+  const announcements = {
+    onDragStart: ({ active }: { active: { id: string | number } }) => `Picked up ${labelOf(active.id)}. Use the arrow keys to move it, Space to drop, Escape to cancel.`,
+    onDragOver: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) =>
+      over ? `${labelOf(active.id)} is over position ${keys.indexOf(String(over.id)) + 1} of ${keys.length}.` : `${labelOf(active.id)} is no longer over a position.`,
+    onDragEnd: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) =>
+      over ? `${labelOf(active.id)} was dropped at position ${keys.indexOf(String(over.id)) + 1} of ${keys.length}.` : `${labelOf(active.id)} was dropped.`,
+    onDragCancel: ({ active }: { active: { id: string | number } }) => `Moving ${labelOf(active.id)} was cancelled.`,
+  };
   const activePage = activeKey ? pages.find((p) => p.key === activeKey) : undefined;
   const dragCount = activeKey && selected.has(activeKey) ? selected.size : 1;
 
@@ -192,7 +201,14 @@ export function PageGrid({
 
   if (!sortable) return grid;
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveKey(null)}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragCancel={() => setActiveKey(null)}
+      accessibility={{ announcements, screenReaderInstructions: { draggable: 'To pick up a page, press Space. Use the arrow keys to move it and press Space again to drop it. Press Enter to select or deselect it.' } }}
+    >
       <SortableContext items={keys} strategy={rectSortingStrategy}>
         {grid}
       </SortableContext>

@@ -3,7 +3,7 @@ import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { createCanvas } from '@napi-rs/canvas';
 import { resolve } from 'node:path';
 
-const root = resolve(__dirname, '../../node_modules/pdfjs-dist');
+const root = resolve(import.meta.dirname, '../../node_modules/pdfjs-dist');
 
 export async function openWithPdfjs(bytes: Uint8Array, password?: string) {
   return pdfjs.getDocument({

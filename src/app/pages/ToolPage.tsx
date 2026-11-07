@@ -1,4 +1,4 @@
-import { Component, Suspense, useMemo, type ReactNode } from 'react';
+import { Component, Suspense, useState, type ReactNode } from 'react';
 import { getTool } from '../../features/registry';
 import { takeHandedOffFiles } from '../router';
 import { Spinner } from '../../components/ui/Feedback';
@@ -30,7 +30,8 @@ class ToolErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
 
 export function ToolPage({ id }: { id: string }) {
   const tool = getTool(id);
-  const initialFiles = useMemo(() => takeHandedOffFiles(), [id]);
+  // ToolPage is keyed by tool id, so this runs once per opened tool.
+  const [initialFiles] = useState(takeHandedOffFiles);
   if (!tool) return <NotFoundPage />;
   const ToolComponent = tool.component;
   return (

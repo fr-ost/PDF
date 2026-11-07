@@ -97,7 +97,7 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setContainerWidth(el.clientWidth));
+    const ro = new ResizeObserver(() => setContainerWidth((w) => (Math.abs(w - el.clientWidth) >= 16 ? el.clientWidth : w)));
     ro.observe(el);
     setContainerWidth(el.clientWidth);
     return () => ro.disconnect();
@@ -198,6 +198,9 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
   // ---- pointer interaction ------------------------------------------------
   const onBackgroundDown = (e: ReactPointerEvent<SVGSVGElement>, info: PageInfo) => {
     if (e.button !== 0) return;
+    // Suppress the compatibility mousedown so focus isn't pulled away from
+    // the text box we are about to open (which would immediately close it).
+    e.preventDefault();
     const [x, y] = toPoint(e, info);
     setEditingId(null);
     if (toolKind === 'select') {
@@ -399,7 +402,7 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
                 </button>
               ))}
             </nav>
-            <div ref={scrollRef} className="relative flex-1 overflow-auto bg-surface-2 p-6">
+            <div ref={scrollRef} className="relative flex-1 overflow-auto bg-surface-2 p-6 [scrollbar-gutter:stable]">
               <div className="mx-auto w-fit">
                 <PageCanvas docId={entry.id} pageIndex={Math.min(page, Math.max(0, pageCount - 1))} zoom={scale} onInfo={setPageInfo}>
                   {(info) => {
@@ -448,7 +451,9 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
                         </svg>
                         {editing && editing.page === page ? (
                           <textarea
-                            autoFocus
+                            ref={(el) => {
+                              if (el && document.activeElement !== el) requestAnimationFrame(() => el.focus());
+                            }}
                             aria-label="Edit text"
                             data-testid="text-editor"
                             value={editing.text}

@@ -127,7 +127,7 @@ export default function WatermarkTool({ tool, initialFiles }: ToolProps) {
           </Field>
           {layer === 'under' ? <Alert tone="info">Behind-content watermarks can be hidden on scanned pages or pages with solid backgrounds.</Alert> : null}
           <Field label="Pages">
-            <Segmented label="Pages" value={pagesMode} onChange={setPagesMode} options={[{ value: 'all', label: 'All pages' }, { value: 'custom', label: 'Select pages' }]} />
+            <Segmented label="Pages to watermark" value={pagesMode} onChange={setPagesMode} options={[{ value: 'all', label: 'All pages' }, { value: 'custom', label: 'Select pages' }]} />
           </Field>
           {pagesMode === 'custom' ? <PageRangeField value={range} onChange={setRange} pageCount={pageCount} /> : null}
         </>

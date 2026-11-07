@@ -29,6 +29,7 @@ export const MAX_METADATA_LENGTH = 2000;
 function safe(value: string | undefined): string {
   if (!value) return '';
   // Strip control characters that some producers embed; keep printable text.
+  // eslint-disable-next-line no-control-regex -- intentionally matching control characters
   return value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').slice(0, MAX_METADATA_LENGTH);
 }
 

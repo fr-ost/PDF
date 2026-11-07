@@ -3,7 +3,7 @@
  * Organize: an ordered list of page references (file + page index + extra
  * rotation) plus a selection. Nothing here touches PDF bytes.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FileEntry } from '../../hooks/useFileList';
 import type { PagePlanItem } from '../../pdf/engines/assemble';
 import { normalizeQuarter } from './rotation';
@@ -25,10 +25,14 @@ export function usePageWorkspace(entries: FileEntry[]) {
   const readyKey = ready.map((e) => `${e.id}:${e.pageCount}`).join('|');
   const [pages, setPages] = useState<WorkspacePage[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Until the user edits the page list, it always mirrors the file order
+  // (files may finish loading in any order).
+  const touched = useRef(false);
 
   // Keep pages in sync with the files: add pages of new files, drop pages of removed files.
   useEffect(() => {
     setPages((current) => {
+      if (!touched.current) return ready.flatMap(pagesFor);
       const ids = new Set(ready.map((e) => e.id));
       const kept = current.filter((p) => ids.has(p.fileId));
       const present = new Set(kept.map((p) => p.fileId));
@@ -44,17 +48,20 @@ export function usePageWorkspace(entries: FileEntry[]) {
   }, [readyKey]);
 
   const rotate = useCallback((keys: Iterable<string>, delta: number) => {
+    touched.current = true;
     const set = new Set(keys);
     setPages((list) => list.map((p) => (set.has(p.key) ? { ...p, rotation: normalizeQuarter(p.rotation + delta) } : p)));
   }, []);
 
   const remove = useCallback((keys: Iterable<string>) => {
+    touched.current = true;
     const set = new Set(keys);
     setPages((list) => list.filter((p) => !set.has(p.key)));
     setSelected((sel) => new Set([...sel].filter((k) => !set.has(k))));
   }, []);
 
   const reorder = useCallback((keys: string[]) => {
+    touched.current = true;
     setPages((list) => {
       const byKey = new Map(list.map((p) => [p.key, p]));
       return keys.map((k) => byKey.get(k)).filter((p): p is WorkspacePage => !!p);
@@ -62,6 +69,7 @@ export function usePageWorkspace(entries: FileEntry[]) {
   }, []);
 
   const reset = useCallback(() => {
+    touched.current = false;
     setPages(ready.flatMap(pagesFor));
     setSelected(new Set());
   }, [ready]);

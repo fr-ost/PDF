@@ -55,8 +55,8 @@ export async function screenFiles(files: File[], accept: FileKind[], limit = MAX
       continue;
     }
     if (!kind || !accept.includes(kind)) {
-      const wanted = accept.map((k) => (k === 'pdf' ? 'PDF' : 'image (JPEG, PNG, WebP, GIF, BMP, AVIF)')).join(' or ');
-      rejected.push({ name: file.name, reason: kind ? `This tool needs a ${wanted} file.` : `This is not a ${wanted} file.` });
+      const wanted = accept.map((k) => (k === 'pdf' ? 'a PDF file' : 'an image file (JPEG, PNG, WebP, GIF, BMP or AVIF)')).join(' or ');
+      rejected.push({ name: file.name, reason: kind ? `This tool needs ${wanted}.` : `This doesn’t look like ${wanted}.` });
       continue;
     }
     accepted.push({ file, kind });

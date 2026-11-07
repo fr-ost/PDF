@@ -30,4 +30,9 @@ export default tseslint.config(
     files: ['scripts/**', 'tests/**', '*.config.ts', '*.config.js'],
     rules: { 'no-console': 'off' },
   },
+  {
+    // Playwright fixtures use `({}, use) =>` and a `use` callback by design.
+    files: ['tests/e2e/**'],
+    rules: { 'no-empty-pattern': 'off', 'react-hooks/rules-of-hooks': 'off' },
+  },
 );
