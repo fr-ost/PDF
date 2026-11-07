@@ -1,0 +1,62 @@
+{
+  "name": "unique-pdf",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Unique PDF — Free PDF Toolkit by Unique Labs. Private, local-first PDF tools for Chrome.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "author": "Unique Labs",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "prepare-assets": "node scripts/copy-pdfjs-assets.mjs",
+    "dev": "npm run prepare-assets && vite",
+    "build": "npm run prepare-assets && tsc -p tsconfig.json --noEmit && vite build && node scripts/validate-build.mjs",
+    "build:dev": "npm run prepare-assets && vite build --mode development",
+    "watch": "npm run prepare-assets && vite build --mode development --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --trace off",
+    "validate": "node scripts/validate-build.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@cantoo/pdf-lib": "^2.11.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource-variable/inter": "^5.3.0",
+    "fflate": "^0.8.3",
+    "html-entities": "^2.6.0",
+    "lucide-react": "^1.70.0",
+    "pdfjs-dist": "^6.5.438",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@napi-rs/canvas": "^1.1.0",
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/chrome": "^0.3.7",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "jsdom": "^31.0.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
