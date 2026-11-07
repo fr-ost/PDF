@@ -92,5 +92,5 @@ test('popup', async ({ extContext, extensionId }) => {
   await p.setViewportSize({ width: 360, height: 600 });
   await p.goto(`chrome-extension://${extensionId}/popup.html`);
   await p.waitForTimeout(400);
-  await p.screenshot({ path: out('11-popup') });
+  await p.screenshot({ path: out('09-popup') });
 });

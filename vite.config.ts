@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { buildManifest } from './scripts/manifest';
+import { buildManifest } from './scripts/manifest.ts';
 
 const pkg = JSON.parse(readFileSync(resolve(import.meta.dirname, 'package.json'), 'utf8')) as { version: string };
 

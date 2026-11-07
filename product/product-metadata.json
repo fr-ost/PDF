@@ -1,0 +1,89 @@
+{
+  "$comment": "Product metadata for the Unique PDF website and store listings. Keep claims factual and in sync with FEATURES.md.",
+  "product": {
+    "name": "Unique PDF",
+    "fullName": "Unique PDF — Free PDF Toolkit",
+    "brand": "Unique Labs",
+    "brandTagline": "Useful technology. Accessible to everyone.",
+    "category": "Productivity / PDF utilities",
+    "platforms": ["Google Chrome (Manifest V3, version 120+)"],
+    "version": "1.0.0",
+    "price": "Free",
+    "positioning": "Free PDF tools without subscriptions, watermarks or file uploads."
+  },
+  "descriptions": {
+    "short": "Free PDF tools that run on your device: merge, split, compress, convert, edit, sign, protect and redact. No uploads, no watermarks.",
+    "long": "Unique PDF is a free PDF toolkit for Chrome that works entirely on your computer. Merge and split documents, reorder, rotate and delete pages, compress large files, turn images into PDFs and PDFs into images, add text, drawings, signatures, watermarks and page numbers, protect files with AES-256 passwords, remove passwords you know, edit metadata, and permanently redact sensitive information with automatic verification. Your files are never uploaded: processing happens in your browser, it works offline, and there are no accounts, quotas, subscriptions, watermarks or ads."
+  },
+  "coreFeatures": [
+    { "name": "Merge PDF", "summary": "Combine PDFs in any order." },
+    { "name": "Split PDF", "summary": "Every page, custom ranges, equal parts or at chosen pages; ZIP download." },
+    { "name": "Organize pages", "summary": "Reorder, rotate and delete pages from several PDFs in one workspace." },
+    { "name": "Rotate, reorder, delete and extract pages", "summary": "Visual thumbnail tools with multi-select and keyboard support." },
+    { "name": "Compress PDF", "summary": "Optimises images and removes unused data while keeping text searchable; optional maximum compression." },
+    { "name": "Images to PDF", "summary": "JPEG, PNG, WebP, GIF, BMP and AVIF with page size, orientation and margin controls." },
+    { "name": "PDF to images", "summary": "PNG or JPEG up to 600 DPI." },
+    { "name": "Edit PDF", "summary": "Add text, freehand drawings, highlights, shapes, arrows and images with undo/redo." },
+    { "name": "Sign PDF", "summary": "Draw a signature and place it anywhere (visual signature)." },
+    { "name": "Watermark", "summary": "Text or image watermarks with opacity, rotation, position and tiling." },
+    { "name": "Page numbers", "summary": "Positions, formats, prefixes, suffixes and start number." },
+    { "name": "Protect PDF", "summary": "AES-256 password protection with optional permissions." },
+    { "name": "Unlock PDF", "summary": "Remove protection when you know the password." },
+    { "name": "Redact PDF", "summary": "Permanently remove text and areas, with verification." },
+    { "name": "Edit metadata", "summary": "View, edit or remove document properties." }
+  ],
+  "supportedFileTypes": {
+    "input": ["PDF (including password-protected: RC4 40/128-bit, AES-128, AES-256)", "JPEG", "PNG", "WebP", "GIF", "BMP", "AVIF"],
+    "output": ["PDF", "PNG", "JPEG", "ZIP (multiple outputs)"]
+  },
+  "privacyPositioning": {
+    "statement": "Your files stay on your device. Unique PDF processes everything locally in your browser and cannot send documents anywhere.",
+    "facts": [
+      "No uploads, servers or cloud storage",
+      "No account or sign-in",
+      "No analytics, telemetry or advertising",
+      "One permission: local storage for settings",
+      "Network access blocked by the extension's security policy",
+      "Works offline after installation"
+    ]
+  },
+  "searchKeywords": [
+    "free pdf tools",
+    "merge pdf",
+    "split pdf",
+    "compress pdf",
+    "pdf to jpg",
+    "jpg to pdf",
+    "edit pdf",
+    "sign pdf",
+    "redact pdf",
+    "password protect pdf",
+    "offline pdf editor",
+    "private pdf tools",
+    "pdf without upload",
+    "pdf chrome extension"
+  ],
+  "comparisonPositioning": {
+    "$comment": "Describe differences factually; do not name or disparage specific competitors, and do not claim to be the best.",
+    "versusOnlineConverters": "Many online PDF services upload documents to their servers for processing. Unique PDF processes files locally, so documents are never transmitted.",
+    "versusFreemiumTools": "Freemium tools often limit daily tasks, file sizes or add watermarks unless you subscribe. Unique PDF's tools have no quotas, watermarks or paid tiers.",
+    "versusDesktopSuites": "Full desktop PDF suites offer more advanced features (such as editing existing text or OCR) but require installation and often a licence. Unique PDF covers everyday tasks instantly in the browser at no cost.",
+    "honestLimitations": [
+      "Does not edit text that already exists in a PDF (adds content on top).",
+      "No OCR or Office document conversion yet.",
+      "Visual signatures only; no certificate-based digital signing yet."
+    ]
+  },
+  "faq": [
+    { "q": "Is Unique PDF really free?", "a": "Yes. All tools are free with no subscriptions, quotas or watermarks." },
+    { "q": "Are my files uploaded?", "a": "No. Files are processed on your device inside the browser. The extension's security policy blocks network connections." },
+    { "q": "Does it work offline?", "a": "Yes. After installation every tool works without an internet connection." },
+    { "q": "Do I need an account?", "a": "No account or sign-in is needed." },
+    { "q": "Can I edit existing text in a PDF?", "a": "Not yet. You can add text, drawings, shapes, images and signatures on top of pages, or cover text with a white rectangle and type over it." },
+    { "q": "Is redaction secure?", "a": "Yes. Redacted pages are rebuilt without the original content, and the result is checked automatically to confirm no text remains in the redacted areas." },
+    { "q": "Can it remove a password I forgot?", "a": "No. Unique PDF only removes protection when you provide the correct password; it never cracks or bypasses passwords." },
+    { "q": "How large can files be?", "a": "Files up to 1 GB are accepted. The practical limit depends on your computer's memory; very large files can be slow." },
+    { "q": "What data does it store?", "a": "Only your settings and, if enabled, a list of recent file names and sizes, kept in your browser. You can clear it any time." },
+    { "q": "Which languages can I type in the editor?", "a": "Added text uses the standard PDF fonts, which support Western European characters. Support for more scripts is on the roadmap." }
+  ]
+}

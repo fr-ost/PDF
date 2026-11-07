@@ -16,7 +16,7 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": false,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["chrome", "vite/client", "node"],
     "paths": { "@/*": ["./src/*"] }
