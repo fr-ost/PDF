@@ -4,9 +4,8 @@ import { FONT_ASCENT, FONT_DESCENT, toWinAnsi, type FontFamily } from '../winAns
 import type { ProgressFn } from './assemble';
 import { FontCache, clamp, parseHexColor, withDisplaySpace } from './drawing';
 import { loadPdf, savePdf, type PdfSource } from './load';
-
-export type NumberPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-export type NumberFormat = 'n' | 'page-n' | 'n-of-total' | 'page-n-of-total';
+import { formatPageNumber, type NumberFormat, type NumberPosition } from '../pageNumberFormat';
+export { formatPageNumber, type NumberFormat, type NumberPosition } from '../pageNumberFormat';
 
 export interface PageNumberOptions {
   position: NumberPosition;
@@ -21,12 +20,6 @@ export interface PageNumberOptions {
   color: string;
   /** 0-based indices of pages that receive a number, in document order. */
   pages: number[];
-}
-
-export function formatPageNumber(n: number, total: number, options: Pick<PageNumberOptions, 'format' | 'prefix' | 'suffix'>): string {
-  const core =
-    options.format === 'page-n' ? `Page ${n}` : options.format === 'n-of-total' ? `${n} of ${total}` : options.format === 'page-n-of-total' ? `Page ${n} of ${total}` : `${n}`;
-  return `${options.prefix}${core}${options.suffix}`;
 }
 
 export async function addPageNumbers(source: PdfSource, options: PageNumberOptions, progress: ProgressFn = () => undefined): Promise<Uint8Array> {

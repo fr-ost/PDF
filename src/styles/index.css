@@ -1,0 +1,146 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/wght.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Unique PDF design tokens. Semantic colours are CSS variables so the dark
+ * theme only has to redefine them once.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f5f8;
+  --color-surface-3: #e9edf2;
+  --color-line: #e3e7ec;
+  --color-line-strong: #cdd3dc;
+  --color-fg: #0f1217;
+  --color-fg-muted: #525a68;
+  --color-fg-subtle: #858d9b;
+
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4fd7;
+  --color-primary-fg: #ffffff;
+  --color-primary-soft: #eef4ff;
+  --color-primary-line: #c6d7fd;
+
+  --color-success: #15803d;
+  --color-success-soft: #ecfdf3;
+  --color-success-line: #b7ebc8;
+  --color-danger: #d92d20;
+  --color-danger-hover: #b42318;
+  --color-danger-soft: #fef3f2;
+  --color-danger-line: #fecdca;
+  --color-warning: #b54708;
+  --color-warning-soft: #fffaeb;
+  --color-warning-line: #fedf89;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.04);
+  --shadow-raised: 0 2px 4px -2px rgb(16 24 40 / 0.06), 0 6px 14px -4px rgb(16 24 40 / 0.08);
+  --shadow-pop: 0 18px 40px -12px rgb(16 24 40 / 0.28), 0 6px 14px -6px rgb(16 24 40 / 0.12);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@layer base {
+  .dark {
+    --color-canvas: #0c0e12;
+    --color-surface: #14171d;
+    --color-surface-2: #1b1f27;
+    --color-surface-3: #242a34;
+    --color-line: #262c37;
+    --color-line-strong: #353d4b;
+    --color-fg: #eef1f5;
+    --color-fg-muted: #a3abb9;
+    --color-fg-subtle: #737c8c;
+    --color-primary: #3b82f6;
+    --color-primary-hover: #5b96f8;
+    --color-primary-soft: #16233d;
+    --color-primary-line: #23406f;
+    --color-success: #3fb969;
+    --color-success-soft: #0f2a1b;
+    --color-success-line: #1c4d31;
+    --color-danger: #f0605a;
+    --color-danger-hover: #f47d78;
+    --color-danger-soft: #2f1414;
+    --color-danger-line: #5c2321;
+    --color-warning: #f1a33b;
+    --color-warning-soft: #2c200b;
+    --color-warning-line: #5a4114;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-raised: 0 4px 12px -4px rgb(0 0 0 / 0.5);
+    --shadow-pop: 0 18px 40px -12px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-fg font-sans;
+    font-feature-settings: 'cv11', 'ss01';
+    min-height: 100vh;
+  }
+
+  body.popup {
+    min-height: 0;
+    width: 360px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  dialog::backdrop {
+    background: rgb(9 11 15 / 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  input[type='range'] {
+    accent-color: var(--color-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .page-shadow {
+    box-shadow: 0 0 0 1px rgb(16 24 40 / 0.06), 0 2px 8px -2px rgb(16 24 40 / 0.12);
+  }
+  .checkerboard {
+    background-image: linear-gradient(45deg, var(--color-surface-3) 25%, transparent 25%), linear-gradient(-45deg, var(--color-surface-3) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--color-surface-3) 75%), linear-gradient(-45deg, transparent 75%, var(--color-surface-3) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  }
+  .lazy-section {
+    content-visibility: auto;
+  }
+}

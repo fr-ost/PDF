@@ -12,8 +12,8 @@
   "scripts": {
     "prepare-assets": "node scripts/copy-pdfjs-assets.mjs",
     "dev": "npm run prepare-assets && vite",
-    "build": "npm run prepare-assets && tsc -p tsconfig.json --noEmit && vite build && node scripts/validate-build.mjs",
-    "build:dev": "npm run prepare-assets && vite build --mode development",
+    "build": "npm run prepare-assets && tsc -p tsconfig.json --noEmit && vite build && node scripts/third-party-notices.mjs && node scripts/validate-build.mjs",
+    "build:dev": "npm run prepare-assets && vite build --mode development && node scripts/validate-build.mjs dist-dev",
     "watch": "npm run prepare-assets && vite build --mode development --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
