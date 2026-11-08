@@ -196,6 +196,14 @@ are analysed in [ROADMAP.md](ROADMAP.md).
 | Unique AI says it isn't available | Check the requirements shown in the tool (desktop Chrome 138+, free disk space, GPU/RAM). `chrome://on-device-internals` shows the status of Chrome's AI model. Search mode and Quick summary work everywhere. |
 | The one-time AI setup seems stuck | Chrome downloads the AI model in the background (several GB). Keep Chrome open on an unmetered connection and try again later. |
 
+## Website
+
+`website/` is the product website: static HTML, CSS and a few KB of JavaScript, ready for Vercel
+(set the project's **Root Directory** to `website`, framework preset *Other*, no build command).
+It is generated from `scripts/website/` with `npm run website`, which pulls the tool list, FAQ,
+donation wallets and version from the extension so the two stay in sync. Before going live, set the
+site address and the Chrome Web Store link in `scripts/website/config.mjs` and rebuild.
+
 ## Documentation index
 
 [ARCHITECTURE](ARCHITECTURE.md) · [FEATURES](FEATURES.md) · [ROADMAP](ROADMAP.md) ·

@@ -27,6 +27,7 @@
     "store:capture": "playwright test -c playwright.store.config.ts raw.spec.ts --trace off",
     "store:render": "node store-assets/source/render.mjs",
     "store:video": "node store-assets/source/video.mjs",
+    "website": "node scripts/website/build.mjs",
     "store:kit": "npm run build && npm run screenshots && npm run store:capture && npm run store:render && npm run store:video"
   },
   "dependencies": {

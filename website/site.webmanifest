@@ -1,0 +1,21 @@
+{
+  "name": "Unique PDF",
+  "short_name": "Unique PDF",
+  "description": "Free PDF editor for Chrome with AI chat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f9",
+  "theme_color": "#3d5afe",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
