@@ -62,9 +62,10 @@ Uninstalling the extension deletes all of this data.
 
 ## Links to other sites
 
-The Donate page, the review prompt and the "report a bug" links open the Chrome Web Store (or Edge
-Add-ons) or Telegram in a new tab, only when you click them. Nothing is sent automatically, and the
-donation addresses and QR codes are part of the extension package (no images are fetched).
+The Donate page, the review prompt, the developer credit and the "report a bug" links open the
+Chrome Web Store (or Edge Add-ons), the developer's website (www.shahriarahmed.net) or Telegram in
+a new tab, only when you click them. Nothing is sent automatically, and the donation addresses, QR
+codes and the developer photo are part of the extension package (no images are fetched).
 
 ## Passwords
 

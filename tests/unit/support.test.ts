@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import jsQR from 'jsqr';
-import { WALLETS, shareMessage, storeListing } from '../../src/services/support/support';
+import { DEVELOPER, WALLETS, shareMessage, storeListing } from '../../src/services/support/support';
 import { ASK_AGAIN_AFTER, FIRST_ASK, INITIAL_REVIEW_STATE, MAX_ASKS, afterFinal, afterLater, afterTask, shouldAsk, type ReviewState } from '../../src/services/support/reviewPrompt';
 
 /** Rebuilds the module grid of a segno-style QR SVG (rows drawn as horizontal strokes) and decodes it. */
@@ -53,6 +53,19 @@ describe('donation addresses', () => {
     expect(byId.evm).toMatch(/^0x[0-9a-fA-F]{40}$/);
     expect(byId.sol).toMatch(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
     expect(byId.btc).toMatch(/^bc1[02-9ac-hj-np-z]{11,71}$/);
+  });
+});
+
+describe('developer credit', () => {
+  it('links to the developer website and packages the photo', () => {
+    expect(DEVELOPER.name).toBe('Shahriar Ahmed');
+    expect(DEVELOPER.website).toBe('https://www.shahriarahmed.net');
+    const photo = readFileSync(resolve(import.meta.dirname, '../../public', DEVELOPER.photo.replace(/^\//, '')));
+    expect(photo.subarray(0, 4).toString('latin1')).toBe('RIFF');
+    expect(photo.subarray(8, 12).toString('latin1')).toBe('WEBP');
+    // No EXIF/XMP metadata chunks in the packaged photo.
+    expect(photo.includes(Buffer.from('EXIF'))).toBe(false);
+    expect(photo.includes(Buffer.from('XMP '))).toBe(false);
   });
 });
 

@@ -96,6 +96,29 @@ test.describe('support', () => {
     expectNoErrors(errors);
   });
 
+  test('the developer is credited with a photo and a link to the website', async ({ app, errors }) => {
+    const website = 'https://www.shahriarahmed.net';
+    const photoLoaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
+    await app.evaluate(() => (location.hash = '#/about'));
+    const card = app.getByTestId('about-developer');
+    await expect(card).toContainText('About the developer');
+    await expect(card).toContainText('Shahriar Ahmed');
+    expect(await card.getByRole('img', { name: 'Shahriar Ahmed' }).evaluate(photoLoaded)).toBe(true);
+    for (const id of ['developer-name', 'developer-website', 'footer-developer']) {
+      const link = app.getByTestId(id);
+      await expect(link).toHaveAttribute('href', website);
+      await expect(link).toHaveAttribute('target', '_blank');
+      await expect(link).toHaveAttribute('rel', /noopener/);
+    }
+    await expect(app.getByTestId('footer-developer')).toHaveText('Shahriar Ahmed');
+    expect(await app.getByTestId('footer-developer').locator('img').evaluate(photoLoaded)).toBe(true);
+    await app.evaluate(() => (location.hash = '#/donate'));
+    await expect(app.getByTestId('donate-developer')).toHaveAttribute('href', website);
+    await app.evaluate(() => (location.hash = '#/settings'));
+    await expect(app.getByRole('link', { name: 'Shahriar Ahmed' }).first()).toHaveAttribute('href', website);
+    expectNoErrors(errors);
+  });
+
   test('store installs are asked for a 5-star review after a few finished tasks', async ({ app, extensionId, errors }) => {
     await actAsStoreInstall(app);
     await setReviewState(app, { tasks: 2, nextAskAt: 3, asked: 0, done: false });

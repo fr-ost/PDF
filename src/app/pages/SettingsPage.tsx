@@ -3,6 +3,7 @@ import { Monitor, Moon, Settings as SettingsIcon, Sun, Trash2 } from 'lucide-rea
 import { resetSettings, updateSettings, useSettings } from '../../services/settings-service/settings';
 import { clearHistory, useHistory } from '../../services/history-service/history';
 import { resetReviewPrompt } from '../../services/support/reviewPrompt';
+import { DeveloperLink } from '../../components/Developer';
 import { COMPRESSION_PRESETS } from '../../pdf/compressionPresets';
 import { PAPER_SIZES, type PaperSize } from '../../pdf/paper';
 import { Card, PageHeader } from '../../components/ui/Card';
@@ -111,9 +112,13 @@ export function SettingsPage() {
       <Group title="About">
         <div className="flex items-center justify-between gap-4">
           <BrandMark />
-          <div className="text-right text-sm text-fg-muted">
+          <div className="flex flex-col items-end gap-1 text-right text-sm text-fg-muted">
             <p>Version {__APP_VERSION__}</p>
-            <a href="#/about" className="font-medium text-primary hover:underline">About Unique PDF</a>
+            <p className="flex min-h-6 items-center gap-1">
+              Developed by
+              <DeveloperLink className="inline-flex min-h-6 items-center font-medium text-fg hover:text-primary hover:underline" />
+            </p>
+            <a href="#/about" className="inline-flex min-h-6 items-center font-medium text-primary hover:underline">About Unique PDF</a>
           </div>
         </div>
       </Group>

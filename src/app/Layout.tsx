@@ -9,7 +9,8 @@ import { AmbientBackground } from './shell/AmbientBackground';
 import { ThemeToggle } from './shell/ThemeToggle';
 import { isMac, openCommandPalette } from './shell/CommandPalette';
 import { FiveStars } from './shell/ReviewPrompt';
-import { storeListing } from '../services/support/support';
+import { DEVELOPER, storeListing } from '../services/support/support';
+import { DeveloperLink, DeveloperPhoto } from '../components/Developer';
 import { answerFinal } from '../services/support/reviewPrompt';
 
 interface NavItem {
@@ -218,8 +219,13 @@ export function Layout({ children }: { children: ReactNode }) {
         </main>
         <footer className="px-6 py-6 text-xs text-fg-subtle">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 border-t border-line pt-5">
-            <span>
-              Unique PDF <span aria-hidden>·</span> By Unique Labs <span aria-hidden>·</span> Useful technology. Accessible to everyone.
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              Unique PDF <span aria-hidden>·</span> By Unique Labs <span aria-hidden>·</span> Developed by
+              <DeveloperLink className="inline-flex items-center gap-1.5 font-medium text-fg-muted hover:text-fg hover:underline" testId="footer-developer">
+                <DeveloperPhoto size={18} />
+                {DEVELOPER.name}
+              </DeveloperLink>
+              <span aria-hidden>·</span> Useful technology. Accessible to everyone.
             </span>
             <span className="flex items-center gap-4">
               <a href="#/privacy" className="hover:text-fg">Privacy</a>

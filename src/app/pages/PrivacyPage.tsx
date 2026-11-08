@@ -50,7 +50,7 @@ export function PrivacyPage() {
           <strong className="text-fg">One permission.</strong> Unique PDF requests only the “storage” permission, used for settings and the optional recent-task list. It has no host permissions and cannot read or change websites.
         </p>
         <p>
-          <strong className="text-fg">Links open only when you click them.</strong> The Donate page, the review prompt and the bug-report links open the Chrome Web Store or Telegram in a new tab. Nothing is sent automatically, and donation addresses are part of the extension package.
+          <strong className="text-fg">Links open only when you click them.</strong> The Donate page, the review prompt, the developer credit and the bug-report links open the Chrome Web Store, the developer’s website or Telegram in a new tab. Nothing is sent automatically; donation addresses and images are part of the extension package.
         </p>
         <p>
           <strong className="text-fg">Your originals are never modified.</strong> Every operation creates a new file; the files you selected are only read.

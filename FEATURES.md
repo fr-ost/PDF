@@ -198,6 +198,10 @@ never sent to Unique Labs or any server.
   clear history, clear all local data, version.
 - **About** and **Privacy** pages, open-source licence list, keyboard shortcuts, and a “Support
   Unique PDF” card (Donate, rate, report a bug or request a feature).
+- **Developer credit**: “Developed by Shahriar Ahmed” with a small photo, linked to
+  www.shahriarahmed.net, in the footer of every page, the About page (with an “About the developer”
+  card: photo, role, website and Telegram), Settings and the Donate page’s thank-you note. The photo
+  is packaged with the extension (a 10 KB WebP without metadata).
 - **Donate page** (sidebar, footer, popup heart, command palette): why donations matter, how to
   donate, and the Unique Labs crypto wallets — one EVM address (ETH, USDT, BNB, AVAX and other EVM
   chains), Solana and Bitcoin (native SegWit) — each with a QR code, network chips and a Copy

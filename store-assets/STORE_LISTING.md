@@ -63,6 +63,8 @@ Chat with PDFs & get AI summaries. Edit, merge, split, compress, convert JPG to 
 >
 > Note: the editor adds new content; it does not change text that already exists in a PDF. AI
 > answers and summaries can contain mistakes; check important details against the document.
+>
+> Unique PDF is developed by Shahriar Ahmed at Unique Labs — www.shahriarahmed.net
 
 **Screenshots (1280×800):** generate with `npm run screenshots` →
 `store-assets/screenshots/01-home.png` … `11-popup.png`. Suggested five: `01-home`,

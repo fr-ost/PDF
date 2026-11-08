@@ -62,6 +62,11 @@ export const tokenIcon = (id: Token['id']) => `/donate/tok-${id}.svg`;
 
 export const DEVELOPER = {
   name: 'Shahriar Ahmed',
+  role: 'Developer, Unique Labs',
+  website: 'https://www.shahriarahmed.net',
+  websiteLabel: 'www.shahriarahmed.net',
+  /** Packaged with the extension (no image is fetched). */
+  photo: '/developer/shahriar-ahmed.webp',
   telegram: 'https://t.me/igfrostt',
   handle: '@igfrostt',
 } as const;

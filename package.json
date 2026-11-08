@@ -5,7 +5,7 @@
   "description": "Unique PDF — Free PDF Toolkit by Unique Labs. Private, local-first PDF tools for Chrome.",
   "type": "module",
   "license": "UNLICENSED",
-  "author": "Unique Labs",
+  "author": "Shahriar Ahmed, Unique Labs (https://www.shahriarahmed.net)",
   "engines": {
     "node": ">=22.13.0"
   },

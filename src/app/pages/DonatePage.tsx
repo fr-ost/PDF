@@ -6,6 +6,7 @@ import { useToast } from '../../components/ui/Toast';
 import { cn } from '../../utils/cn';
 import { DEVELOPER, WALLETS, shareMessage, storeListing, tokenIcon, type Wallet } from '../../services/support/support';
 import { FiveStars } from '../shell/ReviewPrompt';
+import { DeveloperLink, DeveloperPhoto } from '../../components/Developer';
 import { answerFinal } from '../../services/support/reviewPrompt';
 
 const ORBIT = ['btc', 'eth', 'sol', 'usdt', 'bnb', 'avax'] as const;
@@ -222,16 +223,19 @@ export function DonatePage() {
 
       <Card className="relative flex items-start gap-4 overflow-hidden p-6">
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(closest-side,rgb(244_63_94/0.14),transparent)]" />
-        <span className="donate-heart donate-heart-sm shrink-0" aria-hidden>
-          <Heart size={18} fill="currentColor" strokeWidth={1.5} />
+        <span className="relative shrink-0">
+          <DeveloperPhoto size={52} className="shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] ring-2 ring-surface" />
+          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[linear-gradient(135deg,#fb7185,#e11d48)] text-white ring-2 ring-surface" aria-hidden>
+            <Heart size={11} fill="currentColor" strokeWidth={1.5} />
+          </span>
         </span>
         <div className="relative">
           <p className="text-[15px] font-semibold">Thank you — truly.</p>
           <p className="mt-1 text-[13.5px] leading-relaxed text-fg-muted">
             Whether you donate, share or simply use Unique PDF, you’re the reason it exists. —{' '}
-            <a href={DEVELOPER.telegram} target="_blank" rel="noopener noreferrer" title={`Telegram ${DEVELOPER.handle}`} className="font-medium text-primary hover:underline">
+            <DeveloperLink className="font-medium text-primary hover:underline" testId="donate-developer">
               {DEVELOPER.name}
-            </a>
+            </DeveloperLink>
             , Unique Labs
           </p>
         </div>

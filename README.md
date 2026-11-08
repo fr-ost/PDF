@@ -8,6 +8,8 @@ they come from) and **AI Summary**. Every file is processed in your browser — 
 there is no account, no quota, no watermark and no tracking. It keeps working offline once installed.
 
 > Unique Labs — *Useful technology. Accessible to everyone.*
+>
+> Developed by [Shahriar Ahmed](https://www.shahriarahmed.net) at Unique Labs.
 
 ---
 
