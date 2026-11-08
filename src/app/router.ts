@@ -16,6 +16,7 @@ export type Route =
   | { name: 'settings' }
   | { name: 'about' }
   | { name: 'privacy' }
+  | { name: 'donate' }
   | { name: 'not-found' };
 
 const CATEGORIES: Category[] = ['organize', 'convert', 'edit', 'security', 'ai'];
@@ -27,7 +28,7 @@ export function parseHash(hash: string): Route {
   const [first, second] = parts;
   if (parts.length === 1 && CATEGORIES.includes(first as Category)) return { name: 'category', category: first as Category };
   if (first === 'tool' && second && /^[a-z0-9-]+$/.test(second)) return { name: 'tool', id: second };
-  if (parts.length === 1 && (first === 'recent' || first === 'settings' || first === 'about' || first === 'privacy')) return { name: first };
+  if (parts.length === 1 && (first === 'recent' || first === 'settings' || first === 'about' || first === 'privacy' || first === 'donate')) return { name: first };
   return { name: 'not-found' };
 }
 

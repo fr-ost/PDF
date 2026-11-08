@@ -17,6 +17,12 @@ All notable changes to Unique PDF are documented here. The format follows
   always-visible page actions and long-press dragging on touch screens.
 - Tools load in the background when the browser is idle and when you point at them, so they open
   instantly.
+- **Donate page**: the Unique Labs wallets (one EVM address for ETH, USDT, BNB, AVAX and other EVM
+  chains, Solana, Bitcoin) with QR codes and Copy buttons, plus free ways to help. Reachable from
+  the sidebar, footer, popup, About page and command palette.
+- **Review prompt**: store installs are asked, after a few finished tasks, to rate Unique PDF 5
+  stars on the Chrome Web Store (at most three times, “Maybe later” and “Don’t ask again”, nothing
+  offered in return), with a permanent rating link in the sidebar, About and Donate pages.
 
 ### Changed
 

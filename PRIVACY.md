@@ -51,6 +51,7 @@ The extension uses Chrome's local extension storage (`chrome.storage.local`) for
 | --- | --- | --- |
 | Settings (theme, default formats, resolution, page size, compression level, save behaviour) | Remember your preferences | Settings → Clear all local data |
 | Recent tasks (tool name, input/output **file names and sizes**, time) — only if enabled | Show your recent work | Recent files → Clear history, or turn off "Remember recent tasks" |
+| Review prompt: a **count** of finished tasks and your answer ("later", rated, "don't ask again") | Ask for a store rating at most three times, only in copies installed from a store | Settings → Clear all local data |
 
 A light or dark theme choice is also mirrored in the extension's own web storage
 (`localStorage`) so the right colours appear before the page has loaded; it is removed when the
@@ -58,6 +59,12 @@ theme is set back to the default or local data is cleared.
 
 No document contents, extracted text, summaries, passwords or page images are ever stored.
 Uninstalling the extension deletes all of this data.
+
+## Links to other sites
+
+The Donate page, the review prompt and the "report a bug" links open the Chrome Web Store (or Edge
+Add-ons) or Telegram in a new tab, only when you click them. Nothing is sent automatically, and the
+donation addresses and QR codes are part of the extension package (no images are fetched).
 
 ## Passwords
 

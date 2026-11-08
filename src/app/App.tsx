@@ -6,6 +6,8 @@ import { AboutPage } from './pages/AboutPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { ToolPage } from './pages/ToolPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { DonatePage } from './pages/DonatePage';
+import { ReviewPrompt } from './shell/ReviewPrompt';
 import { Layout } from './Layout';
 import { cancelPendingNavigation, confirmPendingNavigation, usePendingNavigation, useRoute, type Route } from './router';
 import { useApplyTheme } from '../hooks/useTheme';
@@ -29,6 +31,8 @@ function titleFor(route: Route): string {
       return 'About';
     case 'privacy':
       return 'Privacy';
+    case 'donate':
+      return 'Donate';
     default:
       return '';
   }
@@ -50,6 +54,8 @@ function Page({ route }: { route: Route }) {
       return <AboutPage />;
     case 'privacy':
       return <PrivacyPage />;
+    case 'donate':
+      return <DonatePage />;
     default:
       return <NotFoundPage />;
   }
@@ -110,6 +116,7 @@ export function App() {
         <Page route={route} />
       </Layout>
       <CommandPalette />
+      <ReviewPrompt />
       <ConfirmDialog
         open={!!pending}
         onCancel={cancelPendingNavigation}

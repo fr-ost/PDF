@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Monitor, Moon, Settings as SettingsIcon, Sun, Trash2 } from 'lucide-react';
 import { resetSettings, updateSettings, useSettings } from '../../services/settings-service/settings';
 import { clearHistory, useHistory } from '../../services/history-service/history';
+import { resetReviewPrompt } from '../../services/support/reviewPrompt';
 import { COMPRESSION_PRESETS } from '../../pdf/compressionPresets';
 import { PAPER_SIZES, type PaperSize } from '../../pdf/paper';
 import { Card, PageHeader } from '../../components/ui/Card';
@@ -124,6 +125,7 @@ export function SettingsPage() {
           if (confirm === 'all') {
             await clearHistory();
             await resetSettings();
+            await resetReviewPrompt();
             toast.show('All local data was cleared.', 'success');
           } else {
             await clearHistory();
@@ -132,7 +134,7 @@ export function SettingsPage() {
           setConfirm(null);
         }}
         title={confirm === 'all' ? 'Clear all local data?' : 'Clear history?'}
-        message={confirm === 'all' ? 'This resets all settings to their defaults and removes your recent-task history from this browser.' : 'This removes the list of recent tasks from this browser.'}
+        message={confirm === 'all' ? 'This resets all settings to their defaults and removes your recent-task history (and the review-prompt counter) from this browser.' : 'This removes the list of recent tasks from this browser.'}
         confirmLabel="Clear"
         tone="danger"
       />

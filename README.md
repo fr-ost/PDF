@@ -37,7 +37,9 @@ Everything also includes: drag and drop everywhere (including onto tool cards), 
 for encrypted PDFs, progress with cancel, recent-task history (names and sizes only), a command
 palette (`Ctrl K` / `⌘ K`), light, dark and system themes, smooth page transitions (all motion
 respects “reduce motion”), keyboard operation, a quick-access popup and keyboard shortcuts
-(`Alt+Shift+P` opens the app, `Alt+Shift+U` opens the popup).
+(`Alt+Shift+P` opens the app, `Alt+Shift+U` opens the popup). A **Donate** page (crypto wallets
+with QR codes) and, in store installs, an occasional request for a 5-star rating support the
+project without ads or paywalls.
 
 See [FEATURES.md](FEATURES.md) for the precise behaviour of every tool.
 

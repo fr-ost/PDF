@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { FileImage, History, House, Info, LayoutGrid, Menu, PenLine, Search, Settings, ShieldCheck, Sparkles, X, type LucideIcon } from 'lucide-react';
+import { FileImage, Heart, History, House, Info, LayoutGrid, Menu, PenLine, Search, Settings, ShieldCheck, Sparkles, X, type LucideIcon } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { BrandMark } from '../components/BrandMark';
 import { routeHref, useRoute, type Category, type Route } from './router';
@@ -8,6 +8,9 @@ import { accentStyle } from '../features/categories';
 import { AmbientBackground } from './shell/AmbientBackground';
 import { ThemeToggle } from './shell/ThemeToggle';
 import { isMac, openCommandPalette } from './shell/CommandPalette';
+import { FiveStars } from './shell/ReviewPrompt';
+import { storeListing } from '../services/support/support';
+import { answerFinal } from '../services/support/reviewPrompt';
 
 interface NavItem {
   label: string;
@@ -15,6 +18,8 @@ interface NavItem {
   route: Route;
   match: (r: Route) => boolean;
   category?: Category;
+  /** Rose heart icon (Donate). */
+  heart?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -29,6 +34,7 @@ const NAV_SECONDARY: NavItem[] = [
   { label: 'Recent files', icon: History, route: { name: 'recent' }, match: (r) => r.name === 'recent' },
   { label: 'Settings', icon: Settings, route: { name: 'settings' }, match: (r) => r.name === 'settings' },
   { label: 'About Unique PDF', icon: Info, route: { name: 'about' }, match: (r) => r.name === 'about' || r.name === 'privacy' },
+  { label: 'Donate', icon: Heart, route: { name: 'donate' }, match: (r) => r.name === 'donate', heart: true },
 ];
 
 function inCategory(r: Route, category: string): boolean {
@@ -58,10 +64,10 @@ function NavLink({ item, route, onNavigate, pill }: { item: NavItem; route: Rout
       <span
         className={cn(
           'relative flex h-6 w-6 items-center justify-center rounded-lg transition-all duration-300',
-          active && item.category ? 'tint-tile' : active ? 'text-primary' : 'text-fg-subtle group-hover:text-fg',
+          active && item.category ? 'tint-tile' : item.heart ? 'text-rose-500' : active ? 'text-primary' : 'text-fg-subtle group-hover:text-fg',
         )}
       >
-        <Icon size={15} strokeWidth={active ? 2.3 : 2} aria-hidden />
+        <Icon size={15} strokeWidth={active ? 2.3 : 2} fill={item.heart ? 'currentColor' : 'none'} aria-hidden />
       </span>
       <span className="relative">{item.label}</span>
       {item.category === 'ai' ? <span className="relative ml-auto rounded-full bg-[image:var(--btn-gradient)] px-1.5 py-px text-[10px] font-semibold text-white">New</span> : null}
@@ -87,6 +93,7 @@ function SearchButton({ className }: { className?: string }) {
 export function Layout({ children }: { children: ReactNode }) {
   const route = useRoute();
   const [open, setOpen] = useState(false);
+  const [listing] = useState(storeListing);
   const drawerRef = useRef<HTMLDialogElement>(null);
   useEffect(() => setOpen(false), [route]);
   // The drawer is hidden on wide screens; a modal dialog that is merely hidden would keep the page inert.
@@ -134,6 +141,19 @@ export function Layout({ children }: { children: ReactNode }) {
           </p>
           <p className="mt-1 text-[12px] leading-snug text-fg-muted">Files are processed in this tab and never uploaded.</p>
         </a>
+        {listing ? (
+          <a
+            href={listing.reviewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => void answerFinal()}
+            className="flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-[12.5px] font-medium text-fg-muted transition-colors hover:bg-surface-2/80 hover:text-fg"
+            data-testid="sidebar-rate"
+          >
+            Rate Unique PDF
+            <FiveStars size={12} />
+          </a>
+        ) : null}
         <ThemeToggle />
       </div>
     </div>
@@ -204,6 +224,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <span className="flex items-center gap-4">
               <a href="#/privacy" className="hover:text-fg">Privacy</a>
               <a href="#/about" className="hover:text-fg">About</a>
+              <a href="#/donate" className="hover:text-fg">Donate</a>
               <span className="rounded-md border border-line px-1.5 py-px font-mono">v{__APP_VERSION__}</span>
             </span>
           </div>

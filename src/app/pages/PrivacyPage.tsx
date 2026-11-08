@@ -5,7 +5,7 @@ const DOES = [
   'Reads the files you choose directly in this browser tab.',
   'Processes them on your device using bundled code (PDF.js, pdf-lib) running in background workers.',
   'Saves results only when you click Download.',
-  'Keeps your settings, and — if enabled — a short list of recent file names and sizes, in this browser’s local extension storage (a light or dark theme choice is mirrored in local web storage so the page opens in the right colours).',
+  'Keeps your settings, and — if enabled — a short list of recent file names and sizes, in this browser’s local extension storage (a light or dark theme choice is mirrored in local web storage so the page opens in the right colours). It also counts finished tasks there, to know when to ask for a store review.',
   'Uses passwords only in memory, for the operation you asked for.',
   'Runs Unique AI (chat and summaries) on the AI built into Chrome — your document text is never sent to Unique Labs or any server.',
 ];
@@ -48,6 +48,9 @@ export function PrivacyPage() {
         </p>
         <p>
           <strong className="text-fg">One permission.</strong> Unique PDF requests only the “storage” permission, used for settings and the optional recent-task list. It has no host permissions and cannot read or change websites.
+        </p>
+        <p>
+          <strong className="text-fg">Links open only when you click them.</strong> The Donate page, the review prompt and the bug-report links open the Chrome Web Store or Telegram in a new tab. Nothing is sent automatically, and donation addresses are part of the extension package.
         </p>
         <p>
           <strong className="text-fg">Your originals are never modified.</strong> Every operation creates a new file; the files you selected are only read.

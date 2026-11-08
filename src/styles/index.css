@@ -592,6 +592,115 @@ html.theme-reveal::view-transition-group(*) {
   }
 }
 
+/* Donate page and review prompt ---------------------------------------------- */
+@layer components {
+  .donate-orbit {
+    position: relative;
+    width: 230px;
+    height: 230px;
+  }
+  .donate-ring {
+    position: absolute;
+    inset: 0;
+    animation: orbit-spin 48s linear infinite;
+  }
+  .donate-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 1.5px dashed var(--color-line-strong);
+  }
+  .donate-orbit-item {
+    position: absolute;
+    inset: 0;
+    transform: rotate(calc(var(--i, 0) * 60deg));
+  }
+  .donate-orbit-logo {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 42px;
+    height: 42px;
+    translate: -50% -50%;
+    /* Undo the item's angle and the ring's spin so every logo stays upright. */
+    rotate: calc(var(--i, 0) * -60deg);
+    animation: orbit-counter 48s linear infinite;
+    border-radius: 9999px;
+    box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.35), 0 0 0 3px var(--color-surface);
+  }
+  .dark .donate-orbit-logo {
+    box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.6), 0 0 0 3px var(--color-surface), 0 0 0 4px rgb(255 255 255 / 0.16);
+  }
+  .donate-heart {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 9999px;
+    color: #fff;
+    background: linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #be185d 100%);
+    box-shadow: 0 18px 40px -12px rgb(225 29 72 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.35);
+    animation: heartbeat 2.6s ease-in-out infinite;
+  }
+  .donate-heart-sm {
+    position: relative;
+    left: auto;
+    top: auto;
+    translate: none;
+    width: 40px;
+    height: 40px;
+    animation: none;
+  }
+  .review-star {
+    animation: star-in 520ms var(--ease-spring) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 150ms);
+    filter: drop-shadow(0 2px 6px rgb(245 158 11 / 0.35));
+  }
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes orbit-counter {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes heartbeat {
+  0%,
+  42%,
+  100% {
+    scale: 1;
+  }
+  14% {
+    scale: 1.08;
+  }
+  28% {
+    scale: 1.03;
+  }
+}
+@keyframes star-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-35deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.18) rotate(6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -605,7 +714,11 @@ html.theme-reveal::view-transition-group(*) {
   .live-dot::after,
   .ai-orb::before,
   .ai-orb-halo,
-  .shimmer-text {
+  .shimmer-text,
+  .donate-ring,
+  .donate-orbit-logo,
+  .donate-heart,
+  .review-star {
     animation: none !important;
   }
   .shimmer-text {

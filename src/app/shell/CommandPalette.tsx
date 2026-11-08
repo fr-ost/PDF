@@ -3,7 +3,7 @@
  * Built on <dialog> (focus trap, Escape) with combobox/listbox semantics.
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { CornerDownLeft, FileText, History, Home, Info, Moon, Search, Settings as SettingsIcon, ShieldCheck, Sun, type LucideIcon } from 'lucide-react';
+import { CornerDownLeft, FileText, Heart, History, Home, Info, Moon, Search, Settings as SettingsIcon, ShieldCheck, Sun, type LucideIcon } from 'lucide-react';
 import { CATEGORY_INFO, TOOLS } from '../../features/registry';
 import { accentStyle } from '../../features/categories';
 import { navigate, routeHref, type Route } from '../router';
@@ -49,13 +49,13 @@ interface Item {
   preload?: () => void;
 }
 
-const page = (id: string, title: string, subtitle: string, icon: LucideIcon, route: Route): Item => ({
+const page = (id: string, title: string, subtitle: string, icon: LucideIcon, route: Route, extra = ''): Item => ({
   id,
   group: 'Pages',
   title,
   subtitle,
   icon,
-  keywords: `${title} ${subtitle}`.toLowerCase(),
+  keywords: `${title} ${subtitle} ${extra}`.toLowerCase(),
   run: () => navigate(routeHref(route)),
 });
 
@@ -80,6 +80,7 @@ function buildItems(): Item[] {
     page('settings', 'Settings', 'Theme, defaults and local data', SettingsIcon, { name: 'settings' }),
     page('privacy', 'Privacy', 'How your files are handled', ShieldCheck, { name: 'privacy' }),
     page('about', 'About Unique PDF', 'Version, licences and shortcuts', Info, { name: 'about' }),
+    page('donate', 'Donate', 'Support Unique PDF with a small tip', Heart, { name: 'donate' }, 'tip support crypto bitcoin btc ethereum eth solana usdt bnb coffee sponsor'),
     { id: 'theme-dark', group: 'Actions', title: 'Switch to dark theme', subtitle: 'Easy on the eyes', icon: Moon, keywords: 'dark theme night mode appearance', run: () => setTheme('dark') },
     { id: 'theme-light', group: 'Actions', title: 'Switch to light theme', subtitle: 'Bright and crisp', icon: Sun, keywords: 'light theme day mode appearance', run: () => setTheme('light') },
   ];

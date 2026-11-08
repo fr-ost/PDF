@@ -1,4 +1,4 @@
-import { ArrowUpRight, History, Search, Settings } from 'lucide-react';
+import { ArrowUpRight, Heart, History, Search, Settings } from 'lucide-react';
 import { BrandMark } from '../components/BrandMark';
 import { getTool } from '../features/registry';
 import { accentStyle } from '../features/categories';
@@ -31,9 +31,14 @@ export function Popup() {
       <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(closest-side,var(--blob-b),transparent)]" />
       <header className="relative flex items-center justify-between px-4 pb-3 pt-4">
         <BrandMark />
-        <button type="button" onClick={() => void open('#/settings')} className="rounded-lg p-1.5 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg" aria-label="Settings">
-          <Settings size={17} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button type="button" onClick={() => void open('#/donate')} className="rounded-lg p-1.5 text-rose-500 transition-colors hover:bg-surface-2" aria-label="Donate" title="Donate" data-testid="popup-donate">
+            <Heart size={17} fill="currentColor" />
+          </button>
+          <button type="button" onClick={() => void open('#/settings')} className="rounded-lg p-1.5 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg" aria-label="Settings">
+            <Settings size={17} />
+          </button>
+        </div>
       </header>
       <main className="relative space-y-4 px-4 pb-4">
         <h1 className="sr-only">Unique PDF</h1>

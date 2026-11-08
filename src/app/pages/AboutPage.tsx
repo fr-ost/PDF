@@ -1,8 +1,11 @@
-import { CloudOff, Code2, HeartHandshake, Keyboard, ShieldCheck } from 'lucide-react';
+import { CloudOff, Code2, Heart, HeartHandshake, Keyboard, MessageCircle, ShieldCheck, Star } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Kbd } from '../../components/ui/Feedback';
 import { BrandMark, UniqueLabsAttribution } from '../../components/BrandMark';
 import { TOOLS } from '../../features/registry';
+import { DEVELOPER, storeListing } from '../../services/support/support';
+import { answerFinal } from '../../services/support/reviewPrompt';
+import { FiveStars } from '../shell/ReviewPrompt';
 
 const LICENSES = [
   { name: 'PDF.js', license: 'Apache-2.0', use: 'Rendering and text extraction' },
@@ -16,6 +19,7 @@ const LICENSES = [
 ];
 
 export function AboutPage() {
+  const listing = storeListing();
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 sm:px-6">
       <Card className="enter relative overflow-hidden p-7">
@@ -44,6 +48,26 @@ export function AboutPage() {
           </Card>
         ))}
       </div>
+
+      <Card className="relative overflow-hidden p-5" data-testid="about-support">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[radial-gradient(closest-side,rgb(244_63_94/0.14),transparent)]" />
+        <h2 className="relative flex items-center gap-2 text-[15px] font-semibold"><Heart size={16} className="text-rose-500" fill="currentColor" aria-hidden /> Support Unique PDF</h2>
+        <p className="relative mt-1 text-sm text-fg-muted">Unique PDF is free and stays free. If it helps you, here’s how you can help it grow.</p>
+        <div className="relative mt-4 flex flex-wrap gap-2">
+          <a href="#/donate" className="btn-primary btn-press inline-flex h-9 items-center gap-2 rounded-xl px-4 text-[13.5px] font-medium">
+            <Heart size={14} fill="currentColor" aria-hidden className="relative" />
+            <span className="relative">Donate</span>
+          </a>
+          {listing ? (
+            <a href={listing.reviewUrl} target="_blank" rel="noopener noreferrer" onClick={() => void answerFinal()} className="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line-strong/80 bg-surface px-4 text-[13.5px] font-medium transition-colors hover:bg-surface-2 dark:bg-surface-2" data-testid="about-rate">
+              <Star size={14} aria-hidden /> Rate 5 stars <FiveStars size={11} />
+            </a>
+          ) : null}
+          <a href={DEVELOPER.telegram} target="_blank" rel="noopener noreferrer" className="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line-strong/80 bg-surface px-4 text-[13.5px] font-medium transition-colors hover:bg-surface-2 dark:bg-surface-2">
+            <MessageCircle size={14} aria-hidden /> Report a bug or request a feature
+          </a>
+        </div>
+      </Card>
 
       <Card className="p-5">
         <h2 className="flex items-center gap-2 text-[15px] font-semibold"><Keyboard size={16} aria-hidden /> Keyboard shortcuts</h2>

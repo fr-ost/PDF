@@ -196,7 +196,21 @@ never sent to Unique Labs or any server.
 - **Settings**: theme (system/light/dark), default image format/DPI/JPEG quality, default page size,
   default compression level, “Ask where to save each file” (native Save dialog), history toggle,
   clear history, clear all local data, version.
-- **About** and **Privacy** pages, open-source licence list, keyboard shortcuts.
+- **About** and **Privacy** pages, open-source licence list, keyboard shortcuts, and a “Support
+  Unique PDF” card (Donate, rate, report a bug or request a feature).
+- **Donate page** (sidebar, footer, popup heart, command palette): why donations matter, how to
+  donate, and the Unique Labs crypto wallets — one EVM address (ETH, USDT, BNB, AVAX and other EVM
+  chains), Solana and Bitcoin (native SegWit) — each with a QR code, network chips and a Copy
+  button, plus a reminder to check the network. Free ways to help: rate 5 stars, share with a
+  friend (copies a short note), report a bug or request a feature on Telegram. The QR codes are
+  packaged with the extension and a unit test decodes them to check they match the addresses shown.
+- **Review prompt**: in copies installed from the Chrome Web Store (or Edge Add-ons), after three
+  finished tasks (saved files, summaries, a first chat answer) a small card asks happy users to rate
+  Unique PDF 5 stars, with “Rate 5 stars”, “Maybe later” (asks again after twelve more tasks) and
+  “Don’t ask again”. It never appears more than three times, never offers anything in return, and
+  everyone gets the same choices. A “Rate Unique PDF ★★★★★” link also sits in the sidebar, on
+  the About page and on the Donate page. Development and side-loaded copies (which have no store
+  page) never show it.
 - **Popup**: open the app, nine quick tools (Chat with PDF and AI Summary first), recent tasks,
   theme switch.
 - **Phones and tablets**: the main action of a tool floats at the bottom of the screen while you

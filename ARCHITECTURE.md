@@ -41,7 +41,8 @@ src/
     adapters/           Browser image codec (createImageBitmap + OffscreenCanvas), image prep
     *.ts                Pure, dependency-free modules shared by UI and engines
                         (pageRanges, imageLayout, placement, redaction, winAnsi, paper…)
-  services/             storage, settings, history, file intake, export/download, zip
+  services/             storage, settings, history, file intake, export/download, zip,
+                        support (donation wallets, store links, review-prompt state)
   styles/               Tailwind entry, design tokens (light + dark), motion and effects
   types/                Ambient types (Chrome's built-in AI APIs)
 tests/
@@ -51,6 +52,21 @@ tests/
   helpers/, fixtures/   Synthetic fixture generators, PDF.js verification helpers
 scripts/                Manifest, asset copy, validation, notices, packaging, icons
 ```
+
+### Support: donations and the review prompt (`services/support/`)
+
+`support.ts` holds the donation wallets (EVM, Solana, Bitcoin — the same Unique Labs addresses as
+GrowX and UnfollowX; the QR images in `public/donate/` are checked against them by a unit test that
+decodes each QR code) and works out the store this copy came from: stores add `update_url` to the
+installed manifest, so a Google update URL means the Chrome Web Store
+(`chromewebstore.google.com/detail/<id>/reviews`), a Microsoft one Edge Add-ons, and none means a
+development or side-loaded copy without a store page (no rating links are shown). `reviewPrompt.ts`
+keeps a small state in `chrome.storage.local` — finished tasks, when to ask next, how often it was
+asked, whether it is done — and a pure state machine (ask after 3 tasks, again 12 tasks after
+“Maybe later”, at most 3 times, never after rating or “Don’t ask again”). `recordHistory` and the
+first chat answer per document count as finished tasks; `ReviewPrompt` shows the card 1.4 s after
+the threshold is reached, bottom-left on desktop (toasts use bottom-right) and under the header on
+phones.
 
 ### Bundle boundaries
 

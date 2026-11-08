@@ -94,7 +94,7 @@ test.describe('accessibility', () => {
   test('app pages and the command palette, light and dark', async ({ app }) => {
     test.setTimeout(240_000);
     await inEachTheme(app, async (theme) => {
-      for (const hash of ['#/', '#/organize', '#/convert', '#/edit', '#/security', '#/ai', '#/settings', '#/recent', '#/about', '#/privacy', '#/no-such-page']) {
+      for (const hash of ['#/', '#/organize', '#/convert', '#/edit', '#/security', '#/ai', '#/settings', '#/recent', '#/about', '#/privacy', '#/donate', '#/no-such-page']) {
         await go(app, hash);
         await expectAccessible(app, `${theme}: ${hash}`);
       }
@@ -195,6 +195,27 @@ test.describe('accessibility', () => {
     await addFiles(app, [pdfFile('long.pdf', await makeTextPdf({ pages: 12 }))]);
     await expect(app.getByTestId('floating-action')).toBeVisible();
     await expectAccessible(app, 'phone: tool with the floating action bar');
+  });
+
+  test('review prompt and store links (as a store install), light and dark', async ({ app }) => {
+    await app.addInitScript(() => {
+      if (typeof chrome === 'undefined' || !chrome.runtime?.getManifest) return;
+      const real = chrome.runtime.getManifest.bind(chrome.runtime);
+      chrome.runtime.getManifest = () => ({ ...real(), update_url: 'https://clients2.google.com/service/update2/crx' });
+    });
+    await app.evaluate(() => chrome.storage.local.set({ reviewPrompt: { tasks: 3, nextAskAt: 3, asked: 0, done: false } }));
+    await app.reload();
+    try {
+      await inEachTheme(app, async (theme) => {
+        await go(app, '#/');
+        await expect(app.getByTestId('review-prompt')).toBeVisible();
+        await expectAccessible(app, `${theme}: review prompt`);
+        await go(app, '#/donate');
+        await expectAccessible(app, `${theme}: donate page with the review card`);
+      });
+    } finally {
+      await app.evaluate(() => chrome.storage.local.remove('reviewPrompt')).catch(() => undefined);
+    }
   });
 
   test('toolbar popup, light and dark', async ({ extContext, extensionId }) => {
