@@ -103,17 +103,17 @@ export function CommandPalette() {
   const [active, setActive] = useState(0);
   const items = useMemo(buildItems, []);
   const q = query.trim().toLowerCase();
-  const results = useMemo(
-    () =>
-      items
-        .map((item) => ({ item, s: score(item, q) }))
-        .filter((r) => r.s > 0)
-        // Grouped (Tools, Pages, Actions), best match first within each group.
-        .sort((a, b) => GROUP_ORDER[a.item.group] - GROUP_ORDER[b.item.group] || (q ? b.s - a.s : 0))
-        .map((r) => r.item)
-        .slice(0, q ? 12 : items.length),
-    [items, q],
-  );
+  const results = useMemo(() => {
+    const scored = items.map((item) => ({ item, s: score(item, q) })).filter((r) => r.s > 0);
+    // Grouped (Tools, Pages, Actions). While searching, the group holding the best
+    // match comes first, so Enter opens the best match; best match first within each group.
+    const best = new Map<string, number>();
+    for (const r of scored) best.set(r.item.group, Math.max(best.get(r.item.group) ?? 0, r.s));
+    return scored
+      .sort((a, b) => (q ? best.get(b.item.group)! - best.get(a.item.group)! : 0) || GROUP_ORDER[a.item.group] - GROUP_ORDER[b.item.group] || (q ? b.s - a.s : 0))
+      .map((r) => r.item)
+      .slice(0, q ? 12 : items.length);
+  }, [items, q]);
 
   useEffect(() => {
     const el = dialogRef.current;

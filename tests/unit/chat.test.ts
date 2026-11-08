@@ -53,6 +53,16 @@ describe('retrieval', () => {
     expect(overview.passages[0]!.page).toBe(1);
     expect(new Set(overview.passages.map((p) => p.page)).size).toBeGreaterThan(2);
   });
+
+  it('cuts dense Chinese and Japanese pages into passages that fit the context', () => {
+    const sentence = '当社の売上高は前年同期比で増加し、主要な事業分野すべてで堅調な伸びを示しました。';
+    const pages = Array.from({ length: 10 }, (_, i) => sentence.repeat(70) + (i === 6 ? '倉庫の統合はロッテルダムで完了しました。' : ''));
+    const passages = buildPassages(pages);
+    expect(Math.max(...passages.map((p) => p.tokens))).toBeLessThan(400);
+    expect(passages[0]!.text).not.toMatch(/。 当/); // no spaces inserted between Japanese sentences
+    const ctx = selectContext(buildIndex(passages), '倉庫の統合', 3000);
+    expect(ctx.passages.some((p) => p.page === 7 && p.text.includes('倉庫'))).toBe(true);
+  });
 });
 
 describe('prompt building', () => {
@@ -89,6 +99,15 @@ describe('citations', () => {
     expect(pieces.map((p) => (p.type === 'text' ? p.text : '')).join('')).toContain('Bad [p. 99]. Ref [3] stays.');
     expect(citedPages('See [p. 3] and [p.1, 3]', 5)).toEqual([1, 3]);
   });
+
+  it('ignores look-alikes such as (P1) or (p53) and reads other languages and separators', () => {
+    expect(citedPages('Fix the login bug first (P1), then the report (P2). Mutations in (p53).', 60)).toEqual([]);
+    expect(citedPages('Revenue grew [p. 3; p. 5] and (pg 7).', 9)).toEqual([3, 5, 7]);
+    expect(citedPages('Los ingresos crecieron [pág. 4] y [págs. 5 y 6].', 9)).toEqual([4, 5, 6]);
+    expect(citedPages('売上は増加しました［p. 4］。費用（2ページ）', 9)).toEqual([2, 4]);
+    const pieces = splitCitations('Fine [p 2].', 3);
+    expect(pieces.map((p) => p.type)).toEqual(['text', 'cite', 'text']);
+  });
 });
 
 describe('suggestions', () => {
@@ -99,6 +118,13 @@ describe('suggestions', () => {
     const generic = suggestQuestions('A short note about the garden.');
     expect(generic[0]!.kind).toBe('summary');
     expect(generic).toHaveLength(3);
+  });
+
+  it('only counts month names next to a day or year (“may” is also a verb)', () => {
+    const policy = 'You may cancel at any time. Users may opt out. We may share data with partners. Terms may change.';
+    expect(suggestQuestions(policy).map((s) => s.kind)).not.toContain('dates');
+    const schedule = 'Kick-off on May 5, review on 12 March 2026, launch in June 2026.';
+    expect(suggestQuestions(schedule).map((s) => s.kind)).toContain('dates');
   });
 });
 

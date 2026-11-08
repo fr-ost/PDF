@@ -59,11 +59,20 @@ export const Composer = forwardRef<ComposerHandle, { disabled: boolean; busy: bo
           className="max-h-[168px] min-h-[24px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-6 text-fg outline-none placeholder:text-fg-subtle disabled:cursor-not-allowed"
         />
         {busy ? (
-          <button type="button" onClick={onStop} aria-label="Stop answering" data-testid="chat-stop" className="btn-press grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-fg text-canvas transition-transform">
+          <button
+            key="stop"
+            type="button"
+            onClick={(e) => {
+              // Stop takes Send's place: the second click of a double-click on Send must not stop the answer.
+              if (e.detail > 1) return;
+              onStop();
+            }}
+            aria-label="Stop answering"
+            data-testid="chat-stop" className="btn-press grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-fg text-canvas transition-transform">
             <Square size={13} fill="currentColor" aria-hidden />
           </button>
         ) : (
-          <button type="submit" disabled={disabled || !text.trim()} aria-label="Send" data-testid="chat-send" className="btn-primary btn-press grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white disabled:opacity-40 disabled:shadow-none">
+          <button key="send" type="submit" disabled={disabled || !text.trim()} aria-label="Send" data-testid="chat-send" className="btn-primary btn-press grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white disabled:opacity-40 disabled:shadow-none">
             <ArrowUp size={17} strokeWidth={2.4} aria-hidden />
           </button>
         )}

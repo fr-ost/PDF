@@ -105,6 +105,25 @@ test.describe('organize tools', () => {
     expectNoErrors(errors);
   });
 
+  test('reorder pages by dragging with the mouse', async ({ app, errors }) => {
+    await openTool(app, 'reorder');
+    await addFiles(app, [pdfFile('drag.pdf', await makeTextPdf({ pages: 3 }))]);
+    await waitForPages(app, 3);
+    const cards = app.getByTestId('page-card');
+    const from = (await cards.nth(0).boundingBox())!;
+    const to = (await cards.nth(2).boundingBox())!;
+    await app.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await app.mouse.down();
+    await app.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+    await app.mouse.move(to.x + to.width / 2 + 4, to.y + to.height / 2, { steps: 2 });
+    await app.mouse.up();
+    await expect(cards.last()).toHaveAttribute('aria-label', /page 1/);
+    await runPrimary(app);
+    const out = await downloadResult(app);
+    expect(pageNumbers(await extractText(out.bytes))).toEqual(['2', '3', '1']);
+    expectNoErrors(errors);
+  });
+
   test('delete pages asks for confirmation', async ({ app, errors }) => {
     await openTool(app, 'delete-pages');
     await addFiles(app, [pdfFile('trim.pdf', await makeTextPdf({ pages: 4 }))]);

@@ -33,6 +33,8 @@ export interface GridPage {
   color?: string;
   dimmed?: boolean;
   badge?: ReactNode;
+  /** Cards are memoized: set this when the badge can change while rotation, label and dimming stay the same. */
+  badgeKey?: string;
   before?: ReactNode;
 }
 
@@ -65,7 +67,8 @@ interface CardProps {
 /**
  * Cards re-render only when something they show changed. Grid pages are
  * rebuilt on every parent render (new objects, new badge elements), so they
- * are compared by value; badges change together with rotation/dimmed/label.
+ * are compared by value; badges change together with rotation/dimmed/label,
+ * or with `badgeKey`.
  */
 function sameCard(a: CardProps, b: CardProps): boolean {
   const p = a.page;
@@ -85,12 +88,17 @@ function sameCard(a: CardProps, b: CardProps): boolean {
     p.color === q.color &&
     !!p.dimmed === !!q.dimmed &&
     !!p.badge === !!q.badge &&
+    p.badgeKey === q.badgeKey &&
     !!p.before === !!q.before
   );
 }
 
 const PageCard = memo(function PageCard({ page, selected, sortable, selectable, thumbWidth, onSelect, actions }: CardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: page.key, disabled: !sortable });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: page.key,
+    disabled: !sortable,
+    attributes: { role: selectable ? 'checkbox' : 'group', roleDescription: 'sortable page' },
+  });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const handleClick = (e: MouseEvent) => {
     if (!selectable) return;
@@ -107,49 +115,56 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
   return (
     <div className="lazy-section" style={{ containIntrinsicSize: `${thumbWidth}px ${Math.round(thumbWidth * 1.6)}px` }}>
       {page.before}
+      {/* The card's surface (select, drag) and its action buttons are siblings, so no control sits inside another. */}
       <div
         ref={setNodeRef}
         style={style}
-        {...(sortable ? attributes : {})}
-        {...(sortable ? listeners : {})}
-        onKeyDown={handleKeyDown}
-        onClick={handleClick}
-        role={selectable ? 'checkbox' : 'group'}
-        aria-checked={selectable ? selected : undefined}
-        aria-roledescription={sortable ? 'sortable page' : undefined}
-        aria-label={page.label}
-        tabIndex={0}
-        data-testid="page-card"
         data-selected={selected || undefined}
         className={cn(
-          'group relative flex select-none flex-col rounded-2xl border p-2 outline-none transition-[border-color,box-shadow,opacity,transform,background] duration-300 ease-[var(--ease-out-expo)] focus-visible:ring-2 focus-visible:ring-primary',
+          'group relative rounded-2xl border transition-[border-color,box-shadow,opacity,transform,background] duration-300 ease-[var(--ease-out-expo)] has-[>[data-card-surface]:focus-visible]:ring-2 has-[>[data-card-surface]:focus-visible]:ring-primary',
           selected ? 'border-primary/50 bg-primary-soft shadow-raised ring-1 ring-primary/25' : 'border-transparent hover:-translate-y-0.5 hover:border-line hover:bg-surface hover:shadow-card',
           isDragging && 'opacity-30',
-          sortable ? 'cursor-grab active:cursor-grabbing' : selectable ? 'cursor-pointer' : '',
         )}
       >
-        {page.color ? <span className="absolute left-2 right-2 top-0.5 h-0.5 rounded-full" style={{ backgroundColor: page.color }} aria-hidden /> : null}
-        <div className={cn('relative transition-opacity', page.dimmed && 'opacity-35 grayscale')}>
-          <PageThumbnail docId={page.docId} pageIndex={page.pageIndex} rotation={page.rotation} width={thumbWidth} />
-          {selectable ? (
-            <span
-              className={cn(
-                'absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md border shadow-sm transition-all duration-300 ease-[var(--ease-spring)]',
-                selected ? 'scale-110 border-transparent bg-[image:var(--brand-gradient)] text-white' : 'border-line-strong bg-surface/90 text-transparent group-hover:text-fg-subtle',
-              )}
-              aria-hidden
-            >
-              <Check size={13} strokeWidth={3} />
-            </span>
-          ) : null}
-          {page.badge ? <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">{page.badge}</div> : null}
-          {actions ? (
-            <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-data-[selected]:opacity-100 [@media(hover:none)]:opacity-100" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-              {actions(page)}
-            </div>
-          ) : null}
+        <div
+          ref={setActivatorNodeRef}
+          {...(sortable ? attributes : {})}
+          {...(sortable ? listeners : {})}
+          onKeyDown={handleKeyDown}
+          onClick={handleClick}
+          role={selectable ? 'checkbox' : 'group'}
+          aria-checked={selectable ? selected : undefined}
+          aria-roledescription={sortable ? 'sortable page' : undefined}
+          aria-label={page.label}
+          tabIndex={0}
+          data-testid="page-card"
+          data-card-surface=""
+          data-selected={selected || undefined}
+          className={cn('flex select-none flex-col rounded-2xl p-2 outline-none', sortable ? 'cursor-grab active:cursor-grabbing' : selectable ? 'cursor-pointer' : '')}
+        >
+          {page.color ? <span className="absolute left-2 right-2 top-0.5 h-0.5 rounded-full" style={{ backgroundColor: page.color }} aria-hidden /> : null}
+          <div className={cn('relative transition-opacity', page.dimmed && 'opacity-35 grayscale')}>
+            <PageThumbnail docId={page.docId} pageIndex={page.pageIndex} rotation={page.rotation} width={thumbWidth} />
+            {selectable ? (
+              <span
+                className={cn(
+                  'absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md border shadow-sm transition-all duration-300 ease-[var(--ease-spring)]',
+                  selected ? 'scale-110 border-transparent bg-[image:var(--brand-gradient)] text-white' : 'border-line-strong bg-surface/90 text-transparent group-hover:text-fg-subtle',
+                )}
+                aria-hidden
+              >
+                <Check size={13} strokeWidth={3} />
+              </span>
+            ) : null}
+            {page.badge ? <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">{page.badge}</div> : null}
+          </div>
+          <span className="mt-1.5 truncate text-center text-xs font-medium text-fg-muted">{page.label}</span>
         </div>
-        <span className="mt-1.5 truncate text-center text-xs font-medium text-fg-muted">{page.label}</span>
+        {actions ? (
+          <div className="absolute right-3.5 top-3.5 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-data-[selected]:opacity-100 [@media(hover:none)]:opacity-100">
+            {actions(page)}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -257,7 +272,7 @@ export function PageGrid({
           {activePage ? (
             <div className="relative w-full rotate-3 scale-105 rounded-2xl border border-primary/60 bg-surface p-2 shadow-pop" style={{ width: thumbWidth + 16 }}>
               <PageThumbnail docId={activePage.docId} pageIndex={activePage.pageIndex} rotation={activePage.rotation} width={thumbWidth} />
-              {dragCount > 1 ? <span className="absolute -right-2 -top-2 rounded-full bg-[image:var(--brand-gradient)] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_6px_14px_-4px_var(--glow)]">{dragCount}</span> : null}
+              {dragCount > 1 ? <span className="absolute -right-2 -top-2 rounded-full bg-[image:var(--btn-gradient)] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_6px_14px_-4px_var(--glow)]">{dragCount}</span> : null}
             </div>
           ) : null}
         </DragOverlay>,

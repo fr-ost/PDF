@@ -7,6 +7,7 @@ import { Segmented, Switch } from '../../src/components/ui/Form';
 import { Alert } from '../../src/components/ui/Feedback';
 import { ErrorPanel } from '../../src/components/tool/TaskPanels';
 import { PdfToolError } from '../../src/pdf/errors';
+import { PageGrid, type GridPage } from '../../src/components/tool/PageGrid';
 
 afterEach(cleanup);
 
@@ -63,5 +64,38 @@ describe('error presentation', () => {
   it('alerts use the right live-region role', () => {
     render(<Alert tone="danger" title="Bad">x</Alert>);
     expect(screen.getByRole('alert').textContent).toContain('Bad');
+  });
+});
+
+describe('PageGrid', () => {
+  (globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  const pages = (fileOf: (i: number) => number): GridPage[] =>
+    Array.from({ length: 4 }, (_, i) => ({
+      key: `k${i}`,
+      docId: 'doc',
+      pageIndex: i,
+      rotation: 0,
+      label: `Page ${i + 1}`,
+      badgeKey: String(fileOf(i)),
+      badge: <span data-testid={`badge-${i}`}>File {fileOf(i)}</span>,
+    }));
+
+  it('updates a badge when its badgeKey changes (memoized cards)', () => {
+    const { rerender } = render(<PageGrid pages={pages((i) => i + 1)} selected={new Set()} selectable={false} />);
+    expect(screen.getByTestId('badge-3').textContent).toBe('File 4');
+    rerender(<PageGrid pages={pages((i) => Math.floor(i / 2) + 1)} selected={new Set()} selectable={false} />);
+    expect(screen.getByTestId('badge-3').textContent).toBe('File 2');
+  });
+
+  it('keeps page actions outside the selectable card surface (no nested controls)', () => {
+    render(<PageGrid pages={pages(() => 1)} selected={new Set(['k1'])} onSelect={() => undefined} actions={(p) => <button type="button">Rotate {p.label}</button>} />);
+    const surface = screen.getAllByRole('checkbox')[1]!;
+    expect(surface.getAttribute('aria-checked')).toBe('true');
+    expect(surface.querySelector('button')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Rotate Page 2' })).toBeTruthy();
   });
 });

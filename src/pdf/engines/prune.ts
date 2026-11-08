@@ -12,7 +12,9 @@
  *    (redaction), in which case references move to the replacement;
  *  - annotations of removed pages (reachable e.g. through the structure tree,
  *    /IRT reply chains or form field /Kids);
- *  - structure elements that belong to removed pages (alt text, actual text).
+ *  - structure tree content of removed pages: marked-content and object
+ *    references on those pages, then elements left without content (alt
+ *    text, actual text).
  * Link annotations pointing to removed pages, bookmarks that lead only to
  * removed pages and form fields whose widgets lived only on removed pages are
  * dropped. Finally, every unreachable indirect object is deleted.
@@ -47,6 +49,11 @@ const N = {
   UseOutlines: PDFName.of('UseOutlines'),
   AcroForm: PDFName.of('AcroForm'),
   Fields: PDFName.of('Fields'),
+  StructTreeRoot: PDFName.of('StructTreeRoot'),
+  MCR: PDFName.of('MCR'),
+  MCID: PDFName.of('MCID'),
+  OBJR: PDFName.of('OBJR'),
+  Obj: PDFName.of('Obj'),
 };
 
 export interface PruneOptions {
@@ -126,11 +133,23 @@ export function pruneDocument(doc: PDFDocument, options: PruneOptions = {}): Pru
     return removedPages.has(key) || isPageDict(ctx.lookup(value));
   };
 
+  const isGonePage = (value: PDFObject | undefined): boolean =>
+    isRemovedPageRef(value) || (!!options.replacedPagesAreGone && value instanceof PDFRef && remap.has(refKey(value)));
+  const isGoneAnnot = (ref: PDFRef): boolean => {
+    const key = refKey(ref);
+    if (keptAnnots.has(key)) return false;
+    if (removedAnnots.has(key)) return true;
+    const target = ctx.lookup(ref);
+    return isAnnotDict(target) && isRemovedPageRef(target.get(N.P));
+  };
+  // 0. Structure tree: content of removed pages, then elements left empty.
+  const removedStruct = pruneStructTree(doc, isGonePage, isGoneAnnot);
+
   /** True for annotations of removed pages and structure elements of removed pages. */
   const isGone = (ref: PDFRef, target: PDFObject | undefined): boolean => {
     const key = refKey(ref);
     if (keptAnnots.has(key)) return false;
-    if (removedAnnots.has(key)) return true;
+    if (removedAnnots.has(key) || removedStruct.has(key)) return true;
     if (isAnnotDict(target) && isRemovedPageRef(target.get(N.P))) return true;
     if (target instanceof PDFDict && target.has(N.S) && target.has(N.K)) {
       const pg = target.get(N.Pg);
@@ -215,6 +234,66 @@ export function pruneDocument(doc: PDFDocument, options: PruneOptions = {}): Pru
   return { removedObjects };
 }
 
+/**
+ * Prunes the structure tree bottom-up: content items (marked-content IDs,
+ * marked-content and object references) on removed pages are dropped, then
+ * elements left without content. An element whose own /Pg page is gone but
+ * that still has content on kept pages (a table continuing on the next page)
+ * stays, without the /Pg. Returns the removed elements.
+ */
+function pruneStructTree(doc: PDFDocument, isGonePage: (v: PDFObject | undefined) => boolean, isGoneAnnot: (ref: PDFRef) => boolean): Set<string> {
+  const ctx = doc.context;
+  const removed = new Set<string>();
+  const root = doc.catalog.lookup(N.StructTreeRoot);
+  if (!(root instanceof PDFDict)) return removed;
+  const visited = new Set<PDFDict>();
+
+  const keepKid = (kid: PDFObject, page: PDFObject | undefined, depth: number): boolean => {
+    if (kid instanceof PDFNumber) return !isGonePage(page); // marked-content ID on the element's page
+    const target = kid instanceof PDFRef ? ctx.lookup(kid) : kid;
+    if (!(target instanceof PDFDict)) return true;
+    if (target.has(N.S)) {
+      const keep = keepElement(target, page, depth + 1);
+      if (!keep && kid instanceof PDFRef) removed.add(refKey(kid));
+      return keep;
+    }
+    const type = target.get(N.Type);
+    if (type === N.OBJR || target.has(N.Obj)) {
+      const obj = target.get(N.Obj);
+      if (obj instanceof PDFRef && isGoneAnnot(obj)) return false;
+      return !isGonePage(target.get(N.Pg) ?? page);
+    }
+    if (type === N.MCR || target.has(N.MCID)) return !isGonePage(target.get(N.Pg) ?? page);
+    return true;
+  };
+
+  const keepElement = (element: PDFDict, inheritedPage: PDFObject | undefined, depth: number): boolean => {
+    if (visited.has(element) || depth > 256) return true;
+    visited.add(element);
+    const ownPage = element.get(N.Pg);
+    const page = ownPage ?? inheritedPage;
+    const k = element.get(N.K);
+    if (k === undefined) return true; // never had content
+    const container = k instanceof PDFRef ? ctx.lookup(k) : k;
+    const kids = container instanceof PDFArray ? container.asArray() : [k];
+    const kept = kids.filter((kid) => keepKid(kid, page, depth));
+    if (kept.length === 0) return false;
+    if (kept.length !== kids.length) element.set(N.K, kept.length === 1 ? kept[0]! : ctx.obj(kept));
+    if (ownPage !== undefined && isGonePage(ownPage)) element.delete(N.Pg);
+    return true;
+  };
+
+  const top = root.get(N.K);
+  const container = top instanceof PDFRef ? ctx.lookup(top) : top;
+  const kids = top === undefined ? [] : container instanceof PDFArray ? container.asArray() : [top];
+  const kept = kids.filter((kid) => keepKid(kid, undefined, 0));
+  if (kept.length !== kids.length) {
+    if (kept.length) root.set(N.K, kept.length === 1 ? kept[0]! : ctx.obj(kept));
+    else root.delete(N.K);
+  }
+  return removed;
+}
+
 function pruneAcroForm(doc: PDFDocument, isGoneRef: (ref: PDFRef) => boolean): void {
   const acroForm = doc.catalog.lookup(N.AcroForm);
   if (!(acroForm instanceof PDFDict)) return;
@@ -250,26 +329,39 @@ function pruneOutlines(doc: PDFDocument, isRemovedPageRef: (v: PDFObject | undef
   if (!(root instanceof PDFDict)) return;
   let budget = 200_000; // guards against cyclic lists in damaged files
 
-  // Prunes the children of `parent`; returns how many remain.
-  const pruneChildren = (parent: PDFDict, parentRef: PDFObject | undefined, depth: number): number => {
+  /**
+   * Prunes the children of `parent`. Returns how many remain, how many entries
+   * show below `parent` when it is open (its /Count by the spec), and whether
+   * anything below it changed.
+   */
+  const pruneChildren = (parent: PDFDict, parentRef: PDFObject | undefined, depth: number): { kept: number; visible: number; changed: boolean } => {
     const keptItems: PDFRef[] = [];
     const seen = new Set<string>();
+    let visible = 0;
+    let changed = false;
     let ref = parent.get(N.First);
     while (ref instanceof PDFRef && budget-- > 0 && !seen.has(refKey(ref))) {
       seen.add(refKey(ref));
       const item = ctx.lookup(ref);
       if (!(item instanceof PDFDict)) break;
       const next = item.get(N.Next);
-      const children = depth < 48 ? pruneChildren(item, ref, depth + 1) : 1;
+      const sub = depth < 48 ? pruneChildren(item, ref, depth + 1) : { kept: 1, visible: 0, changed: false };
+      changed ||= sub.changed;
+      const count = item.lookup(N.Count);
+      const open = count instanceof PDFNumber && count.asNumber() > 0;
+      const children = sub.kept;
       if (isRemovedPageRef(destinationPage(item))) {
+        changed = true;
         if (children > 0) {
           // A section heading with remaining entries: keep it, without the dead link.
           item.delete(N.Dest);
           item.delete(N.A);
           keptItems.push(ref);
+          visible += 1 + (open ? sub.visible : 0);
         }
       } else {
         keptItems.push(ref);
+        visible += 1 + (open ? sub.visible : 0);
       }
       ref = next;
     }
@@ -288,16 +380,18 @@ function pruneOutlines(doc: PDFDocument, isRemovedPageRef: (v: PDFObject | undef
       parent.delete(N.First);
       parent.delete(N.Last);
     }
-    const count = parent.lookup(N.Count);
-    if (count instanceof PDFNumber || keptItems.length === 0) {
-      const sign = count instanceof PDFNumber && count.asNumber() < 0 ? -1 : 1;
-      if (keptItems.length) parent.set(N.Count, PDFNumber.of(sign * keptItems.length));
+    // Counts are left as they were unless something below changed (many files
+    // carry counts that differ from the spec; viewers rely on them as they are).
+    if (changed) {
+      const count = parent.lookup(N.Count);
+      const closed = count instanceof PDFNumber && count.asNumber() < 0 && parent !== root;
+      if (keptItems.length) parent.set(N.Count, PDFNumber.of(closed ? -visible : visible));
       else parent.delete(N.Count);
     }
-    return keptItems.length;
+    return { kept: keptItems.length, visible, changed };
   };
 
-  const remaining = pruneChildren(root, rootRef, 0);
+  const remaining = pruneChildren(root, rootRef, 0).kept;
   if (remaining === 0) {
     doc.catalog.delete(N.Outlines);
     if (doc.catalog.lookup(N.PageMode) === N.UseOutlines) doc.catalog.delete(N.PageMode);

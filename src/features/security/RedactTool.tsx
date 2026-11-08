@@ -336,7 +336,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
                 <button key={i} type="button" onClick={() => goToPage(i)} aria-current={page === i ? 'page' : undefined} className={cn('relative w-full rounded-lg border p-1.5', page === i ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface-2')}>
                   <PageThumbnail docId={entry.id} pageIndex={i} width={88} />
                   <span className="mt-1 block text-center text-[11px] font-medium text-fg-muted">{i + 1}</span>
-                  {redactedPages.includes(i) ? <span className="absolute right-1 top-1 rounded bg-danger px-1 text-[10px] font-semibold text-white">{boxes.filter((b) => b.page === i).length}</span> : null}
+                  {redactedPages.includes(i) ? <span className="absolute right-1 top-1 rounded bg-danger px-1 text-[10px] font-semibold text-danger-fg">{boxes.filter((b) => b.page === i).length}</span> : null}
                 </button>
               ))}
             </nav>

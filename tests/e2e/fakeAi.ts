@@ -82,9 +82,13 @@ export async function aiCalls(page: Page): Promise<string[]> {
  * cite its page, which shows that retrieval put the right passage in the
  * prompt. A question containing "SLOW" streams slowly (to test Stop).
  */
-export async function installFakeLanguageModel(page: Page, availability: 'available' | 'downloadable' | 'unavailable' | 'none' = 'available'): Promise<void> {
+export async function installFakeLanguageModel(
+  page: Page,
+  availability: 'available' | 'downloadable' | 'unavailable' | 'none' = 'available',
+  { unavailableLanguages = [] }: { unavailableLanguages?: string[] } = {},
+): Promise<void> {
   await page.addInitScript(
-    ({ availability }) => {
+    ({ availability, unavailableLanguages }) => {
       if (availability === 'none') {
         Object.defineProperty(window, 'LanguageModel', { configurable: true, value: undefined });
         return;
@@ -138,7 +142,9 @@ export async function installFakeLanguageModel(page: Page, availability: 'availa
       Object.defineProperty(window, 'LanguageModel', {
         configurable: true,
         value: {
-          availability: async () => state,
+          // Like Chrome builds without some output languages.
+          availability: async (opts?: { expectedOutputs?: { languages?: string[] }[] }) =>
+            opts?.expectedOutputs?.some((o) => o.languages?.some((l) => unavailableLanguages.includes(l))) ? 'unavailable' : state,
           create: async (opts: { monitor?: (m: EventTarget) => void } = {}) => {
             if (state === 'unavailable') throw new DOMException('Unavailable', 'NotSupportedError');
             if (state === 'downloadable') {
@@ -155,7 +161,7 @@ export async function installFakeLanguageModel(page: Page, availability: 'availa
         },
       });
     },
-    { availability },
+    { availability, unavailableLanguages },
   );
 }
 

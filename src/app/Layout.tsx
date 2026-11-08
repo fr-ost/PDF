@@ -64,7 +64,7 @@ function NavLink({ item, route, onNavigate, pill }: { item: NavItem; route: Rout
         <Icon size={15} strokeWidth={active ? 2.3 : 2} aria-hidden />
       </span>
       <span className="relative">{item.label}</span>
-      {item.category === 'ai' ? <span className="relative ml-auto rounded-full bg-[linear-gradient(135deg,var(--c1),var(--c2))] px-1.5 py-px text-[10px] font-semibold text-white">New</span> : null}
+      {item.category === 'ai' ? <span className="relative ml-auto rounded-full bg-[image:var(--btn-gradient)] px-1.5 py-px text-[10px] font-semibold text-white">New</span> : null}
     </a>
   );
 }
@@ -74,12 +74,12 @@ function SearchButton({ className }: { className?: string }) {
     <button
       type="button"
       onClick={openCommandPalette}
-      aria-label="Open command palette"
+      aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
       className={cn('group flex h-9 w-full items-center gap-2.5 rounded-xl border border-line bg-surface/70 px-3 text-left text-[13px] text-fg-subtle shadow-[0_1px_2px_rgb(0_0_0/0.03)] transition-colors hover:border-line-strong hover:text-fg-muted', className)}
     >
       <Search size={15} aria-hidden />
-      <span className="flex-1">Search…</span>
-      <kbd className="rounded-md border border-line bg-surface-2 px-1.5 py-px font-mono text-[10.5px] text-fg-subtle">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
+      <span className="flex-1">Search tools…</span>
+      <kbd aria-hidden className="rounded-md border border-line bg-surface-2 px-1.5 py-px font-mono text-[10.5px] text-fg-subtle">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
     </button>
   );
 }
@@ -89,6 +89,15 @@ export function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDialogElement>(null);
   useEffect(() => setOpen(false), [route]);
+  // The drawer is hidden on wide screens; a modal dialog that is merely hidden would keep the page inert.
+  useEffect(() => {
+    const wide = matchMedia('(min-width: 1024px)');
+    const onChange = () => {
+      if (wide.matches) setOpen(false);
+    };
+    wide.addEventListener('change', onChange);
+    return () => wide.removeEventListener('change', onChange);
+  }, []);
   useEffect(() => {
     const drawer = drawerRef.current;
     if (!drawer) return;
@@ -101,8 +110,9 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const sidebar = (inDrawer: boolean) => (
     <div className="flex h-full flex-col">
-      <a href="#/" className="flex h-[68px] shrink-0 items-center px-5" aria-label="Unique PDF home">
+      <a href="#/" className="flex h-[68px] shrink-0 items-center px-5">
         <BrandMark />
+        <span className="sr-only">, home</span>
       </a>
       <div className="px-3 pb-2">
         <SearchButton />
@@ -145,7 +155,7 @@ export function Layout({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 z-20 hidden h-screen w-[264px] shrink-0 border-r border-line lg:block" style={{ background: 'var(--sidebar-bg)' }}>
+      <aside aria-label="Sidebar" className="sticky top-0 z-20 hidden h-screen w-[264px] shrink-0 border-r border-line lg:block" style={{ background: 'var(--sidebar-bg)' }}>
         {sidebar(false)}
       </aside>
       {/* Native modal dialog: focus moves in and is contained, Escape closes, focus returns to the menu button. */}
@@ -175,8 +185,9 @@ export function Layout({ children }: { children: ReactNode }) {
           <button type="button" className="rounded-lg p-2 text-fg-muted hover:bg-surface-2" onClick={() => setOpen(true)} aria-label="Open navigation">
             <Menu size={20} />
           </button>
-          <a href="#/" aria-label="Unique PDF home" className="mr-auto">
+          <a href="#/" className="mr-auto">
             <BrandMark />
+            <span className="sr-only">, home</span>
           </a>
           <button type="button" className="rounded-lg p-2 text-fg-muted hover:bg-surface-2" onClick={openCommandPalette} aria-label="Open search">
             <Search size={19} />

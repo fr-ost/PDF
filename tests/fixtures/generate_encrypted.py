@@ -3,6 +3,7 @@ implementation) so the decryption code is tested against files it did not
 create itself. Run: python3 tests/fixtures/generate_encrypted.py"""
 from pathlib import Path
 from pypdf import PdfWriter, PdfReader
+from pypdf.generic import NameObject, TextStringObject
 from io import BytesIO
 
 here = Path(__file__).parent
@@ -21,4 +22,14 @@ for alg in ["RC4-40", "RC4-128", "AES-128", "AES-256"]:
 w = PdfWriter(clone_from=PdfReader(BytesIO(buf.getvalue())))
 w.encrypt(user_password="", owner_password="owner456", algorithm="AES-128", permissions_flag=0b0100)
 w.write(here / "pypdf-owner-only.pdf")
+
+# Owner-password-only with catalog strings (page labels, document language):
+# tools that write the restrictions back must keep those strings readable.
+w = PdfWriter()
+for _ in range(3):
+    w.add_blank_page(300, 300)
+w.set_page_label(0, 2, style="/D", prefix="Cover-")
+w._root_object[NameObject("/Lang")] = TextStringObject("en-US")
+w.encrypt(user_password="", owner_password="owner456", algorithm="AES-128", permissions_flag=0b0100)
+w.write(here / "pypdf-owner-only-labels.pdf")
 print("written")

@@ -73,11 +73,28 @@ export function terms(text: string): string[] {
   return out;
 }
 
+/**
+ * Size units: words in spaced scripts; Chinese and Japanese characters count one
+ * each (they carry about a word's worth of meaning and tokens), so passages of
+ * unspaced text are cut to a similar size as English ones.
+ */
+const UNIT = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]|[^\s\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+/g;
+const countUnits = (text: string): number => text.match(UNIT)?.length ?? 0;
+const UNSPACED_END = /[\u3000-\u30ff\u3400-\u9fff\uf900-\ufaff\uff00-\uffef]$/;
+const UNSPACED_START = /^[\u3000-\u30ff\u3400-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+
+/** Joins sentences with a space, except between Chinese/Japanese sentences. */
+function joinSentences(parts: string[]): string {
+  let out = '';
+  for (const part of parts) out += out && !(UNSPACED_END.test(out) && UNSPACED_START.test(part)) ? ` ${part}` : part;
+  return out;
+}
+
 /** Splits pages into passages of roughly `targetWords` words (sentence-aligned, never crossing pages). */
 export function buildPassages(pages: string[], { targetWords = 140, maxWords = 220 }: { targetWords?: number; maxWords?: number } = {}): Passage[] {
   const passages: Passage[] = [];
   const push = (page: number, parts: string[]) => {
-    const text = parts.join(' ').replace(/\s+/g, ' ').trim();
+    const text = joinSentences(parts).replace(/\s+/g, ' ').trim();
     if (text) passages.push({ id: passages.length, page, text, tokens: estimateTokens(text) });
   };
   pages.forEach((pageText, index) => {
@@ -85,14 +102,17 @@ export function buildPassages(pages: string[], { targetWords = 140, maxWords = 2
     let current: string[] = [];
     let words = 0;
     for (const sentence of splitSentences(pageText)) {
-      const count = sentence.split(/\s+/).filter(Boolean).length;
+      const count = countUnits(sentence);
       if (count > maxWords) {
-        // A run-on "sentence" (tables, lists without punctuation): cut it by words.
+        // A run-on "sentence" (tables, lists without punctuation): cut it by size units.
         if (current.length) push(page, current);
         current = [];
         words = 0;
-        const all = sentence.split(/\s+/);
-        for (let i = 0; i < all.length; i += targetWords) push(page, [all.slice(i, i + targetWords).join(' ')]);
+        const units = [...sentence.matchAll(UNIT)];
+        for (let i = 0; i < units.length; i += targetWords) {
+          const last = units[Math.min(i + targetWords, units.length) - 1]!;
+          push(page, [sentence.slice(units[i]!.index, last.index + last[0].length)]);
+        }
         continue;
       }
       if (words + count > maxWords || (words >= targetWords && current.length)) {

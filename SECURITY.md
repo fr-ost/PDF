@@ -45,6 +45,12 @@ style-src 'self' 'unsafe-inline'; media-src 'none'
 - **Protect** uses AES-256 (ISO 32000-2, security handler revision 6) implemented in
   `@cantoo/pdf-lib` with Web Crypto randomness. Without a user-supplied permissions password a
   random 48-hex-character owner password is generated so permission restrictions are binding.
+  The library's writer encrypts streams but not strings, so before an encrypted save every string
+  it would write outside an object stream (catalog, pages, stream dictionaries, objects with a
+  non-zero generation number) is encrypted with that object's key (`engines/encryptStrings.ts`);
+  a unit test checks that such text is not readable without the password.
+- Files with **author restrictions** (owner password only) keep them when edited, and documents
+  built from their pages (Extract, Split, Merge, Organize) inherit the strictest combination.
 - **Unlock** never guesses or bypasses passwords. For files that open without a password but carry
   author restrictions, the owner password is required to remove them.
 - PDF permission flags are advisory by design of the PDF format; the UI says so.

@@ -39,10 +39,9 @@ function CitationChip({ page, ctx }: { page: number; ctx: CiteContext }) {
       type="button"
       onClick={() => ctx.onCite(page)}
       title={snippet ? `Page ${page}: ${snippet.slice(0, 220)}${snippet.length > 220 ? '…' : ''}` : `Show page ${page}`}
-      aria-label={`Show page ${page}`}
       data-testid="citation"
       data-page={page}
-      className="mx-0.5 inline-flex h-[19px] translate-y-[-1px] items-center rounded-md bg-primary-soft px-1.5 align-middle text-[11px] font-semibold tabular-nums text-primary ring-1 ring-primary/15 transition-colors duration-150 hover:bg-primary hover:text-white"
+      className="mx-0.5 inline-flex h-[19px] translate-y-[-1px] items-center rounded-md bg-primary-soft px-1.5 align-middle text-[11px] font-semibold tabular-nums text-primary ring-1 ring-primary/15 transition-colors duration-150 hover:bg-primary hover:text-primary-fg"
     >
       p.&nbsp;{page}
     </button>

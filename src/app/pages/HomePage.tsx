@@ -125,7 +125,7 @@ export function HomePage() {
       <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
         <div>
           <a href={routeHref({ name: 'tool', id: 'ai-chat' })} className="enter group inline-flex items-center gap-2 rounded-full border border-line bg-surface/80 py-1 pl-1 pr-3 text-xs font-medium text-fg-muted shadow-card transition-colors hover:text-fg" style={{ ['--i' as string]: 0 }}>
-            <span className="rounded-full bg-[image:var(--brand-gradient)] px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
+            <span className="rounded-full bg-[image:var(--btn-gradient)] px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
             Unique AI — chat with any PDF
             <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
           </a>

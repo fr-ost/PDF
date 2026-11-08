@@ -20,7 +20,7 @@
   --color-line-strong: #d6d6de;
   --color-fg: #0a0a0f;
   --color-fg-muted: #555561;
-  --color-fg-subtle: #8c8c98;
+  --color-fg-subtle: #666672;
 
   --color-primary: #3d5afe;
   --color-primary-hover: #2f49e6;
@@ -28,14 +28,15 @@
   --color-primary-soft: #eef1ff;
   --color-primary-line: #cfd7ff;
 
-  --color-success: #16a34a;
+  --color-success: #15803d;
   --color-success-soft: #ecfbf1;
   --color-success-line: #bbefcd;
-  --color-danger: #e5383b;
-  --color-danger-hover: #c92a2d;
+  --color-danger: #cf2e31;
+  --color-danger-hover: #b3262a;
+  --color-danger-fg: #ffffff;
   --color-danger-soft: #fff1f1;
   --color-danger-line: #ffd0d1;
-  --color-warning: #c2610c;
+  --color-warning: #b45309;
   --color-warning-soft: #fff8eb;
   --color-warning-line: #fde3b0;
 
@@ -62,6 +63,10 @@
     --brand-2: #7c4dff;
     --brand-3: #00b8d9;
     --brand-gradient: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 60%, #b14dff 100%);
+    /* Fills that carry white text. Slightly deeper than the brand gradient so labels
+     * keep at least 4.5:1 contrast (WCAG AA) in both themes. */
+    --btn-gradient: linear-gradient(135deg, #4660ff 0%, #7448ff 60%, #9a45f5 100%);
+    --danger-gradient: linear-gradient(135deg, #dc3236, #c01d31);
     --glow: rgb(61 90 254 / 0.45);
     --grid-line: rgb(10 10 25 / 0.045);
     --blob-a: rgb(61 90 254 / 0.16);
@@ -80,8 +85,9 @@
     --color-line-strong: #2d2d3a;
     --color-fg: #f4f4f8;
     --color-fg-muted: #a3a3b2;
-    --color-fg-subtle: #6c6c7c;
+    --color-fg-subtle: #8e8ea0;
     --color-primary: #7088ff;
+    --color-primary-fg: #0b0b14;
     --color-primary-hover: #8c9fff;
     --color-primary-soft: rgb(112 136 255 / 0.12);
     --color-primary-line: rgb(112 136 255 / 0.3);
@@ -90,6 +96,7 @@
     --color-success-line: rgb(74 222 128 / 0.25);
     --color-danger: #ff6b6e;
     --color-danger-hover: #ff8a8c;
+    --color-danger-fg: #0b0b14;
     --color-danger-soft: rgb(255 107 110 / 0.1);
     --color-danger-line: rgb(255 107 110 / 0.28);
     --color-warning: #fbbf24;
@@ -500,7 +507,7 @@ html.theme-reveal::view-transition-group(*) {
     position: relative;
     overflow: hidden;
     color: #fff;
-    background: var(--brand-gradient);
+    background: var(--btn-gradient);
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.28) inset, 0 -1px 0 rgb(0 0 0 / 0.12) inset, 0 6px 18px -8px var(--glow);
     transition: box-shadow 250ms ease, filter 200ms ease, transform 160ms var(--ease-spring);
   }

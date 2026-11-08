@@ -5,6 +5,8 @@
  * metadata, page ranges, cross-item search, vertical text).
  */
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFNumber, PDFRawStream, PDFRef, PDFString, StandardFonts, degrees } from '@cantoo/pdf-lib';
 import { inflateSync, zlibSync } from 'fflate';
 import { createCanvas } from '@napi-rs/canvas';
@@ -332,4 +334,114 @@ it('uses objects, not degrees, for rotation checks', () => {
   // Guard against accidental API drift in the helpers used above.
   expect(degrees(90).angle).toBe(90);
   expect(PDFRef.of(1, 0).objectNumber).toBe(1);
+});
+
+describe('encrypted output, replies, restrictions, structure tree and bookmarks', () => {
+  const fixture = (name: string) => new Uint8Array(readFileSync(resolve(import.meta.dirname, '../fixtures', name)));
+  const ALL = { printing: 'high' as const, copying: true, modifying: true, annotating: true, fillingForms: true, contentAccessibility: true, documentAssembly: true };
+
+  it('keeps catalog strings readable when an author’s restrictions are written back', async () => {
+    // Made by pypdf: owner password only, with page labels and a document language.
+    const input = fixture('pypdf-owner-only-labels.pdf');
+    const out = await assembleInPlace([{ bytes: input.slice(), name: 'r.pdf' }], [{ source: 0, page: 0, rotate: 90 }, { source: 0, page: 1 }, { source: 0, page: 2 }]);
+    const pdf = await openWithPdfjs(out);
+    expect(await pdf.getPageLabels()).toEqual(['Cover-1', 'Cover-2', 'Cover-3']);
+    expect(((await pdf.getMetadata()).info as { Language?: string }).Language).toBe('en-US');
+    expect(await pdf.getPermissions()).not.toBeNull();
+  });
+
+  it('protect encrypts strings of objects the writer keeps out of object streams (generation ≠ 0)', async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([200, 200]);
+    const ref = PDFRef.of(doc.context.largestObjectNumber + 5, 1);
+    doc.context.assign(ref, doc.context.obj({ Type: 'Annot', Subtype: 'Text', Rect: [10, 10, 30, 30], Contents: PDFString.of('CONFIDENTIAL-COMMENT') }));
+    page.node.set(PDFName.of('Annots'), doc.context.obj([ref]));
+    const out = await protectPdf({ bytes: await doc.save({ useObjectStreams: false }), name: 'a.pdf' }, { userPassword: 'pw-1234', permissions: ALL });
+    expect(Buffer.from(out).toString('latin1')).not.toContain('CONFIDENTIAL-COMMENT');
+    const annots = await (await (await openWithPdfjs(out, 'pw-1234')).getPage(1)).getAnnotations();
+    expect(annots[0]?.contentsObj?.str).toBe('CONFIDENTIAL-COMMENT');
+  });
+
+  it('replies stay attached to their comment after extract and split', async () => {
+    const doc = await PDFDocument.create();
+    const p1 = doc.addPage([300, 300]);
+    doc.addPage([300, 300]);
+    const ctx = doc.context;
+    const note = ctx.register(ctx.obj({ Type: 'Annot', Subtype: 'Text', Rect: [10, 10, 30, 30], Contents: PDFString.of('Please fix this'), P: p1.ref }));
+    const reply = ctx.register(ctx.obj({ Type: 'Annot', Subtype: 'Text', Rect: [10, 10, 30, 30], Contents: PDFString.of('Done'), P: p1.ref, IRT: note, RT: 'R' }));
+    p1.node.set(PDFName.of('Annots'), ctx.obj([note, reply]));
+    const bytes = await doc.save();
+    const outputs = [
+      await assembleNew([{ bytes: bytes.slice(), name: 'a.pdf' }], [{ source: 0, page: 0 }]),
+      (await splitDocument({ bytes: bytes.slice(), name: 'a.pdf' }, [[0], [1]], ['a.pdf', 'b.pdf']))[0]!.bytes,
+    ];
+    for (const out of outputs) {
+      const res = await PDFDocument.load(out);
+      const annots = res.getPage(0).node.lookup(PDFName.of('Annots')) as PDFArray;
+      expect((annots.lookup(1) as PDFDict).get(PDFName.of('IRT'))).toBe(annots.get(0));
+    }
+  });
+
+  it('new documents keep the restrictions of the files their pages come from', async () => {
+    const restricted = fixture('pypdf-owner-only.pdf');
+    const plain = await PDFDocument.create();
+    plain.addPage([200, 200]);
+    const plainBytes = await plain.save();
+    const extracted = await assembleNew([{ bytes: restricted.slice(), name: 'r.pdf' }], [{ source: 0, page: 0 }]);
+    expect(await (await openWithPdfjs(extracted)).getPermissions()).not.toBeNull();
+    const merged = await assembleNew([{ bytes: plainBytes, name: 'p.pdf' }, { bytes: restricted.slice(), name: 'r.pdf' }], [{ source: 0, page: 0 }, { source: 1, page: 0 }]);
+    expect(await (await openWithPdfjs(merged)).getPermissions()).not.toBeNull();
+    const organized = await assembleInPlace([{ bytes: plainBytes, name: 'p.pdf' }, { bytes: restricted.slice(), name: 'r.pdf' }], [{ source: 0, page: 0 }, { source: 1, page: 0 }]);
+    expect(await (await openWithPdfjs(organized)).getPermissions()).not.toBeNull();
+    const parts = await splitDocument({ bytes: restricted.slice(), name: 'r.pdf' }, [[0]], ['a.pdf']);
+    expect(await (await openWithPdfjs(parts[0]!.bytes)).getPermissions()).not.toBeNull();
+  });
+
+  it('structure elements: content on kept pages survives, content of deleted pages goes', async () => {
+    const doc = await PDFDocument.create();
+    const p1 = doc.addPage([300, 300]);
+    const p2 = doc.addPage([300, 300]);
+    const p3 = doc.addPage([300, 300]);
+    const ctx = doc.context;
+    // A table that starts on page 1 and continues on page 2 (the table's own /Pg is page 1).
+    const row1 = ctx.register(ctx.obj({ Type: 'StructElem', S: 'TR', Pg: p1.ref, K: 0, Alt: PDFString.of('ROW-ON-PAGE-1') }));
+    const row2 = ctx.register(ctx.obj({ Type: 'StructElem', S: 'TR', Pg: p2.ref, K: 0, Alt: PDFString.of('ROW-ON-PAGE-2') }));
+    const table = ctx.register(ctx.obj({ Type: 'StructElem', S: 'Table', Pg: p1.ref, K: [row1, row2] }));
+    // A figure whose page is only given on its marked-content reference.
+    const figure = ctx.register(ctx.obj({ Type: 'StructElem', S: 'Figure', Alt: PDFString.of('FIGURE-ON-PAGE-3'), K: { Type: 'MCR', Pg: p3.ref, MCID: 0 } }));
+    const root = ctx.register(ctx.obj({ Type: 'StructElem', S: 'Document', K: [table, figure] }));
+    doc.catalog.set(PDFName.of('StructTreeRoot'), ctx.register(ctx.obj({ Type: 'StructTreeRoot', K: root })));
+    const out = await assembleInPlace([{ bytes: await doc.save(), name: 'a.pdf' }], [{ source: 0, page: 1 }]);
+    expect(await fileContains(out, 'ROW-ON-PAGE-2')).toBe(true);
+    expect(await fileContains(out, 'ROW-ON-PAGE-1')).toBe(false);
+    expect(await fileContains(out, 'FIGURE-ON-PAGE-3')).toBe(false);
+    const res = await PDFDocument.load(out);
+    const documentElement = (res.catalog.lookup(PDFName.of('StructTreeRoot')) as PDFDict).lookup(PDFName.of('K')) as PDFDict;
+    const keptTable = documentElement.lookup(PDFName.of('K')) as PDFDict;
+    expect(keptTable.get(PDFName.of('S'))).toBe(PDFName.of('Table'));
+    expect(keptTable.has(PDFName.of('Pg'))).toBe(false);
+    expect((keptTable.lookup(PDFName.of('K')) as PDFDict).get(PDFName.of('Pg'))).toBe(res.getPage(0).ref);
+  });
+
+  it('bookmark counts stay as they are unless entries were removed, then follow the spec', async () => {
+    const doc = await PDFDocument.create();
+    const [p1, p2, p3] = [doc.addPage([200, 200]), doc.addPage([200, 200]), doc.addPage([200, 200])];
+    const ctx = doc.context;
+    const [root, a, a1, a1x, a2, b] = [ctx.nextRef(), ctx.nextRef(), ctx.nextRef(), ctx.nextRef(), ctx.nextRef(), ctx.nextRef()];
+    ctx.assign(a1x, ctx.obj({ Title: PDFString.of('A1x'), Parent: a1, Dest: [p2.ref, 'Fit'] }));
+    ctx.assign(a1, ctx.obj({ Title: PDFString.of('A1'), Parent: a, Next: a2, First: a1x, Last: a1x, Count: 1, Dest: [p2.ref, 'Fit'] }));
+    ctx.assign(a2, ctx.obj({ Title: PDFString.of('A2'), Parent: a, Prev: a1, Dest: [p3.ref, 'Fit'] }));
+    // Closed chapter: three entries show when it is opened (A1, A1x, A2).
+    ctx.assign(a, ctx.obj({ Title: PDFString.of('A'), Parent: root, Next: b, First: a1, Last: a2, Count: -3, Dest: [p1.ref, 'Fit'] }));
+    ctx.assign(b, ctx.obj({ Title: PDFString.of('B'), Parent: root, Prev: a, Dest: [p3.ref, 'Fit'] }));
+    ctx.assign(root, ctx.obj({ Type: 'Outlines', First: a, Last: b, Count: 2 }));
+    doc.catalog.set(PDFName.of('Outlines'), root);
+    const bytes = await doc.save();
+    const countOfA = async (out: Uint8Array) => ((await openWithPdfjs(out)).getOutline() as Promise<{ title: string; count?: number }[]>).then((o) => o.find((i) => i.title === 'A')?.count);
+    const rotated = await assembleInPlace([{ bytes: bytes.slice(), name: 'a.pdf' }], [{ source: 0, page: 0 }, { source: 0, page: 1 }, { source: 0, page: 2, rotate: 90 }]);
+    expect(await countOfA(rotated)).toBe(-3);
+    // Deleting page 3 removes A2 (and B): A1 with its open child remains, so two entries show when A opens.
+    const trimmed = await assembleInPlace([{ bytes: bytes.slice(), name: 'a.pdf' }], [{ source: 0, page: 0 }, { source: 0, page: 1 }]);
+    expect(await countOfA(trimmed)).toBe(-2);
+  });
 });

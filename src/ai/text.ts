@@ -17,13 +17,14 @@ export function pageTextFromItems(items: TextItemish[]): string {
   return out;
 }
 
+/** Chinese and Japanese characters (Korean puts spaces between words, so Hangul is not included). */
+const UNSPACED = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/;
+
 /**
  * Normalises extracted PDF text for language models: re-joins words
  * hyphenated across lines, turns soft line breaks into spaces and keeps
  * paragraph breaks after sentence-ending punctuation.
  */
-const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/;
-
 export function cleanExtractedText(text: string): string {
   return text
     .replace(/\r\n?/g, '\n')
@@ -32,9 +33,9 @@ export function cleanExtractedText(text: string): string {
     .replace(/[ \t\f\v]*\n[\s]*/g, (m: string, offset: number, whole: string) => {
       const prev = whole.slice(Math.max(0, offset - 1), offset);
       if (/[.!?:;。！？]/.test(prev)) return '\n';
-      // Chinese, Japanese and Korean lines wrap without spaces between words.
+      // Chinese and Japanese lines wrap without spaces between words.
       const next = whole.charAt(offset + m.length);
-      return CJK.test(prev) && CJK.test(next) ? '' : ' ';
+      return UNSPACED.test(prev) && UNSPACED.test(next) ? '' : ' ';
     })
     .replace(/[ \t\f\v\u00a0]{2,}/g, ' ')
     .replace(/\n{3,}/g, '\n\n')

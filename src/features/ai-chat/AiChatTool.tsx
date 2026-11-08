@@ -55,6 +55,7 @@ function sourcesFor(result: AskResult, pageCount: number): Source[] {
 }
 
 const isDesktop = () => matchMedia('(min-width: 1024px)').matches;
+const isAiMode = (status: AiState) => status === 'available' || status === 'downloadable' || status === 'downloading';
 
 export default function AiChatTool({ tool, initialFiles }: ToolProps) {
   const files = useToolFiles(tool, initialFiles);
@@ -70,7 +71,10 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
   const api = useMemo(getLanguageModelApi, []);
   const [language, setLanguage] = useState('en');
   const [status, setStatus] = useState<AiState>('checking');
-  const aiMode = status === 'available' || status === 'downloadable' || status === 'downloading';
+  const aiMode = isAiMode(status);
+  /** The reply-language picker stays put while a newly chosen language is checked (focus stays on it). */
+  const [languagePicker, setLanguagePicker] = useState(false);
+  const lastGoodLanguage = useRef('en');
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -89,11 +93,25 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
   useEffect(() => {
     let cancelled = false;
     setStatus('checking');
-    void checkChatStatus(language, api).then((s) => !cancelled && setStatus(s));
+    void checkChatStatus(language, api).then((s) => {
+      if (cancelled) return;
+      if (!isAiMode(s) && language !== lastGoodLanguage.current) {
+        // This device can't reply in that language: keep the last one that works.
+        const label = CHAT_LANGUAGES.find((l) => l.value === language)?.label ?? language;
+        toast.show(`Unique AI can’t reply in ${label} on this device yet.`, 'error');
+        setLanguage(lastGoodLanguage.current);
+        return;
+      }
+      if (isAiMode(s)) {
+        lastGoodLanguage.current = language;
+        setLanguagePicker(true);
+      }
+      setStatus(s);
+    });
     return () => {
       cancelled = true;
     };
-  }, [language, api]);
+  }, [language, api, toast]);
 
   const getChat = useCallback(() => {
     if (!api) return null;
@@ -130,6 +148,8 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
     setMessages([]);
     setFocus(null);
     setPreview(null);
+    stickRef.current = true;
+    setAtBottom(true);
   }, [entry?.id]);
 
   const update = useCallback((id: string, patch: Partial<Message>) => setMessages((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m))), []);
@@ -212,6 +232,8 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
     abortRef.current?.abort();
     setMessages([]);
     setFocus(null);
+    stickRef.current = true;
+    setAtBottom(true);
     composerRef.current?.focus();
   };
 
@@ -268,6 +290,7 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   };
 
+  const previewWidth = Math.max(160, Math.min(360, window.innerWidth - 96));
   const previewPassage = useMemo(() => (preview && index ? index.passages.find((p) => p.page === preview) : undefined), [preview, index]);
   const busy = !!busyId;
   const ready = !!index && hasText && status !== 'checking';
@@ -311,7 +334,7 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
                   {statusLine}
                 </p>
               </div>
-              {aiMode ? (
+              {languagePicker && (aiMode || status === 'checking') ? (
                 <select
                   aria-label="Reply language"
                   value={language}
@@ -392,8 +415,9 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
       <Dialog open={preview !== null} onClose={() => setPreview(null)} title={`Page ${preview ?? ''}`} size="md">
         {preview !== null && entry ? (
           <div className="space-y-3 pb-3" data-testid="page-preview">
-            <div className="mx-auto w-fit overflow-hidden rounded-lg shadow-[0_0_0_1px_var(--color-line),0_10px_24px_-12px_rgb(0_0_0/0.35)]">
-              <PageThumbnail docId={entry.id} pageIndex={preview - 1} width={Math.min(360, window.innerWidth - 96)} />
+            {/* The thumbnail fills its container, so the container needs a definite width. */}
+            <div className="mx-auto overflow-hidden rounded-lg shadow-[0_0_0_1px_var(--color-line),0_10px_24px_-12px_rgb(0_0_0/0.35)]" style={{ width: previewWidth }}>
+              <PageThumbnail docId={entry.id} pageIndex={preview - 1} width={previewWidth} />
             </div>
             {previewPassage ? <p className="line-clamp-6 text-[13.5px] leading-relaxed text-fg-muted">{previewPassage.text}</p> : null}
           </div>

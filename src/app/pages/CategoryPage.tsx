@@ -24,7 +24,7 @@ export function CategoryPage({ category }: { category: Category }) {
       </div>
       <div className="mt-9 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {toolsIn(category).map((t, i) => (
-          <ToolCard key={t.id} tool={t} index={i + 1} />
+          <ToolCard key={t.id} tool={t} index={i + 1} headingLevel={2} />
         ))}
       </div>
     </div>

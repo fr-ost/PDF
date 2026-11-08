@@ -10,7 +10,10 @@ export interface Suggestion {
   text: string;
 }
 
-const MONTHS = /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/gi;
+// Month names only count next to a day or a year: "may" and "march" are also common words.
+const MONTH = String.raw`(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?`;
+const DAY = String.raw`\d{1,2}(?:st|nd|rd|th)?`;
+const MONTHS = new RegExp(String.raw`\b${MONTH}\s+${DAY}\b|\b${DAY}\s+(?:of\s+)?${MONTH}(?![a-z])|\b${MONTH}\s+(?:19|20)\d{2}\b`, 'gi');
 
 function count(text: string, pattern: RegExp): number {
   return text.match(pattern)?.length ?? 0;

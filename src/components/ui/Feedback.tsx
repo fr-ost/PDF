@@ -75,7 +75,8 @@ export function Badge({ children, tone = 'neutral', className }: { children: Rea
   );
 }
 
-export function EmptyState({ icon: Icon, title, children, action }: { icon: LucideIcon; title: string; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({ icon: Icon, title, children, action, headingLevel = 2 }: { icon: LucideIcon; title: string; children?: ReactNode; action?: ReactNode; headingLevel?: 1 | 2 | 3 }) {
+  const Heading = headingLevel === 1 ? 'h1' : headingLevel === 3 ? 'h3' : 'h2';
   return (
     <div className="flex flex-col items-center px-6 py-16 text-center">
       <div className="relative mb-5">
@@ -84,7 +85,7 @@ export function EmptyState({ icon: Icon, title, children, action }: { icon: Luci
           <Icon size={24} aria-hidden />
         </div>
       </div>
-      <h3 className="text-[15px] font-semibold tracking-tight">{title}</h3>
+      <Heading className="text-[15px] font-semibold tracking-tight">{title}</Heading>
       {children ? <p className="mt-1.5 max-w-sm text-sm text-fg-muted">{children}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>

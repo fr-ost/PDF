@@ -89,7 +89,7 @@ test.describe('security tools', () => {
     await addFiles(app, [pdfFile('statement.pdf', await doc.save())]);
     await expect(app.getByTestId('redact-overlay')).toBeVisible();
     await app.getByLabel('Find text to redact').fill('DE89 3704');
-    await app.getByRole('button', { name: 'Search' }).click();
+    await app.getByRole('button', { name: 'Search', exact: true }).click();
     await expect(app.getByTestId('search-results')).toContainText('1 match on 1 page');
     await app.getByRole('button', { name: 'Mark all' }).click();
     await expect(app.getByTestId('redaction-box')).toHaveCount(1);

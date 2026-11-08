@@ -107,7 +107,7 @@ test('screens', async ({ app }) => {
   await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
   await expect(app.getByTestId('redact-overlay')).toBeVisible();
   await app.getByLabel('Find text to redact').fill('Revenue');
-  await app.getByRole('button', { name: 'Search' }).click();
+  await app.getByRole('button', { name: 'Search', exact: true }).click();
   await app.getByRole('button', { name: 'Mark all' }).click();
   await app.waitForTimeout(400);
   await app.screenshot({ path: out('05-redact') });

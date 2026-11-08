@@ -130,11 +130,28 @@ reachability walk from the trailer (`Root`, `Info`, and `Encrypt` only when encr
   (outline/link destinations, annotation `/P`), so removed pages cannot stay alive indirectly —
   unless the page was replaced (Redact), in which case references move to the replacement;
 - severs references to annotations of removed pages (reachable from the structure tree, `/IRT`
-  reply chains or form `/Kids`) and to structure elements of removed or replaced pages;
+  reply chains or form `/Kids`);
+- prunes the structure tree bottom-up: marked-content and object references on removed (or, for
+  Redact, replaced) pages go first, then elements left without content — so a table continuing on
+  a kept page survives, and alt text attached only through a marked-content reference does not;
 - drops link annotations pointing to removed pages, bookmarks that lead only to removed pages
   (relinking the outline lists) and form fields whose widgets were only on removed pages;
+- recomputes bookmark `/Count` values (visible descendants, by the spec) only where entries were
+  removed, leaving other counts as the file had them;
 - deletes every unreachable object — including stale cross-reference streams, superseded
   incremental-update objects and pages pulled in by pdf-lib's deep copier.
+
+### Encrypted output (`engines/encryptStrings.ts`)
+
+pdf-lib's writer encrypts streams (object streams included) but not strings. Objects packed into an
+object stream are covered by that stream's encryption; the objects it writes on their own — the
+catalog, page tree and pages, stream dictionaries, objects with a non-zero generation number,
+signature dictionaries — would keep their strings in plain text, which readers then "decrypt" into
+garbage. `savePdf` therefore encrypts exactly those strings with each object's own key right before
+writing an encrypted file (Protect, and files whose author restrictions are written back).
+Documents built from pages of other files (Extract, Split, Merge, Organize) inherit the strictest
+combination of their sources' author restrictions, and comment replies are re-linked to their
+comments on the copied pages.
 
 This is what makes "Delete pages" and "Redact" genuinely remove content from the output file
 (verified by byte-level unit tests).

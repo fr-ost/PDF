@@ -28,8 +28,12 @@ export function trackSpotlight(e: PointerEvent<HTMLElement>): void {
   });
 }
 
-/** Tool card. Dropping files onto it opens the tool with those files. */
-export function ToolCard({ tool, showCategory, index = 0 }: { tool: ToolDefinition; showCategory?: boolean; index?: number }) {
+/**
+ * Tool card. Dropping files onto it opens the tool with those files.
+ * `headingLevel`: 3 inside a titled section (home page), 2 directly under the page title.
+ */
+export function ToolCard({ tool, showCategory, index = 0, headingLevel = 3 }: { tool: ToolDefinition; showCategory?: boolean; index?: number; headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const Icon = tool.icon;
   const [over, setOver] = useState(false);
   const ref = useRef<HTMLAnchorElement>(null);
@@ -68,7 +72,7 @@ export function ToolCard({ tool, showCategory, index = 0 }: { tool: ToolDefiniti
         </div>
         <ArrowUpRight size={16} className="text-fg-subtle opacity-0 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden />
       </div>
-      <h3 className="mt-4 text-[15px] font-semibold tracking-[-0.015em]">{tool.name}</h3>
+      <Heading className="mt-4 text-[15px] font-semibold tracking-[-0.015em]">{tool.name}</Heading>
       <p className="mt-1 text-[13px] leading-relaxed text-fg-muted">{over ? 'Drop to open with these files' : tool.description}</p>
       {showCategory ? (
         <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-medium text-fg-subtle">

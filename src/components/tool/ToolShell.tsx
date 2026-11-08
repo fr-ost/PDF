@@ -188,7 +188,7 @@ export function ToolShell({
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_348px]">
             <div className="enter min-w-0" style={{ ['--i' as string]: 1 }}>{children}</div>
-            <aside ref={asideRef} className="enter lg:sticky lg:top-6" style={{ ['--i' as string]: 2 }}>
+            <aside ref={asideRef} aria-label={`${tool.name} options`} className="enter lg:sticky lg:top-6" style={{ ['--i' as string]: 2 }}>
               {/* On large screens the panel fits the viewport: options scroll inside it and the action stays visible. */}
               <Card className="flex flex-col overflow-hidden lg:max-h-[var(--panel-max,calc(100vh-3rem))]">
                 {options ? <div className="scroll-fade min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-5">{options}</div> : null}

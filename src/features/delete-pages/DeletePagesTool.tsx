@@ -70,7 +70,7 @@ export default function DeletePagesTool({ tool, initialFiles }: ToolProps) {
     >
       <SelectionBar keys={keys} selected={ws.selected} onChange={ws.setSelected} />
       <PageGrid
-        pages={toGridPages(ws.pages, ws.ready).map((p) => (marked.has(p.key) ? { ...p, dimmed: true, badge: <span className="rounded bg-danger px-1.5 py-0.5 text-[10px] font-semibold text-white">Delete</span> } : p))}
+        pages={toGridPages(ws.pages, ws.ready).map((p) => (marked.has(p.key) ? { ...p, dimmed: true, badge: <span className="rounded bg-danger px-1.5 py-0.5 text-[10px] font-semibold text-danger-fg">Delete</span> } : p))}
         selected={marked}
         onSelect={ws.setSelected}
       />

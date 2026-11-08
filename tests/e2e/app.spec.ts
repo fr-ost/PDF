@@ -78,10 +78,18 @@ test.describe('application shell', () => {
     await expect(input).toBeHidden();
     await settled(app);
     // The palette also opens from the sidebar search button and closes with Escape.
-    await app.getByRole('button', { name: 'Open command palette' }).click();
+    await app.getByRole('button', { name: 'Search tools' }).click();
     await expect(input).toBeFocused();
     await input.fill('summ');
     await expect(app.getByRole('option').first()).toContainText('AI Summary');
+    // Enter opens the best match even when it is in a later group (a page, not a tool).
+    await input.fill('privacy');
+    await expect(app.getByRole('option').first()).toContainText('Privacy');
+    await app.keyboard.press('Enter');
+    await expect(app.locator('h1')).toHaveText('Privacy');
+    await settled(app);
+    await app.keyboard.press('Control+K');
+    await expect(input).toBeFocused();
     await app.keyboard.press('Escape');
     await expect(input).toBeHidden();
     expectNoErrors(errors);

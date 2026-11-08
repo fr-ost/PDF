@@ -106,6 +106,7 @@ export default function SplitTool({ tool, initialFiles }: ToolProps) {
           const startsGroup = groupIndex > 0 && valid[groupIndex]![0] === i;
           return {
             ...p,
+            badgeKey: `${groupIndex}:${startsGroup}:${valid.length > 1}`,
             badge: groupIndex >= 0 && valid.length > 1 ? <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-semibold', startsGroup ? 'bg-primary text-primary-fg' : 'bg-surface/90 text-fg-muted shadow-sm')}>{startsGroup ? <Scissors size={10} className="mr-0.5 inline" aria-hidden /> : null}File {groupIndex + 1}</span> : undefined,
           };
         })}

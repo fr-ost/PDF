@@ -6,7 +6,7 @@
  * recovery of forgotten passwords. Passwords only exist in memory for the
  * duration of the operation and are never stored or transmitted.
  */
-import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFNumber, PDFRef, PDFString, type PDFObject } from '@cantoo/pdf-lib';
+import { PDFDict, PDFDocument, PDFName, PDFNumber } from '@cantoo/pdf-lib';
 import { PdfToolError } from '../errors';
 import { dropAuthorRestrictions, hasPdfHeader, isPdfA, loadPdf, savePdf, type PdfSource } from './load';
 
@@ -64,7 +64,6 @@ export async function protectPdf(source: PdfSource, options: ProtectOptions): Pr
   // PDF/A forbids encryption, so an encrypted copy can't keep claiming PDF/A:
   // drop the catalog XMP that carries the claim (the document info stays).
   if (doc.catalog.has(PDFName.of('Metadata')) && isPdfA(doc)) doc.catalog.delete(PDFName.of('Metadata'));
-  moveStringsIntoObjects(doc);
   doc.encrypt({
     userPassword: options.userPassword,
     // Without an explicit owner password, a random one makes the permission
@@ -82,39 +81,6 @@ export async function protectPdf(source: PdfSource, options: ProtectOptions): Pr
     algorithm: 'AES-256',
   });
   return savePdf(doc);
-}
-
-function containsString(obj: PDFObject, depth = 0): boolean {
-  if (obj instanceof PDFString || obj instanceof PDFHexString) return true;
-  if (depth > 32) return false;
-  if (obj instanceof PDFArray) return obj.asArray().some((v) => containsString(v, depth + 1));
-  if (obj instanceof PDFDict) return obj.values().some((v) => containsString(v, depth + 1));
-  return false;
-}
-
-/**
- * The writer encrypts streams (object streams included) but keeps the catalog
- * and page-tree objects outside object streams, where strings would stay in
- * plain text and readers would "decrypt" them into garbage (page labels,
- * /Lang…). Moving string-bearing values into their own objects puts them into
- * an encrypted object stream.
- */
-function moveStringsIntoObjects(doc: PDFDocument): void {
-  const holders: PDFDict[] = [doc.catalog];
-  const seen = new Set<PDFDict>();
-  const walk = (node: PDFObject | undefined, depth: number) => {
-    if (!(node instanceof PDFDict) || seen.has(node) || depth > 64) return;
-    seen.add(node);
-    holders.push(node);
-    const kids = node.lookup(PDFName.of('Kids'));
-    if (kids instanceof PDFArray) for (let i = 0; i < kids.size(); i++) walk(kids.lookup(i), depth + 1);
-  };
-  walk(doc.catalog.lookup(PDFName.of('Pages')), 0);
-  for (const dict of holders) {
-    for (const [key, value] of dict.entries()) {
-      if (!(value instanceof PDFRef) && containsString(value)) dict.set(key, doc.context.register(value));
-    }
-  }
 }
 
 export interface SecurityInfo {

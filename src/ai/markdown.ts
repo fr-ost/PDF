@@ -10,13 +10,17 @@ export type Block =
   | { kind: 'numbered'; inline: Inline[]; n: number }
   | { kind: 'paragraph'; inline: Inline[] };
 
+// Emphasis markers must not touch letters/digits on the outside, so
+// "quarterly_report_final.pdf" and "2*3*4" stay as they are. Chinese, Japanese
+// and Korean put bold right next to the surrounding text ("これは**重要**です"),
+// so their characters don't count.
+const WORD_CHAR = String.raw`(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}])[\p{L}\p{N}]`;
+const INLINE = new RegExp(String.raw`(?<!${WORD_CHAR})(\*\*[^*]+\*\*|__[^_]+__|\*[^*\s][^*]*\*|_[^_\s][^_]*_)(?!${WORD_CHAR})|` + '`[^`]+`', 'gu');
+
 export function parseInline(text: string): Inline[] {
   const out: Inline[] = [];
-  // Emphasis markers must not touch letters/digits on the outside, so
-  // "quarterly_report_final.pdf" and "2*3*4" stay as they are.
-  const re = /(?<![\p{L}\p{N}])(\*\*[^*]+\*\*|__[^_]+__|\*[^*\s][^*]*\*|_[^_\s][^_]*_)(?![\p{L}\p{N}])|`[^`]+`/gu;
   let last = 0;
-  for (const m of text.matchAll(re)) {
+  for (const m of text.matchAll(INLINE)) {
     const idx = m.index ?? 0;
     if (idx > last) out.push({ text: text.slice(last, idx) });
     const token = m[0];

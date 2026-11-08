@@ -87,6 +87,8 @@ describe('chunking', () => {
   it('keeps underscores and asterisks inside words, joins CJK lines without spaces', () => {
     expect(blocksToPlainText(parseSummaryBlocks('See quarterly_report_final.pdf and 2*3*4, but _this_ is italic.'))).toBe('See quarterly_report_final.pdf and 2*3*4, but this is italic.');
     expect(cleanExtractedText('日本語の\n文章です。\nNext line')).toBe('日本語の文章です。\nNext line');
+    // Korean puts spaces between words, so a line break stays a space.
+    expect(cleanExtractedText('조건에\n동의합니다')).toBe('조건에 동의합니다');
   });
 });
 
@@ -117,6 +119,10 @@ describe('markdown blocks', () => {
     expect(blocks[1]!.inline[0]).toEqual({ text: 'Bold', bold: true });
     expect(blocksToPlainText(blocks)).toContain('• second <script>');
     expect(parseInline('a `code` and *it*')).toEqual([{ text: 'a ' }, { text: 'code', code: true }, { text: ' and ' }, { text: 'it', italic: true }]);
+    // Chinese, Japanese and Korean put bold right next to the surrounding text.
+    expect(parseInline('これは**重要**です')).toEqual([{ text: 'これは' }, { text: '重要', bold: true }, { text: 'です' }]);
+    expect(parseInline('**중요**합니다')).toEqual([{ text: '중요', bold: true }, { text: '합니다' }]);
+    expect(parseInline('file_name_v2 and 2*3*4')).toEqual([{ text: 'file_name_v2 and 2*3*4' }]);
   });
 });
 

@@ -282,12 +282,20 @@ export function searchAnswer(index: SearchIndex, question: string, limit = 3): S
 
 export type CitationPiece = { type: 'text'; text: string } | { type: 'cite'; pages: number[]; raw: string };
 
-const CITATION = /[[(]\s*(?:pp?\.|pp?|pages?|pg\.?)\s*(\d{1,4}(?:\s*(?:[-–—,&]|and)\s*(?:pp?\.?\s*)?\d{1,4})*)\s*[\])]/gi;
+// A page prefix needs a dot or a space after "p"/"pp", so "(P1)" or "(p53)" are not page references.
+// Also Spanish (pág., página) and Japanese (ページ, 頁) forms, and full-width brackets.
+const PAGE_PREFIX = String.raw`(?:pp?\.\s*|pp?\s+|pages?\s*|pg\.\s*|pg\s+|p[áa]gs?\.\s*|p[áa]ginas?\s*|ページ\s*|頁\s*)`;
+const PAGE_SEPARATOR = String.raw`\s*(?:[-–—~〜,，、;；&]|\band\b|\by\b)\s*`;
+const CITATION = new RegExp(
+  String.raw`[[(［（]\s*(?:${PAGE_PREFIX}(\d{1,4}(?:${PAGE_SEPARATOR}${PAGE_PREFIX}?\d{1,4})*)|(\d{1,4})\s*(?:ページ|頁))\s*[\])］）]`,
+  'gi',
+);
 
 function citationPages(spec: string, pageCount: number): number[] {
   const pages: number[] = [];
-  for (const part of spec.split(/\s*(?:,|&|\band\b)\s*/i)) {
-    const range = part.match(/(\d{1,4})\s*[-–—]\s*(?:pp?\.?\s*)?(\d{1,4})/i);
+  for (const raw of spec.split(/\s*(?:[,，、;；&]|\band\b|\by\b)\s*/i)) {
+    const part = raw.replace(/[^\d\-–—~〜]+/g, ' ');
+    const range = part.match(/(\d{1,4})\s*[-–—~〜]\s*(\d{1,4})/);
     if (range) {
       const from = Number(range[1]);
       const to = Number(range[2]);
@@ -306,7 +314,7 @@ export function splitCitations(text: string, pageCount: number): CitationPiece[]
   const pieces: CitationPiece[] = [];
   let last = 0;
   for (const m of text.matchAll(CITATION)) {
-    const pages = citationPages(m[1]!, pageCount);
+    const pages = citationPages(m[1] ?? m[2]!, pageCount);
     if (!pages.length) continue;
     if (m.index > last) pieces.push({ type: 'text', text: text.slice(last, m.index) });
     pieces.push({ type: 'cite', pages, raw: m[0] });

@@ -166,6 +166,29 @@ test.describe('Chat with PDF', () => {
     expectNoErrors(errors);
   });
 
+  test('a reply language this device lacks falls back, and the picker keeps focus', async ({ app, errors }) => {
+    await installFakeLanguageModel(app, 'available', { unavailableLanguages: ['ja'] });
+    await app.reload();
+    await openTool(app, 'ai-chat');
+    await addFiles(app, [pdfFile('report.pdf', await makeProsePdf())]);
+    const picker = app.getByRole('combobox', { name: 'Reply language' });
+    await expect(picker).toBeVisible();
+    await picker.focus();
+    await picker.selectOption('es');
+    await expect(app.getByTestId('chat-status-line')).toHaveText('Ready');
+    await expect(picker).toHaveValue('es');
+    await expect(picker).toBeFocused();
+    await picker.selectOption('ja');
+    await expect(app.getByText('Unique AI can’t reply in 日本語 on this device yet.')).toBeVisible();
+    await expect(picker).toHaveValue('es');
+    await expect(app.getByTestId('chat-status-line')).toHaveText('Ready');
+    await expect(picker).toBeFocused();
+    await ask(app, 'How many warehouses were merged?');
+    await expect(lastAnswer(app)).toHaveAttribute('data-status', 'done');
+    expect((await lmCalls(app)).length).toBeGreaterThan(0);
+    expectNoErrors(errors);
+  });
+
   test('on small screens a citation opens the page preview', async ({ app, errors }) => {
     await app.setViewportSize({ width: 390, height: 844 });
     await openChat(app, 'available');
@@ -177,6 +200,10 @@ test.describe('Chat with PDF', () => {
     const dialog = app.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: 'Page 2' })).toBeVisible();
     await expect(dialog.getByTestId('page-preview')).toContainText('warehouses were merged');
+    // The page image is shown, at a real size.
+    const image = dialog.getByTestId('page-preview').locator('img');
+    await expect(image).toBeVisible();
+    expect((await image.boundingBox())!.width).toBeGreaterThan(150);
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(dialog).toBeHidden();
     expectNoErrors(errors);

@@ -26,6 +26,11 @@ All notable changes to Unique PDF are documented here. The format follows
   also open in older supported Chrome versions.
 - Thumbnails render newest-first and skip pages scrolled past; page grids no longer re-render every
   card on each keystroke; splitting documents with internal links is up to ~25× faster.
+- Accessibility: every page, tool state, dialog, the phone layout and the toolbar popup pass an
+  automated WCAG 2.2 AA audit (axe-core) in light and dark themes. Secondary text, buttons, badges
+  and status colours meet 4.5:1 contrast; page cards keep their buttons beside (not inside) the
+  draggable card; landmarks and headings are labelled and in order; visible labels match what
+  screen readers announce; the popup has proper landmarks and a heading.
 
 ### Fixed
 
@@ -38,7 +43,16 @@ All notable changes to Unique PDF are documented here. The format follows
 - PDF/A files: in-place tools failed on PDF/A-1 and Protect failed on all PDF/A files.
 - Compress no longer corrupts images whose decode parameters are written as an array, and no longer
   rotates photos that carry an EXIF orientation.
-- Protect: page labels, document language and other catalog strings are encrypted correctly.
+- Protect: page labels, document language and other catalog strings are encrypted correctly, and
+  so are strings in objects kept outside object streams (pages, stream dictionaries, objects with a
+  non-zero generation number), which were readable without the password.
+- Files with author restrictions (owner password only): page labels and the document language stay
+  readable after editing, and Extract, Split, Merge and Organize keep the restrictions instead of
+  producing an unrestricted copy.
+- Comment replies stay attached to their comment after Extract, Split, Merge and Organize.
+- Delete pages keeps structure elements (tables, paragraphs) that continue on kept pages, and
+  removes alt text whose page is given only on a marked-content reference.
+- Bookmarks: closed chapters stay closed after editing (counts are no longer rewritten).
 - Page ranges: “1 5” means pages 1 and 5 (it was read as page 15).
 - Files with author restrictions (owner password only) keep their restrictions after editing.
 - Redacted pages no longer inherit rotation or crop box from the page tree.
@@ -56,9 +70,18 @@ All notable changes to Unique PDF are documented here. The format follows
   command palette results stay grouped; editor shortcuts no longer fire while typing in other
   fields; a cancelled task can't reset a newer one; the toolbar button focuses the open app tab
   instead of opening another.
-- Quick summary handles very large documents; underscores and asterisks inside words are kept;
-  Chinese and Japanese line breaks no longer insert spaces; streamed text can't be garbled by a
-  repeated chunk.
+- Quick summary handles very large documents; underscores and asterisks inside words are kept,
+  and bold next to Chinese, Japanese or Korean text works; Chinese and Japanese line breaks no
+  longer insert spaces (Korean keeps them); streamed text can't be garbled by a repeated chunk.
+- Chat with PDF: dense Chinese and Japanese pages are split into passages that fit the model's
+  context; “(P1)” or “(p53)” are no longer taken for page references, while “[p. 3; p. 5]”,
+  Spanish “[pág. 4]” and Japanese “（4ページ）” are; the page preview on phones shows the page;
+  choosing a reply language the device can't use keeps the previous one (and the picker keeps
+  focus); the second click of a double-click on Send no longer stops the answer; “Latest” no
+  longer lingers after opening another PDF; date suggestions no longer count the word “may”.
+- Split: “File N” badges update when the split mode changes. The command palette opens the best
+  match on Enter (e.g. the Privacy page for “privacy”). Widening the window with the phone menu
+  open no longer leaves the page unresponsive.
 
 ## [1.1.0] — 2026-11-08
 

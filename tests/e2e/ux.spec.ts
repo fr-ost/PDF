@@ -64,6 +64,18 @@ test.describe('interaction details', () => {
     expectNoErrors(errors);
   });
 
+  test('widening the window closes the phone menu and leaves the page usable', async ({ app, errors }) => {
+    await app.setViewportSize({ width: 390, height: 844 });
+    await app.getByRole('button', { name: 'Open navigation' }).click();
+    await expect(app.getByRole('navigation', { name: 'Main (menu)' })).toBeVisible();
+    await app.setViewportSize({ width: 1360, height: 900 });
+    await expect(app.getByRole('navigation', { name: 'Main (menu)' })).toBeHidden();
+    // Nothing is left inert behind an invisible modal: the sidebar link works.
+    await app.getByRole('navigation', { name: 'Main', exact: true }).getByRole('link', { name: 'Settings' }).click();
+    await expect(app.locator('h1')).toHaveText('Settings');
+    expectNoErrors(errors);
+  });
+
   test('on phones the main action follows you down long pages', async ({ app, errors }) => {
     await app.setViewportSize({ width: 390, height: 844 });
     await openTool(app, 'rotate');

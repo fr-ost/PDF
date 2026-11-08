@@ -11,6 +11,7 @@
 import { EncryptedPDFError, PDFDict, PDFDocument, PDFName, PDFNumber, PDFRawStream, PDFRef, decodePDFRawStream } from '@cantoo/pdf-lib';
 import { PdfToolError } from '../errors';
 import { pruneDocument } from './prune';
+import { encryptLooseStrings } from './encryptStrings';
 import { hasPdfHeader } from '../sniff';
 
 export interface PdfSource {
@@ -75,6 +76,35 @@ function readRestrictions(doc: PDFDocument): PdfPermissions | null {
 /** For tools that set or remove protection themselves (Protect, Unlock). */
 export function dropAuthorRestrictions(doc: PDFDocument): void {
   authorRestrictions.delete(doc);
+}
+
+/**
+ * A new document built from pages of other documents (Extract, Split, Merge,
+ * Organize) keeps the restrictions of its sources; with several restricted
+ * sources, the strictest combination applies.
+ */
+export function inheritAuthorRestrictions(target: PDFDocument, sources: Iterable<PDFDocument>): void {
+  let combined: PdfPermissions | undefined;
+  for (const source of sources) {
+    const r = authorRestrictions.get(source);
+    if (!r) continue;
+    if (!combined) {
+      combined = { ...r };
+      continue;
+    }
+    const rank = { highResolution: 2, lowResolution: 1 } as const;
+    const printing = (p: PdfPermissions['printing']) => (p ? rank[p] : 0);
+    combined = {
+      printing: printing(r.printing) < printing(combined.printing) ? r.printing : combined.printing,
+      modifying: combined.modifying && r.modifying,
+      copying: combined.copying && r.copying,
+      annotating: combined.annotating && r.annotating,
+      fillingForms: combined.fillingForms && r.fillingForms,
+      contentAccessibility: combined.contentAccessibility && r.contentAccessibility,
+      documentAssembly: combined.documentAssembly && r.documentAssembly,
+    };
+  }
+  if (combined) authorRestrictions.set(target, combined);
 }
 
 export function randomPassword(): string {
@@ -200,7 +230,13 @@ export async function savePdf(doc: PDFDocument, options: SaveOptions = {}): Prom
   }
   pruneDocument(doc);
   // PDF/A-1 forbids object and cross-reference streams.
-  return doc.save({ useObjectStreams: objectStreams && pdfAPart(doc) !== 1, addDefaultPage: false, updateFieldAppearances: false });
+  const useObjectStreams = objectStreams && pdfAPart(doc) !== 1;
+  if (doc.context.security) {
+    // Embed pending fonts and images first so their objects are covered too.
+    await doc.flush();
+    encryptLooseStrings(doc, useObjectStreams);
+  }
+  return doc.save({ useObjectStreams, addDefaultPage: false, updateFieldAppearances: false });
 }
 
 /** PDF/A part declared in the catalog XMP (1, 2, 3, 4), if any. */
