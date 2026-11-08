@@ -10,7 +10,7 @@ The submission steps and the pre-submission checklist are in [`STORE_LISTING.md`
 | --- | --- | --- |
 | Item name | [`listing/title.txt`](listing/title.txt) (comes from the manifest) | 67 / 75 characters |
 | Summary | [`listing/summary.txt`](listing/summary.txt) (comes from the manifest) | 132 / 132 characters |
-| Description | [`listing/description.txt`](listing/description.txt) | about 3,200 / 16,000 characters |
+| Description | [`listing/description.txt`](listing/description.txt) | about 11,800 / 16,000 characters |
 | Category, language, URLs, distribution | [`listing/store-settings.md`](listing/store-settings.md) | — |
 | Store icon | `store-icon-128.png` | 128×128 PNG (96×96 artwork, transparent padding) |
 | Screenshots (up to 5, in this order) | `screenshot-1-chat.png`, `screenshot-2-summary.png`, `screenshot-3-tools.png`, `screenshot-4-edit.png`, `screenshot-5-private.png` | 1280×800, 24-bit PNG, no alpha |

@@ -4,7 +4,7 @@
 | --- | --- |
 | Item name | from the manifest — same as `title.txt` (67 of 75 characters) |
 | Summary | from the manifest — same as `summary.txt` (132 of 132 characters) |
-| Description | `description.txt` (about 3,200 of 16,000 characters) |
+| Description | `description.txt` (about 11,800 of 16,000 characters) |
 | Category | Productivity → Tools |
 | Language | English |
 | Store icon | `../store-icon-128.png` |
