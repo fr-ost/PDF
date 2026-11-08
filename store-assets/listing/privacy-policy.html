@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Unique PDF</title>
+<meta name="description" content="How Unique PDF handles your files: everything is processed in your browser; nothing is collected, uploaded or shared.">
+<style>
+  :root { color-scheme: light dark; --ink: #0a0a0f; --muted: #555561; --line: #e8e8ee; --bg: #f7f7f9; --card: #fff; --accent: #3d5afe; --code: #f1f1f5; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #f4f4f8; --muted: #a3a3b2; --line: #24242f; --bg: #050507; --card: #0d0d12; --accent: #8c9fff; --code: #1c1c25; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 20px 64px; }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 40px clamp(20px, 5vw, 48px); }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; font-weight: 650; }
+  .logo { width: 40px; height: 40px; border-radius: 11px; background: linear-gradient(135deg, #4660ff, #7448ff 60%, #9a45f5); display: grid; place-items: center; }
+  .brand small { display: block; color: var(--muted); font-weight: 500; font-size: 13px; }
+  h1 { font-size: 34px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 8px; }
+  h2 { font-size: 21px; letter-spacing: -0.02em; margin: 36px 0 10px; }
+  p, li { color: var(--ink); }
+  p > em:only-child { color: var(--muted); font-style: normal; }
+  a { color: var(--accent); }
+  code { background: var(--code); border-radius: 6px; padding: 1px 6px; font-size: 0.9em; }
+  ul, ol { padding-left: 1.3em; }
+  li { margin: 6px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  footer { color: var(--muted); font-size: 14px; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+<article>
+<div class="brand"><span class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/></svg></span><span>Unique PDF<small>by Unique Labs</small></span></div>
+<h1>Privacy Policy — Unique PDF</h1>
+<p><em>Effective date: 8 November 2026 · Applies to Unique PDF version 1.2.0 and later</em></p>
+<p>Unique PDF ("the extension") is a free PDF toolkit for Google Chrome made by Unique Labs and developed by Shahriar Ahmed. It is designed so that your documents never leave your device.</p>
+<h2>Summary</h2>
+<ul><li><strong>We do not collect, transmit, sell or share any personal data or document content.</strong></li><li>All PDF and image processing happens locally in your browser, including Unique AI chat and summaries, which run on the AI model built into Chrome.</li><li>There are no accounts, no analytics, no telemetry, no advertising and no third-party services.</li></ul>
+<h2>How your files are handled</h2>
+<ol><li>You choose files with the file picker or drag and drop. The browser gives the extension read access to those files only.</li><li>Files are processed inside the extension's own page and background workers using bundled code (PDF.js and pdf-lib). No file, page, text, image or password is sent to any server.</li><li>Results are kept in memory until you download them. Downloads are saved by Chrome to the location you choose. Your original files are only read, never modified.</li><li>When you close the tab or start over, in-memory data is released.</li></ol>
+<p>The extension's Content Security Policy only permits network connections to the extension's own packaged files (<code>connect-src 'self' blob: data:</code>), so the browser itself blocks any attempt to send data elsewhere.</p>
+<h2>Unique AI (chat and summaries)</h2>
+<p>Unique AI is built on the AI that is built into Chrome (the Prompt and Summarizer APIs). The text of the PDF is extracted in your browser and processed by the AI model that Chrome runs on your computer. The extension does not send the document, its text, your questions, the answers or summaries to Unique Labs or any other server, and its network policy above still applies.</p>
+<ul><li><strong>Model download:</strong> the first time you use Unique AI on a device, Chrome may need to download its AI model. This download is performed and managed by Chrome itself (not by the extension), starts only when you ask your first question or press <strong>Set up AI &amp; summarize</strong>, and transfers the model to your device — not your documents. Chrome's own policies apply to that download.</li><li><strong>No storage:</strong> document text, questions, answers and summaries are kept in memory only and are gone when you close the tool or the tab. They are saved only if you export, download or copy them. The recent-task list (if enabled) records file names, such as <code>report-chat.md</code>, never the text.</li><li><strong>Search mode and Quick summary</strong> (when the AI model isn't available) work entirely inside the extension without any model.</li></ul>
+<h2>Data stored on your device</h2>
+<p>The extension uses Chrome's local extension storage (<code>chrome.storage.local</code>) for:</p>
+<table><thead><tr><th>Data</th><th>Purpose</th><th>How to remove</th></tr></thead><tbody><tr><td>Settings (theme, default formats, resolution, page size, compression level, save behaviour)</td><td>Remember your preferences</td><td>Settings → Clear all local data</td></tr><tr><td>Recent tasks (tool name, input/output <strong>file names and sizes</strong>, time) — only if enabled</td><td>Show your recent work</td><td>Recent files → Clear history, or turn off "Remember recent tasks"</td></tr><tr><td>Review prompt: a <strong>count</strong> of finished tasks and your answer ("later", rated, "don't ask again")</td><td>Ask for a store rating at most three times, only in copies installed from a store</td><td>Settings → Clear all local data</td></tr></tbody></table>
+<p>A light or dark theme choice is also mirrored in the extension's own web storage (<code>localStorage</code>) so the right colours appear before the page has loaded; it is removed when the theme is set back to the default or local data is cleared.</p>
+<p>No document contents, extracted text, summaries, passwords or page images are ever stored. Uninstalling the extension deletes all of this data.</p>
+<h2>Links to other sites</h2>
+<p>The Donate page, the review prompt, the developer credit and the "report a bug" links open the Chrome Web Store (or Edge Add-ons), the developer's website (www.shahriarahmed.net) or Telegram in a new tab, only when you click them. Nothing is sent automatically, and the donation addresses, QR codes and the developer photo are part of the extension package (no images are fetched).</p>
+<h2>Passwords</h2>
+<p>Passwords you enter to open, protect or unlock a PDF are held in memory only for the duration of the operation, are never written to storage and are never transmitted.</p>
+<h2>Permissions</h2>
+<table><thead><tr><th>Permission</th><th>Why it is needed</th></tr></thead><tbody><tr><td><code>storage</code></td><td>Save your settings and the optional recent-task list on your device.</td></tr></tbody></table>
+<p>The extension requests <strong>no host permissions</strong>: it cannot read or change the websites you visit, and it has no access to your browsing history, tabs' contents, cookies or downloads list.</p>
+<h2>Children</h2>
+<p>The extension does not collect data from anyone, including children.</p>
+<h2>Changes</h2>
+<p>If this policy changes, the updated version will be published with the extension and in this file, with a new effective date. Material changes will never introduce data collection without a new explicit opt-in.</p>
+<h2>Contact</h2>
+<p>Questions about privacy: Shahriar Ahmed, Unique Labs — <a href="https://www.shahriarahmed.net" rel="noopener">www.shahriarahmed.net</a> or Telegram <a href="https://t.me/igfrostt" rel="noopener">@igfrostt</a>.</p>
+</article>
+<footer>Unique PDF · Unique Labs · Developed by <a href="https://www.shahriarahmed.net" rel="noopener">Shahriar Ahmed</a></footer>
+</main>
+</body>
+</html>

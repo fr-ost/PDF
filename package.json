@@ -23,7 +23,11 @@
     "validate": "node scripts/validate-build.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "icons": "node scripts/generate-icons.mjs",
-    "screenshots": "playwright test -c playwright.store.config.ts --trace off"
+    "screenshots": "playwright test -c playwright.store.config.ts screenshots.spec.ts --trace off",
+    "store:capture": "playwright test -c playwright.store.config.ts raw.spec.ts --trace off",
+    "store:render": "node store-assets/source/render.mjs",
+    "store:video": "node store-assets/source/video.mjs",
+    "store:kit": "npm run build && npm run screenshots && npm run store:capture && npm run store:render && npm run store:video"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",

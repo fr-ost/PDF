@@ -1,0 +1,48 @@
+Unique PDF is a free PDF editor for Chrome with Unique AI. Chat with any PDF, get instant summaries, and edit, merge, split, compress, convert, sign, protect and redact — without uploading a single file.
+
+★ UNIQUE AI — CHAT WITH ANY PDF
+Ask questions in plain language and get answers in seconds, with page references you can click to see exactly where each answer comes from. Ask follow-up questions, start from suggested questions, choose the reply language, regenerate, copy or export the whole conversation. Long documents work too: Unique AI finds the passages that matter.
+
+★ AI SUMMARY
+Turn a 100-page report into key points, a TL;DR, a teaser or a headline. Choose the length and language, tell it what to focus on, then copy or download the result.
+
+★ 20 PDF TOOLS IN ONE FREE EXTENSION
+
+ORGANIZE
+• Merge PDF — combine files in any order
+• Split PDF — every page, custom ranges, equal parts or at chosen pages, with ZIP download
+• Organize pages — reorder, rotate and delete pages from several PDFs in one workspace
+• Rotate, reorder, delete and extract pages
+
+CONVERT
+• Compress PDF — smaller files; images are optimised while text stays sharp and searchable
+• Images to PDF — JPG, PNG, WebP, GIF, BMP and AVIF to PDF
+• PDF to images — export pages as PNG or JPEG from 72 to 600 DPI
+
+EDIT
+• Edit PDF — add text, drawings, highlights, shapes, arrows and images
+• Sign PDF — draw your signature and place it on any page
+• Watermark — text or image, with opacity, rotation, position and tiling
+• Page numbers — several formats, positions and a custom start
+
+SECURITY
+• Protect PDF — AES-256 password encryption with permissions
+• Unlock PDF — remove a password you know
+• Redact PDF — permanently remove sensitive text and areas, with automatic verification
+• Edit metadata — view, change or remove title, author and other details
+
+★ PRIVATE BY DESIGN
+Your files never leave your device: every tool works inside your browser. No uploads, no account, no analytics, no ads, no watermarks and no quotas. It even works offline.
+
+★ FAST AND EASY
+Drag and drop files anywhere, find any tool with the command palette (Ctrl K / ⌘ K), use keyboard shortcuts, switch between light and dark themes, and open your favourite tools from the toolbar popup. Large documents with hundreds of pages are handled smoothly.
+
+PERFECT FOR
+Students and researchers summarizing papers, professionals reviewing contracts and reports, and anyone who needs to merge, compress or sign a PDF quickly — without trusting a website with private files.
+
+GOOD TO KNOW
+• Unique AI needs desktop Chrome 138 or later on a computer that supports Chrome's built-in AI. Elsewhere, chat works as a labelled passage search and a key-sentence summary (no AI) is available.
+• The editor adds new content on top of the page; it does not change text that already exists in a PDF.
+• AI answers and summaries can contain mistakes. Check important details against the document.
+
+Unique PDF is made by Unique Labs and developed by Shahriar Ahmed — www.shahriarahmed.net. If it helps you, a ★★★★★ review means a lot and helps other people find free, private PDF tools.

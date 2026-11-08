@@ -201,7 +201,8 @@ are analysed in [ROADMAP.md](ROADMAP.md).
 [ARCHITECTURE](ARCHITECTURE.md) · [FEATURES](FEATURES.md) · [ROADMAP](ROADMAP.md) ·
 [PRIVACY](PRIVACY.md) · [SECURITY](SECURITY.md) · [TESTING](TESTING.md) ·
 [CONTRIBUTING](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) ·
-[Product metadata](product/product-metadata.json) · [Store listing](store-assets/STORE_LISTING.md)
+[Product metadata](product/product-metadata.json) · [Store kit](store-assets/README.md) ·
+[Store submission guide](store-assets/STORE_LISTING.md)
 
 ---
 

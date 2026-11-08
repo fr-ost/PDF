@@ -2,8 +2,8 @@
 
 *Effective date: 8 November 2026 · Applies to Unique PDF version 1.2.0 and later*
 
-Unique PDF ("the extension") is a free PDF toolkit for Google Chrome made by Unique Labs. It is
-designed so that your documents never leave your device.
+Unique PDF ("the extension") is a free PDF toolkit for Google Chrome made by Unique Labs and
+developed by Shahriar Ahmed. It is designed so that your documents never leave your device.
 
 ## Summary
 
@@ -93,5 +93,5 @@ explicit opt-in.
 
 ## Contact
 
-Questions about privacy can be directed to Unique Labs through the support contact listed on the
-extension's Chrome Web Store page.
+Questions about privacy: Shahriar Ahmed, Unique Labs — [www.shahriarahmed.net](https://www.shahriarahmed.net)
+or Telegram [@igfrostt](https://t.me/igfrostt).
