@@ -32,7 +32,7 @@ designed ones.
 
 | Use | File | Size |
 | --- | --- | --- |
-| YouTube video thumbnail | `social/youtube-thumbnail-1280x720.png` | 1280×720 |
+| Video thumbnail (YouTube, Full HD) | `social/youtube-thumbnail-1920x1080.png`, `social/youtube-thumbnail-1280x720.png` | 1920×1080, 1280×720 |
 | X (Twitter) profile header — words clear of the profile photo and mobile buttons | `social/x-header-1500x500.png` | 1500×500 |
 | Link preview (Open Graph) for a website or posts | `social/og-image-1200x630.png` | 1200×630 |
 | Developer card (website, posts) | `social/developer-card-1200x630.png` | 1200×630 |

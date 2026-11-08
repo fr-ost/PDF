@@ -272,6 +272,9 @@ const ASSETS = {
   },
 };
 
+// Full-HD thumbnail for the showcase video: the same design rendered at 1.5x.
+ASSETS['social/youtube-thumbnail-1920x1080'] = { ...ASSETS['social/youtube-thumbnail-1280x720'], scale: 1.5 };
+
 // Extra asset used by the README of the kit: the developer card (for the website / social posts).
 ASSETS['social/developer-card-1200x630'] = {
   w: 1200,
@@ -299,20 +302,22 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 const outputs = [];
 for (const name of names) {
-  const { w, h, html } = ASSETS[name];
+  const { w, h, html, scale = 1 } = ASSETS[name];
+  const target = scale === 1 ? page : await browser.newPage({ deviceScaleFactor: scale });
   const file = join(TMP, `${name.replace(/\//g, '_')}.html`);
   writeFileSync(file, html());
-  await page.setViewportSize({ width: w, height: h });
-  await page.goto(pathToFileURL(file).href);
-  await page.evaluate(async () => {
+  await target.setViewportSize({ width: w, height: h });
+  await target.goto(pathToFileURL(file).href);
+  await target.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all([...document.images].map((img) => (img.complete ? null : new Promise((r) => img.addEventListener('load', r, { once: true })))));
   });
   const out = join(KIT, `${name}.png`);
   mkdirSync(dirname(out), { recursive: true });
-  await page.screenshot({ path: out, clip: { x: 0, y: 0, width: w, height: h } });
+  await target.screenshot({ path: out, clip: { x: 0, y: 0, width: w, height: h } });
+  if (target !== page) await target.close();
   outputs.push(out);
-  console.log(`✓ ${name}.png (${w}×${h})`);
+  console.log(`✓ ${name}.png (${w * scale}×${h * scale})`);
 }
 await browser.close();
 
