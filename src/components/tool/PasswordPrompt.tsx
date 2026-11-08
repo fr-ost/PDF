@@ -37,7 +37,7 @@ export function PasswordPrompt({ files }: { files: FileListApi }) {
         className="space-y-3"
       >
         <Field label="Password" htmlFor="pdf-password" error={locked.error ?? null}>
-          <TextInput id="pdf-password" type="password" autoComplete="off" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} invalid={!!locked.error} />
+          <TextInput id="pdf-password" type="password" autoComplete="off" data-autofocus value={password} onChange={(e) => setPassword(e.target.value)} invalid={!!locked.error} />
         </Field>
         <p className="flex items-start gap-2 text-[12.5px] text-fg-subtle">
           <KeyRound size={14} className="mt-0.5 shrink-0" aria-hidden />

@@ -4,6 +4,7 @@
  * the network. Document scripting (JavaScript in PDFs) is never enabled, and
  * XFA forms are not rendered.
  */
+import '../../polyfills/modern'; // first: evaluated before pdf.js
 import {
   AnnotationMode,
   GlobalWorkerOptions,
@@ -12,7 +13,7 @@ import {
   type PDFDocumentProxy,
   type PDFPageProxy,
 } from 'pdfjs-dist';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import workerSrc from './pdfjs.worker.ts?worker&url';
 import { PdfToolError } from '../errors';
 
 GlobalWorkerOptions.workerSrc = workerSrc;

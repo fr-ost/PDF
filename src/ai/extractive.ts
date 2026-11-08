@@ -6,7 +6,7 @@
  */
 import { splitSentences, wordTokens } from './text';
 
-const STOPWORDS = new Set(
+export const STOPWORDS = new Set(
   (
     'a about above after again against all also am an and any are as at be because been before being below between both but by can could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most my myself no nor not now of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up very was we were what when where which while who whom why will with would you your yours yourself yourselves ' +
     'el la los las un una unos unas de del y o en que por para con sin es son se su sus al lo como más pero sus este esta estos estas ' +
@@ -27,7 +27,8 @@ export function extractiveSummary(text: string, { sentences }: ExtractiveOptions
   const freq = new Map<string, number>();
   const tokenized = all.map((s) => wordTokens(s).filter((w) => w.length > 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w)));
   for (const tokens of tokenized) for (const w of new Set(tokens)) freq.set(w, (freq.get(w) ?? 0) + 1);
-  const max = Math.max(1, ...freq.values());
+  let max = 1;
+  for (const v of freq.values()) if (v > max) max = v; // no spread: documents can have >100k distinct words
 
   const scored = all.map((s, i) => {
     const unique = new Set(tokenized[i]);

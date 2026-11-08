@@ -23,7 +23,7 @@ export function AboutPage() {
         <BrandMark />
         <h1 className="display relative mt-6 text-[28px] leading-tight">Free PDF tools without subscriptions, watermarks or file uploads.</h1>
         <p className="mt-2 text-fg-muted">
-          Unique PDF brings {TOOLS.length} everyday PDF tools — including on-device AI summaries — into your browser. Everything runs locally on your device, so your documents stay private, and it works offline.
+          Unique PDF brings {TOOLS.length} PDF tools into your browser — including Unique AI, which lets you chat with your PDFs and summarize them in seconds. Your documents stay private, and it works offline.
         </p>
         <p className="mt-4 text-sm text-fg-subtle">
           Made by <UniqueLabsAttribution className="text-fg" /> — <em>Useful technology. Accessible to everyone.</em>

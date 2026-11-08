@@ -89,8 +89,12 @@ function PdfPreview({ blob }: { blob: Blob }) {
     (async () => {
       try {
         const doc = await openPdfDocument(new Uint8Array(await blob.arrayBuffer()));
+        if (cancelled) {
+          // Unmounted while opening: the cleanup had nothing to destroy yet.
+          void destroyPdfDocument(doc);
+          return;
+        }
         docRef = doc;
-        if (cancelled) return;
         const page = await doc.getPage(1);
         const scale = 240 / page.getViewport({ scale: 1 }).width;
         if (canvasRef.current && !cancelled) await renderPageToCanvas(page, scale * Math.min(2, devicePixelRatio || 1), { canvas: canvasRef.current });

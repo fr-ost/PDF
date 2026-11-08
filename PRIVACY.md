@@ -1,6 +1,6 @@
 # Privacy Policy — Unique PDF
 
-*Effective date: 8 November 2026 · Applies to Unique PDF version 1.1.0 and later*
+*Effective date: 8 November 2026 · Applies to Unique PDF version 1.2.0 and later*
 
 Unique PDF ("the extension") is a free PDF toolkit for Google Chrome made by Unique Labs. It is
 designed so that your documents never leave your device.
@@ -8,8 +8,8 @@ designed so that your documents never leave your device.
 ## Summary
 
 - **We do not collect, transmit, sell or share any personal data or document content.**
-- All PDF and image processing happens locally in your browser, including AI summaries, which are
-  written by Chrome's built-in on-device model.
+- All PDF and image processing happens locally in your browser, including Unique AI chat and
+  summaries, which run on the AI model built into Chrome.
 - There are no accounts, no analytics, no telemetry, no advertising and no third-party services.
 
 ## How your files are handled
@@ -26,21 +26,22 @@ The extension's Content Security Policy only permits network connections to the 
 packaged files (`connect-src 'self' blob: data:`), so the browser itself blocks any attempt to send
 data elsewhere.
 
-## AI Summary (on-device AI)
+## Unique AI (chat and summaries)
 
-AI Summary uses Chrome's built-in Summarizer API. The text of the PDF is extracted on your device
-and handed to the model that Chrome runs locally (Gemini Nano). The extension does not send the
-text, the summary or anything else to Unique Labs or any other server, and its network policy above
-still applies while summarising.
+Unique AI is built on the AI that is built into Chrome (the Prompt and Summarizer APIs). The text of
+the PDF is extracted in your browser and processed by the AI model that Chrome runs on your
+computer. The extension does not send the document, its text, your questions, the answers or
+summaries to Unique Labs or any other server, and its network policy above still applies.
 
-- **Model download:** the first time you use AI Summary on a device, Chrome may need to download
-  its on-device model. This download is performed and managed by Chrome itself (not by the
-  extension), happens only after you press **Set up AI & summarize**, and transfers the model to
-  your device — not your documents. Chrome's own policies apply to that download.
-- **No storage:** document text and summaries are kept in memory only. A summary is saved only if
-  you download or copy it. The recent-task list (if enabled) records the file names, such as
-  `report-summary.md`, never the text.
-- **Quick summary (no AI)** works entirely inside the extension without any model.
+- **Model download:** the first time you use Unique AI on a device, Chrome may need to download its
+  AI model. This download is performed and managed by Chrome itself (not by the extension), starts
+  only when you ask your first question or press **Set up AI & summarize**, and transfers the model
+  to your device — not your documents. Chrome's own policies apply to that download.
+- **No storage:** document text, questions, answers and summaries are kept in memory only and are
+  gone when you close the tool or the tab. They are saved only if you export, download or copy them.
+  The recent-task list (if enabled) records file names, such as `report-chat.md`, never the text.
+- **Search mode and Quick summary** (when the AI model isn't available) work entirely inside the
+  extension without any model.
 
 ## Data stored on your device
 

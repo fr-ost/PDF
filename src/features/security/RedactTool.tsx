@@ -9,7 +9,7 @@
  *    nothing remains inside the redacted areas.
  */
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { CheckCircle2, FileX2, MousePointer2, Search, ShieldAlert, Square, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, FileX2, MousePointer2, Search, ShieldAlert, Square, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 import type { ToolProps } from '../registry';
 import { ToolShell } from '../../components/tool/ToolShell';
 import { PageCanvas, type PageInfo } from '../../components/tool/PageCanvas';
@@ -27,7 +27,7 @@ import { PdfToolError } from '../../pdf/errors';
 import { getDocumentProxy } from '../../pdf/renderers/documents';
 import { destroyPdfDocument, openPdfDocument, type PDFDocumentProxy } from '../../pdf/renderers/pdfjs';
 import { canvasToBlob, releaseCanvas, renderPageToCanvas, safeScale } from '../../pdf/renderers/render';
-import { boxIntersects, findTextBoxes, partitionTextItems, textItemGeometry, type RedactionBox, type TextItemLike } from '../../pdf/redaction';
+import { boxIntersects, findTextBoxes, pageTextContains, partitionTextItems, textItemGeometry, type RedactionBox, type TextItemLike } from '../../pdf/redaction';
 import type { RedactedPageInput } from '../../pdf/engines/redact';
 import { makeOutput, type OutputFile } from '../../services/export-service/download';
 import { outputName } from '../../utils/filenames';
@@ -45,7 +45,10 @@ async function pageTextItems(doc: PDFDocumentProxy, index: number): Promise<{ it
   const page = await doc.getPage(index + 1);
   const viewport = page.getViewport({ scale: 1 });
   const content = await page.getTextContent();
-  const items = content.items.filter((i): i is typeof i & TextItemLike => 'str' in i && 'transform' in i) as unknown as TextItemLike[];
+  const styles = content.styles as Record<string, { vertical?: boolean }>;
+  const items = content.items
+    .filter((i): i is typeof i & TextItemLike & { fontName: string } => 'str' in i && 'transform' in i)
+    .map((i) => ({ str: i.str, transform: i.transform, width: i.width, height: i.height, hasEOL: i.hasEOL, vertical: !!styles[i.fontName]?.vertical }));
   return { items, transform: viewport.transform, width: viewport.width, height: viewport.height };
 }
 
@@ -75,6 +78,11 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const entry = files.ready[0];
   const pageCount = entry?.pageCount ?? 0;
+  /** Shows another page; a selected box belongs to the old page, so it is cleared. */
+  const goToPage = (p: number) => {
+    setPage(Math.max(0, Math.min(pageCount - 1, p)));
+    setSelectedId(null);
+  };
 
   useEffect(() => {
     setBoxes([]);
@@ -100,8 +108,8 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
       delete: () => selectedId && setBoxes((bs) => bs.filter((b) => b.id !== selectedId)),
       backspace: () => selectedId && setBoxes((bs) => bs.filter((b) => b.id !== selectedId)),
       escape: () => setSelectedId(null),
-      pagedown: () => setPage((p) => Math.min(pageCount - 1, p + 1)),
-      pageup: () => setPage((p) => Math.max(0, p - 1)),
+      pagedown: () => goToPage(page + 1),
+      pageup: () => goToPage(page - 1),
     },
     !!entry,
   );
@@ -157,7 +165,8 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
 
   const search = async () => {
     const doc = entry ? await getDocumentProxy(entry.id) : undefined;
-    if (!doc || !query.trim()) return;
+    if (!doc || !query.trim() || searching) return;
+    // The field is read-only while searching, so results always match the query shown.
     setSearching(true);
     try {
       const results: Omit<RedactionBox, 'id' | 'source'>[] = [];
@@ -175,7 +184,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
     if (!found) return;
     setBoxes((bs) => [...bs, ...found.boxes.map((b) => ({ ...b, id: crypto.randomUUID(), source: 'search' as const }))]);
     setTerms((t) => [...new Set([...t, found.query])]);
-    if (found.boxes[0]) setPage(found.boxes[0].page);
+    if (found.boxes[0]) goToPage(found.boxes[0].page);
     setFound(null);
     setQuery('');
   };
@@ -223,10 +232,10 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
         }
         for (const term of terms) {
           const pages: number[] = [];
-          const needle = caseSensitive ? term : term.toLowerCase();
           for (let i = 0; i < out.numPages; i++) {
-            const { items } = await pageTextItems(out, i);
-            if (items.some((it) => (caseSensitive ? it.str : it.str.toLowerCase()).includes(needle))) pages.push(i);
+            const { items, transform } = await pageTextItems(out, i);
+            // Same matching as the search (also across text items), so nothing slips through.
+            if (pageTextContains(items, term, transform, { caseSensitive, wholeWord: false })) pages.push(i);
           }
           if (pages.length) termsOnOtherPages.push({ term, pages });
         }
@@ -264,7 +273,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
           <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); void search(); }}>
             <Field label="Find text to redact" htmlFor="redact-q">
               <div className="flex gap-2">
-                <TextInput id="redact-q" value={query} placeholder="Name, number, email…" onChange={(e) => { setQuery(e.target.value); setFound(null); }} />
+                <TextInput id="redact-q" value={query} placeholder="Name, number, email…" readOnly={searching} aria-busy={searching || undefined} onChange={(e) => { setQuery(e.target.value); setFound(null); }} />
                 <IconButton icon={Search} label="Search" variant="secondary" type="submit" disabled={!query.trim() || searching} />
               </div>
             </Field>
@@ -324,7 +333,7 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
           <div className="flex h-[calc(100vh-15rem)] min-h-[460px]">
             <nav className="hidden w-28 shrink-0 space-y-2 overflow-y-auto border-r border-line p-2 md:block" aria-label="Pages">
               {Array.from({ length: pageCount }, (_, i) => (
-                <button key={i} type="button" onClick={() => { setPage(i); setSelectedId(null); }} aria-current={page === i ? 'page' : undefined} className={cn('relative w-full rounded-lg border p-1.5', page === i ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface-2')}>
+                <button key={i} type="button" onClick={() => goToPage(i)} aria-current={page === i ? 'page' : undefined} className={cn('relative w-full rounded-lg border p-1.5', page === i ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface-2')}>
                   <PageThumbnail docId={entry.id} pageIndex={i} width={88} />
                   <span className="mt-1 block text-center text-[11px] font-medium text-fg-muted">{i + 1}</span>
                   {redactedPages.includes(i) ? <span className="absolute right-1 top-1 rounded bg-danger px-1 text-[10px] font-semibold text-white">{boxes.filter((b) => b.page === i).length}</span> : null}
@@ -358,8 +367,12 @@ export default function RedactTool({ tool, initialFiles }: ToolProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-line px-3 py-1.5 text-xs text-fg-muted">
-            <span>Page {page + 1} of {pageCount}</span>
+          <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-1 text-xs text-fg-muted">
+            <span className="flex shrink-0 items-center gap-0.5">
+              <IconButton icon={ChevronLeft} label="Previous page" size="sm" onClick={() => goToPage(page - 1)} disabled={page === 0} />
+              <span className="tabular-nums">Page {page + 1} of {pageCount}</span>
+              <IconButton icon={ChevronRight} label="Next page" size="sm" onClick={() => goToPage(page + 1)} disabled={page >= pageCount - 1} />
+            </span>
             <span>{mode === 'draw' ? 'Drag on the page to mark an area' : 'Click a box to select it · Delete removes it'}</span>
           </div>
         </div>

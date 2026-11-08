@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
 /**
- * Installs a deterministic stand-in for Chrome's on-device Summarizer API
+ * Installs a deterministic stand-in for Chrome's built-in Summarizer API
  * (the real model is not available in headless CI). It mirrors the API
  * shape: availability(), create() with download-progress monitor,
  * summarizeStreaming() returning deltas, measureInputUsage(), inputQuota.
@@ -74,4 +74,91 @@ export async function installFakeSummarizer(page: Page, availability: 'available
 
 export async function aiCalls(page: Page): Promise<string[]> {
   return page.evaluate(() => (window as unknown as { __aiCalls?: string[] }).__aiCalls ?? []);
+}
+
+/**
+ * A deterministic stand-in for Chrome's Prompt API (LanguageModel). Answers
+ * quote the excerpt sentence that shares the most words with the question and
+ * cite its page, which shows that retrieval put the right passage in the
+ * prompt. A question containing "SLOW" streams slowly (to test Stop).
+ */
+export async function installFakeLanguageModel(page: Page, availability: 'available' | 'downloadable' | 'unavailable' | 'none' = 'available'): Promise<void> {
+  await page.addInitScript(
+    ({ availability }) => {
+      if (availability === 'none') {
+        Object.defineProperty(window, 'LanguageModel', { configurable: true, value: undefined });
+        return;
+      }
+      const calls: string[] = [];
+      (window as unknown as { __lmCalls: string[] }).__lmCalls = calls;
+      let state = availability;
+      const words = (t: string) => new Set(t.toLowerCase().match(/[a-z0-9]{4,}/g) ?? []);
+      const answerFor = (prompt: string) => {
+        const question = prompt.slice(prompt.lastIndexOf('Question:') + 9).trim();
+        const q = words(question);
+        let best = { score: -1, sentence: 'I could not find that in this document.', page: 0 };
+        for (const line of prompt.split('\n')) {
+          const m = line.match(/^\[p\. (\d+)\] (.*)$/);
+          if (!m) continue;
+          for (const sentence of m[2]!.split(/(?<=[.!?])\s+/)) {
+            let score = 0;
+            for (const w of words(sentence)) if (q.has(w) || [...q].some((x) => x.slice(0, 5) === w.slice(0, 5))) score++;
+            if (score > best.score) best = { score, sentence, page: Number(m[1]) };
+          }
+        }
+        return best.page ? `According to the document, **${best.sentence.replace(/\.$/, '')}** [p. ${best.page}].` : best.sentence;
+      };
+      const session = (): Record<string, unknown> => ({
+        contextWindow: 6000,
+        inputQuota: 6000,
+        measureContextUsage: async (t: string) => Math.ceil(t.length / 4),
+        measureInputUsage: async (t: string) => Math.ceil(t.length / 4),
+        prompt: async (t: string) => {
+          calls.push(t);
+          return answerFor(t);
+        },
+        promptStreaming: (t: string, o?: { signal?: AbortSignal }) => {
+          calls.push(t);
+          const slow = /SLOW/.test(t.slice(t.lastIndexOf('Question:')));
+          const text = slow ? `${'This is a long and careful answer. '.repeat(40)}[p. 1]` : answerFor(t);
+          const parts = text.match(/[\s\S]{1,12}/g) ?? [];
+          let i = 0;
+          return new ReadableStream<string>({
+            async pull(controller) {
+              await new Promise((r) => setTimeout(r, slow ? 120 : 12));
+              if (o?.signal?.aborted) return controller.error(new DOMException('Aborted', 'AbortError'));
+              if (i < parts.length) controller.enqueue(parts[i++]!);
+              else controller.close();
+            },
+          });
+        },
+        clone: async () => session(),
+        destroy() {},
+      });
+      Object.defineProperty(window, 'LanguageModel', {
+        configurable: true,
+        value: {
+          availability: async () => state,
+          create: async (opts: { monitor?: (m: EventTarget) => void } = {}) => {
+            if (state === 'unavailable') throw new DOMException('Unavailable', 'NotSupportedError');
+            if (state === 'downloadable') {
+              const monitor = new EventTarget();
+              opts.monitor?.(monitor);
+              for (const p of [0.15, 0.4, 0.7, 1]) {
+                await new Promise((r) => setTimeout(r, 200));
+                monitor.dispatchEvent(new ProgressEvent('downloadprogress', { loaded: p, total: 1 }));
+              }
+              state = 'available';
+            }
+            return session();
+          },
+        },
+      });
+    },
+    { availability },
+  );
+}
+
+export async function lmCalls(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as { __lmCalls?: string[] }).__lmCalls ?? []);
 }

@@ -19,7 +19,10 @@
  * redacted content.
  */
 import {
+  PDFArray,
   PDFName,
+  PDFNumber,
+  PDFRef,
   TextRenderingMode,
   beginText,
   endText,
@@ -119,6 +122,8 @@ export async function redactPdf(source: PdfSource, pages: RedactedPageInput[], o
   const originalPages = doc.getPages().map((p) => p.ref);
   const pageCount = originalPages.length;
   const seen = new Set<number>();
+  const removedAnnots: PDFRef[] = [];
+  const remapPages: [PDFRef, PDFRef][] = [];
   let font: PDFFont | undefined;
 
   const sorted = [...pages].sort((a, b) => a.pageIndex - b.pageIndex);
@@ -131,7 +136,22 @@ export async function redactPdf(source: PdfSource, pages: RedactedPageInput[], o
     progress(i / sorted.length, `Flattening page ${input.pageIndex + 1}`);
 
     const image = input.image.kind === 'png' ? await doc.embedPng(input.image.bytes) : await doc.embedJpg(input.image.bytes);
+    // Everything attached to the original page goes with it (form widgets with
+    // their values, links, comments); the pruner is told explicitly because the
+    // page object is deleted right away.
+    const oldPage = doc.getPage(input.pageIndex);
+    const annots = oldPage.node.lookup(PDFName.of('Annots'));
+    if (annots instanceof PDFArray) {
+      for (let k = 0; k < annots.size(); k++) {
+        const a = annots.get(k);
+        if (a instanceof PDFRef) removedAnnots.push(a);
+      }
+    }
     const newPage = doc.insertPage(input.pageIndex, [input.width, input.height]);
+    // Don't inherit /Rotate or /CropBox from the page tree: the image already shows the page as displayed.
+    newPage.node.set(PDFName.of('Rotate'), PDFNumber.of(0));
+    newPage.node.set(PDFName.of('CropBox'), doc.context.obj([0, 0, input.width, input.height]));
+    remapPages.push([oldPage.ref, newPage.ref]);
     doc.removePage(input.pageIndex + 1);
     newPage.drawImage(image, { x: 0, y: 0, width: input.width, height: input.height });
     if (input.textItems.length > 0) {
@@ -141,8 +161,14 @@ export async function redactPdf(source: PdfSource, pages: RedactedPageInput[], o
     }
   }
 
+  // XFA form data repeats every field value (including fields on redacted pages).
+  const acroForm = doc.catalog.lookup(PDFName.of('AcroForm'));
+  if (acroForm instanceof PDFDict) acroForm.delete(PDFName.of('XFA'));
+  doc.catalog.delete(PDFName.of('NeedsRendering'));
   if (options.removeHiddenInformation) sanitizeDocument(doc);
-  pruneDocument(doc, { originalPages });
+  // Links to a redacted page now lead to its flattened replacement; its old
+  // structure elements (alt text, actual text) are dropped.
+  pruneDocument(doc, { originalPages, removedAnnots, remapPages, replacedPagesAreGone: true });
   progress(0.95, 'Saving');
   return savePdf(doc, { stamp: !options.removeHiddenInformation });
 }

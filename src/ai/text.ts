@@ -22,14 +22,19 @@ export function pageTextFromItems(items: TextItemish[]): string {
  * hyphenated across lines, turns soft line breaks into spaces and keeps
  * paragraph breaks after sentence-ending punctuation.
  */
+const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/;
+
 export function cleanExtractedText(text: string): string {
   return text
     .replace(/\r\n?/g, '\n')
     .replace(/\u00ad/g, '')
     .replace(/(\p{L})-\n(\p{Ll})/gu, '$1$2')
-    .replace(/[ \t\f\v]*\n[\s]*/g, (_m, offset: number, whole: string) => {
+    .replace(/[ \t\f\v]*\n[\s]*/g, (m: string, offset: number, whole: string) => {
       const prev = whole.slice(Math.max(0, offset - 1), offset);
-      return /[.!?:;。！？]/.test(prev) ? '\n' : ' ';
+      if (/[.!?:;。！？]/.test(prev)) return '\n';
+      // Chinese, Japanese and Korean lines wrap without spaces between words.
+      const next = whole.charAt(offset + m.length);
+      return CJK.test(prev) && CJK.test(next) ? '' : ' ';
     })
     .replace(/[ \t\f\v\u00a0]{2,}/g, ' ')
     .replace(/\n{3,}/g, '\n\n')

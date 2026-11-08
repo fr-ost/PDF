@@ -22,6 +22,7 @@ import {
   PDFArray,
   PDFDict,
   PDFName,
+  PDFNull,
   PDFNumber,
   PDFRawStream,
   PDFRef,
@@ -32,6 +33,7 @@ import {
 } from '@cantoo/pdf-lib';
 import { zlibSync } from 'fflate';
 import { getPageGeometry } from './geometry';
+import { readJpegHeader, stripExifSegments } from './imageFormats';
 import { loadPdf, savePdf, type PdfSource } from './load';
 import { pruneDocument } from './prune';
 import type { ProgressFn } from './assemble';
@@ -335,8 +337,12 @@ export function stripMetadata(doc: PDFDocument): void {
   const info = ctx.trailerInfo.Info;
   if (info instanceof PDFRef) ctx.delete(info);
   ctx.trailerInfo.Info = undefined;
+  // XMP can be attached to the catalog, pages, images, form XObjects, fonts…
+  for (const [, obj] of ctx.enumerateIndirectObjects()) {
+    if (obj instanceof PDFDict) obj.delete(N.Metadata);
+    else if (obj instanceof PDFStream) obj.dict.delete(N.Metadata);
+  }
   doc.catalog.delete(N.Metadata);
-  for (const page of doc.getPages()) page.node.delete(N.Metadata);
 }
 
 export async function compressPdf(source: PdfSource, options: CompressOptions, codec: ImageCodec, progress: ProgressFn = () => undefined): Promise<{ bytes: Uint8Array; report: CompressReport }> {
@@ -422,10 +428,16 @@ async function recompressImage(
 
   let input: CodecInput;
   if (filter === N.DCTDecode) {
-    input = { kind: 'jpeg', bytes: stream.contents };
+    // Browsers apply the EXIF orientation when decoding, but the PDF already
+    // rotates the image with its placement matrix: decode it as stored.
+    input = { kind: 'jpeg', bytes: (readJpegHeader(stream.contents)?.orientation ?? 1) !== 1 ? stripExifSegments(stream.contents) : stream.contents };
   } else {
+    // /DecodeParms may be a dict or, with /Filter [/FlateDecode], a one-element array.
+    const rawParms = dict.lookup(N.DecodeParms);
+    if (rawParms instanceof PDFArray && rawParms.size() !== 1) return false;
+    const parms = rawParms instanceof PDFArray ? rawParms.lookup(0) : rawParms;
+    if (parms !== undefined && parms !== PDFNull && !(parms instanceof PDFDict)) return false;
     let data = decodePDFRawStream(stream).decode();
-    const parms = dict.lookup(N.DecodeParms);
     if (parms instanceof PDFDict) {
       const predictor = num(parms.lookup(N.Predictor)) ?? 1;
       const colors = num(parms.lookup(N.Colors)) ?? 1;

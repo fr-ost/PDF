@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cleanExtractedText, countWords, pageTextFromItems, splitSentences } from '../../src/ai/text';
-import { accumulateStream, chunkTexts, estimateTokens, splitOversized } from '../../src/ai/chunk';
+import { chunkTexts, createStreamAccumulator, estimateTokens, splitOversized } from '../../src/ai/chunk';
 import { extractiveSummary } from '../../src/ai/extractive';
 import { blocksToPlainText, parseInline, parseSummaryBlocks } from '../../src/ai/markdown';
 import { checkAiStatus, summarizeDocument } from '../../src/ai/summarizer';
@@ -71,10 +71,22 @@ describe('chunking', () => {
     expect(pieces.length).toBeGreaterThan(5);
     for (const p of pieces) expect(estimateTokens(p)).toBeLessThanOrEqual(100);
   });
-  it('accepts cumulative and delta streams', () => {
-    expect(accumulateStream('', 'Hello')).toBe('Hello');
-    expect(accumulateStream('Hello', ' world')).toBe('Hello world');
-    expect(accumulateStream('Hello', 'Hello world')).toBe('Hello world');
+  it('accepts cumulative and delta streams, deciding once', () => {
+    const run = (chunks: string[]) => {
+      const acc = createStreamAccumulator();
+      let text = '';
+      for (const c of chunks) text = acc(c);
+      return text;
+    };
+    expect(run(['Hello', ' world'])).toBe('Hello world');
+    expect(run(['Hello', 'Hello world', 'Hello world!'])).toBe('Hello world!');
+    // A delta that repeats the text so far is not mistaken for a cumulative chunk.
+    expect(run(['1', ' key', ' findings', '1', ' more'])).toBe('1 key findings1 more');
+    expect(run(['1', '1', ' key findings'])).toBe('11 key findings');
+  });
+  it('keeps underscores and asterisks inside words, joins CJK lines without spaces', () => {
+    expect(blocksToPlainText(parseSummaryBlocks('See quarterly_report_final.pdf and 2*3*4, but _this_ is italic.'))).toBe('See quarterly_report_final.pdf and 2*3*4, but this is italic.');
+    expect(cleanExtractedText('日本語の\n文章です。\nNext line')).toBe('日本語の文章です。\nNext line');
   });
 });
 

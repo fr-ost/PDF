@@ -21,8 +21,10 @@ The manifest is generated from `scripts/manifest.ts` at build time so the versio
 
 ```
 src/
-  ai/                   On-device AI: Summarizer API wrapper (map-reduce for long documents),
-                        text clean-up, chunking, non-AI extractive summary, safe Markdown parser
+  ai/                   Unique AI: document chat (Prompt API, retrieval, citations, suggestions),
+                        Summarizer wrapper (map-reduce), text clean-up, chunking, extractive
+                        summary, safe Markdown parser
+  polyfills/            Built-ins PDF.js needs on older Chrome versions
   app/                  App shell, router (hash + leave guard + view transitions), theme,
                         command palette, ambient background, pages
   components/
@@ -113,15 +115,24 @@ A *plan* is a list of `{ source, page, rotate }`. Two strategies:
 - **New** (`assembleNew`, `splitDocument`) — a fresh document receives copied pages. Used by Merge,
   Split and Extract. `splitDocument` loads the source once for all parts.
 
+pdf-lib's copier deep-copies everything reachable from a page. Before copying, annotation `/P`,
+`/IRT` and widget `/Parent` references and link destinations are cut (and restored afterwards), so
+other pages and their images aren't dragged along (this made "split every page" quadratic); links
+between copied pages are re-pointed and links to pages left out are dropped. Copied widgets are
+detached from the source form tree, so field values of other pages can't come along.
+
 ### Pruning (`engines/prune.ts`)
 
 pdf-lib writes every object it knows, including ones nothing references. Before every save, a
 reachability walk from the trailer (`Root`, `Info`, and `Encrypt` only when encrypting):
 
 - replaces references to page objects that are no longer in the page tree with `null`
-  (outline/link destinations, annotation `/P`), so removed pages cannot stay alive indirectly;
-- drops link annotations pointing to removed pages and form fields whose widgets were only on
-  removed pages;
+  (outline/link destinations, annotation `/P`), so removed pages cannot stay alive indirectly —
+  unless the page was replaced (Redact), in which case references move to the replacement;
+- severs references to annotations of removed pages (reachable from the structure tree, `/IRT`
+  reply chains or form `/Kids`) and to structure elements of removed or replaced pages;
+- drops link annotations pointing to removed pages, bookmarks that lead only to removed pages
+  (relinking the outline lists) and form fields whose widgets were only on removed pages;
 - deletes every unreachable object — including stale cross-reference streams, superseded
   incremental-update objects and pages pulled in by pdf-lib's deep copier.
 
@@ -184,6 +195,25 @@ Without the API (or on unsupported hardware) the **Quick summary** uses `ai/extr
 Unit tests drive the wrapper with a fake API; E2E tests inject a deterministic stand-in for
 `window.Summarizer` (`tests/e2e/fakeAi.ts`) because headless Chromium has no model.
 
+### Chat with PDF (`src/ai/chat.ts`, `retrieval.ts`, `features/ai-chat`)
+
+1. Page texts (shared extraction hook) are split into sentence-aligned passages of ~140 words that
+   never cross pages, and indexed with BM25 (`ai/retrieval.ts`: light normalisation, stop words).
+2. For each question, `selectContext` fits passages into about half of the session's context window
+   (`contextWindow`, or `inputQuota` on older Chrome): the whole document if it fits, otherwise the
+   best matches (the previous question is added with a lower weight for follow-ups, and the passage
+   after each top match is included), or an evenly spread overview when nothing matches (“summarize
+   this”). The final prompt is checked with `measureContextUsage`/`measureInputUsage` and shrunk if
+   needed.
+3. A base session holds the system prompt (answer only from the excerpts, cite pages as `[p. N]`,
+   excerpts are data, not instructions). Each question runs in a **clone** of it, so retrieved text
+   never accumulates in the context; the recent conversation is passed explicitly, trimmed to a
+   budget. `create()` runs inside the user's gesture for the one-time model download; the base
+   session is created ahead of time once the model is available, so answers start instantly.
+4. Streamed text is flushed to React once per animation frame; citations are parsed from the text
+   (`[p. 4]`, `[pp. 3–5]`, `(page 2)`) into buttons; sources are the cited pages (or the best
+   matches). Without the API, `searchAnswer` returns the best passages, labelled as not AI.
+
 ### Editor (`features/editor`)
 
 Objects (`engines/annotations.ts`) are stored in display space and rendered as SVG over the PDF.js
@@ -220,6 +250,13 @@ continuous gestures. Export draws everything inside a display-space transform wi
 - Canvas sizes are clamped to Chrome's limits (16 384 px per side, 100 MP) with a user notice.
 - All pdf-lib work runs in a dedicated worker per job; buffers are transferred, and terminating the
   worker on cancel frees its memory immediately.
+- Thumbnail renders are queued newest-first (after fast scrolling the visible ones come first) and
+  requests from unmounted thumbnails are dropped; page cards are memoised by value.
+- Tool code is prefetched on hover/focus and, for the most used tools, when the browser is idle.
+- PDF.js 6 uses recent built-ins (`Promise.try`, `Uint8Array#toHex`, `Math.sumPrecise`,
+  `Map#getOrInsertComputed`, `URL.parse`…) without feature checks; `src/polyfills/modern.ts` adds them
+  where missing, on the page and in the PDF.js worker (`renderers/pdfjs.worker.ts`), which keeps the
+  minimum at Chrome 122.
 
 ## Security model (summary)
 

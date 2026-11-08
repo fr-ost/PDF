@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Circle,
   Highlighter,
   ImagePlus,
@@ -93,6 +95,12 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
   const signaturePrompted = useRef(false);
   const entry = files.ready[0];
   const pageCount = entry?.pageCount ?? 0;
+  /** Shows another page; the selection belongs to the old page, so it is cleared. */
+  const goToPage = (p: number) => {
+    setPage(Math.max(0, Math.min(pageCount - 1, p)));
+    setSelectedId(null);
+    setEditingId(null);
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -103,10 +111,17 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
     return () => ro.disconnect();
   }, [entry]);
 
-  useEffect(() => () => Object.values(assets).forEach((a) => URL.revokeObjectURL(a.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Inserted images live as object URLs; release them when replaced and on unmount.
+  const assetsRef = useRef(assets);
+  useEffect(() => {
+    assetsRef.current = assets;
+  }, [assets]);
+  useEffect(() => () => Object.values(assetsRef.current).forEach((a) => URL.revokeObjectURL(a.url)), []);
 
   // A new document starts with a clean slate.
   useEffect(() => {
+    Object.values(assetsRef.current).forEach((a) => URL.revokeObjectURL(a.url));
+    setAssets({});
     history.reset();
     setSelectedId(null);
     setEditingId(null);
@@ -312,8 +327,8 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
       'shift+arrowright': () => nudge(10, 0),
       'shift+arrowup': () => nudge(0, -10),
       'shift+arrowdown': () => nudge(0, 10),
-      pagedown: () => setPage((p) => Math.min(pageCount - 1, p + 1)),
-      pageup: () => setPage((p) => Math.max(0, p - 1)),
+      pagedown: () => goToPage(page + 1),
+      pageup: () => goToPage(page - 1),
       ...Object.fromEntries(TOOLS.map((t) => [t.key, () => setToolKind(t.id)])),
     },
     !!entry && !editingId,
@@ -327,8 +342,10 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
   const exportPdf = () =>
     task.run(async ({ signal, progress }) => {
       const payload: Record<string, EditorAsset> = {};
-      for (const [id, a] of Object.entries(assets)) payload[id] = { kind: a.kind, bytes: a.bytes.slice(), width: a.width, height: a.height };
       const clean = objects.filter((o) => o.type !== 'text' || o.text.trim());
+      // Only images still on the pages are sent to the worker.
+      const used = new Set(clean.flatMap((o) => (o.type === 'image' ? [o.assetId] : [])));
+      for (const [id, a] of Object.entries(assets)) if (used.has(id)) payload[id] = { kind: a.kind, bytes: a.bytes.slice(), width: a.width, height: a.height };
       const bytes = await runInWorker('editorExport', { source: await toSource(entry!), objects: clean, assets: payload }, { signal, onProgress: progress });
       const outputs = [makeOutput(outputName(entry!.name, mode === 'sign' ? 'signed' : 'edited'), bytes, 'pdf', { pageCount })];
       recordHistory(tool, [entry!], outputs);
@@ -392,7 +409,7 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
           <div className="flex h-[calc(100vh-15rem)] min-h-[460px]">
             <nav className="hidden w-28 shrink-0 space-y-2 overflow-y-auto border-r border-line bg-surface p-2 md:block" aria-label="Pages">
               {Array.from({ length: pageCount }, (_, i) => (
-                <button key={i} type="button" onClick={() => { setPage(i); setSelectedId(null); setEditingId(null); }} aria-current={page === i ? 'page' : undefined} className={cn('relative w-full rounded-lg border p-1.5 text-center', page === i ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface-2')}>
+                <button key={i} type="button" onClick={() => goToPage(i)} aria-current={page === i ? 'page' : undefined} className={cn('relative w-full rounded-lg border p-1.5 text-center', page === i ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface-2')}>
                   <PageThumbnail docId={entry.id} pageIndex={i} width={88} />
                   <span className="mt-1 block text-[11px] font-medium text-fg-muted">{i + 1}</span>
                   {pagesWithObjects.has(i) ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" aria-label="Has edits" /> : null}
@@ -489,7 +506,11 @@ export function EditorWorkspace({ tool, initialFiles, mode = 'edit' }: ToolProps
             </div>
           </div>
           <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-1 text-xs text-fg-muted">
-            <span>Page {page + 1} of {pageCount}</span>
+            <span className="flex items-center gap-0.5">
+              <IconButton icon={ChevronLeft} label="Previous page" size="sm" onClick={() => goToPage(page - 1)} disabled={page === 0} />
+              <span className="tabular-nums">Page {page + 1} of {pageCount}</span>
+              <IconButton icon={ChevronRight} label="Next page" size="sm" onClick={() => goToPage(page + 1)} disabled={page >= pageCount - 1} />
+            </span>
             <span className="hidden truncate lg:inline">Double-click text to edit · Delete removes · Arrow keys nudge</span>
             <span className="flex items-center gap-0.5">
               <IconButton icon={ZoomOut} label="Zoom out" size="sm" onClick={() => setZoom(Math.max(0.25, scale / 1.25))} />

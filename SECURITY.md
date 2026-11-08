@@ -19,8 +19,10 @@ We aim to acknowledge reports within 5 working days.
 | Redacted content | Content remains in the file | True removal + reachability pruning + automatic text-extraction verification that blocks export on failure; byte-level unit tests. |
 | Deleted pages | Content remains in the file | Pruning removes every object only reachable from removed pages; byte-level unit test. |
 | Users | Over-broad permissions | Only `storage`; no host permissions, content scripts, web-accessible resources or external messaging (validated at build time). |
-| Document text sent to AI | Leaving the device | Only Chrome's built-in, on-device Summarizer API is used; no AI service is contacted and the CSP still blocks every network connection. |
-| AI output | Injection into the page | Summaries are parsed into a small set of text blocks (headings, lists, bold/italic) and rendered by React as text; HTML in model output is never interpreted. Document text can influence what the model writes (prompt injection), so summaries are labelled as AI output to be checked. |
+| Document text sent to AI | Leaving the device | Only Chrome's built-in AI APIs (Prompt, Summarizer) are used; no AI service is contacted and the CSP still blocks every network connection. |
+| AI output | Injection into the page | Answers and summaries are parsed into a small set of text blocks (headings, lists, bold/italic, page citations) and rendered by React as text; HTML in model output is never interpreted. |
+| Prompt injection | A PDF steering the assistant | The model is told that document excerpts are data, never instructions, and to answer only from them; it has no tools or actions (it can only write text), and answers are labelled as AI output to be checked. |
+| Hidden data in outputs | Fields, XFA data, structure elements or bookmarks of removed/redacted pages | The pruner severs references to annotations, widgets and structure elements of removed or replaced pages, drops bookmarks that lead only to removed pages and form fields without remaining widgets; Redact removes XFA data; pages copied into new documents are detached from the source form tree. |
 
 ## Content Security Policy
 

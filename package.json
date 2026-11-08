@@ -1,7 +1,7 @@
 {
   "name": "unique-pdf",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Unique PDF — Free PDF Toolkit by Unique Labs. Private, local-first PDF tools for Chrome.",
   "type": "module",
   "license": "UNLICENSED",

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useMeasuredWidth } from '../../hooks/useMeasuredWidth';
 import { Bold, ImageUp, Italic, Type } from 'lucide-react';
 import type { ToolProps } from '../registry';
 import { ToolShell } from '../../components/tool/ToolShell';
@@ -29,6 +30,7 @@ const POSITIONS: Anchor[][] = [
 
 export default function WatermarkTool({ tool, initialFiles }: ToolProps) {
   const files = useToolFiles(tool, initialFiles);
+  const [previewRef, previewWidth] = useMeasuredWidth<HTMLDivElement>();
   const task = useTask<OutputFile[]>();
   const toast = useToast();
   const imageInput = useRef<HTMLInputElement>(null);
@@ -51,6 +53,9 @@ export default function WatermarkTool({ tool, initialFiles }: ToolProps) {
   const [previewPage, setPreviewPage] = useState(0);
   const entry = files.ready[0];
   const pageCount = entry?.pageCount ?? 0;
+  // One clamped index for the canvas, the overlay and the pager; a new file starts at page 1.
+  const shownPage = Math.min(previewPage, Math.max(0, pageCount - 1));
+  useEffect(() => setPreviewPage(0), [entry?.id]);
 
   useEffect(() => () => { if (image) URL.revokeObjectURL(image.url); }, [image]);
 
@@ -134,10 +139,10 @@ export default function WatermarkTool({ tool, initialFiles }: ToolProps) {
       }
     >
       {entry ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface-2/60 p-4">
-          <PageCanvas docId={entry.id} pageIndex={Math.min(previewPage, pageCount - 1)} maxWidth={560} maxHeight={720}>
+        <div ref={previewRef} className="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface-2/60 p-4">
+          <PageCanvas docId={entry.id} pageIndex={shownPage} maxWidth={Math.max(160, Math.min(560, previewWidth || 560))} maxHeight={720}>
             {(info) => {
-              if (!targetPages.includes(previewPage)) return <div className="absolute inset-x-0 bottom-2 text-center text-xs text-fg-subtle">Not watermarked</div>;
+              if (!targetPages.includes(shownPage)) return <div className="absolute inset-x-0 bottom-2 text-center text-xs text-fg-subtle">Not watermarked</div>;
               const H = info.height;
               let item: { w: number; h: number };
               if (type === 'image') {
@@ -165,7 +170,7 @@ export default function WatermarkTool({ tool, initialFiles }: ToolProps) {
               );
             }}
           </PageCanvas>
-          <PreviewPager index={previewPage} count={pageCount} onChange={setPreviewPage} />
+          <PreviewPager index={shownPage} count={pageCount} onChange={setPreviewPage} />
         </div>
       ) : null}
     </ToolShell>

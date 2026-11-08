@@ -122,50 +122,66 @@ warning when a digitally signed PDF would lose its signatures.
 
 ### Redact PDF
 - Mark areas by drawing boxes, by searching text (match case, whole words; all pages at once), or
-  by redacting whole pages. Move/resize/delete marks; preview the result.
+  by redacting whole pages. Search also finds words split across text runs or lines (“John” in
+  bold followed by “Smith”) and works on vertical text. Move/resize/delete marks; preview the result.
 - Black or white fill, 150/200/300 DPI for flattened pages.
 - Removes the underlying content of marked pages (not a visual cover): pages with marks are
   replaced by flattened images with the areas painted over, and their original text, fonts,
-  images and annotations are deleted from the file.
+  images, annotations, form fields (with their values), XFA form data and structure elements are
+  deleted from the file. Links and bookmarks to a redacted page lead to its flattened version.
 - Optional searchable text layer rebuilt only from text completely outside the marks.
 - Optional removal of hidden information: metadata, XMP, bookmarks, attachments, document
   JavaScript, open actions, tags/structure tree.
 - **Automatic verification**: the result is re-opened and its text extracted; if any text lies
-  inside a marked area the export is refused. Search terms still found elsewhere are reported.
+  inside a marked area the export is refused. Search terms still found elsewhere are reported
+  (with the same cross-run matching as the search).
 
 ### Edit metadata
 - Shows title, author, subject, keywords, creator, producer, creation/modification dates, XMP
   presence, PDF version, page count and encryption.
 - Edit or clear any field (dates via date-time pickers); existing XMP metadata is regenerated to
-  match (PDF/A identification is kept). **Remove all metadata** strips the Info dictionary, XMP and
-  private application data. The saved values are read back from the new file and displayed.
+  match (PDF/A identification is kept). **Remove all metadata** strips the Info dictionary, XMP
+  (also XMP attached to images, fonts and forms) and private application data. The saved values are read back from the new file and displayed.
 
-## AI tools
+## Unique AI
+
+Unique AI is the AI assistant built into Unique PDF by Unique Labs. It runs on the AI built into
+Chrome (Prompt and Summarizer APIs): the document text is extracted in the browser with PDF.js and
+never sent to Unique Labs or any server.
+
+### Chat with PDF
+- Ask anything about a document in plain language. Answers stream in as they are written, with
+  **clickable page citations** (“p. 4”) and a **Sources** row; on large screens a citation scrolls
+  the page rail beside the chat to that page and highlights it, on phones it opens a page preview.
+- Documents of any length: the text is split into page-tagged passages and indexed (BM25). Short
+  documents are given to the model whole; for long ones the passages most relevant to the question
+  (and the previous question, for follow-ups) are chosen to fit the model's context window, checked
+  with the model's own token counter.
+- Conversation: follow-up questions use the recent conversation; **Stop** (button or Escape),
+  **Regenerate**, **Copy** (plain text with page references), **New chat**, **Export** (Markdown,
+  `<name>-chat.md`), reply language (English, Spanish, Japanese).
+- Suggested first questions adapt to the document (summary, key takeaways, numbers, dates and
+  deadlines, obligations in contracts, findings in research papers, people and organizations).
+- The model is told to answer only from the document, to cite pages, and never to follow
+  instructions found inside the document. Answers are rendered as text (never HTML).
+- First use: when Chrome reports the model as downloadable, the first question starts the one-time
+  setup (progress shown in the answer). Availability: desktop Chrome 138+ on Windows, macOS, Linux or
+  Chromebook Plus with enough storage and memory (about 22 GB free disk space; a GPU with more than
+  4 GB of memory, or 16 GB RAM and 4+ CPU cores).
+- **Search mode (not AI)**: where Unique AI isn't available, the same chat returns the best-matching
+  passages with the question's words highlighted and page links, labelled “Best matches · not AI”.
+- Scanned PDFs without a text layer are detected and explained (OCR is on the roadmap).
 
 ### AI Summary
-- Summaries are written **on the device** by Chrome's built-in Summarizer API (Gemini Nano). The
-  document's text is extracted locally with PDF.js and passed to the browser's local model; nothing
-  is uploaded and the extension's network policy stays closed.
-- Options: style (**Key points**, **TL;DR**, **Teaser**, **Headline**), length (short, medium,
-  long), output language (English, Spanish, Japanese), optional focus (“deadlines, costs and
-  risks”), and all pages or a page range.
-- Long documents are split into parts that fit the model's input quota (measured with the model's
-  own token counter) and summarised part by part, then combined (“summary of summaries”), with
-  progress for each step. Cancel stops the job.
+- Key points, TL;DR, teaser or headline; short, medium or long; English, Spanish or Japanese; an
+  optional focus (“deadlines, costs and risks”); all pages or a page range.
+- Long documents are split into parts that fit the model's input quota and combined (“summary of
+  summaries”), with progress for each step. Cancel stops the job.
 - The summary streams in as it is written. **Copy** puts plain text on the clipboard;
-  **Download** saves Markdown (`<name>-summary.md`) with a note on how it was produced;
-  **Regenerate** writes a new one. Output is rendered as text (never as HTML).
-- First use: when Chrome reports the model as downloadable, the button reads **Set up AI &
-  summarize**; Chrome downloads and manages the model once (progress shown), then summaries work
-  offline.
-- Availability: desktop Chrome 138+ on Windows, macOS, Linux or Chromebook Plus with enough storage
-  and memory for the model (Chrome's requirements: about 22 GB free disk space; a GPU with more than
-  4 GB of memory, or 16 GB RAM and 4+ CPU cores). The tool shows the device's status and the
-  requirements.
+  **Download** saves Markdown (`<name>-summary.md`); **Regenerate** writes a new one.
 - **Quick summary (no AI)**: on any device, key sentences are selected from the document by a
   simple statistical method and labelled “Key sentences · not AI”.
-- PDFs without selectable text (scans) are detected and explained; OCR is on the roadmap.
-- AI output can be wrong: the summary carries a reminder to check important details.
+- AI output can be wrong: answers and summaries carry a reminder to check important details.
 
 ## Application
 
@@ -181,7 +197,13 @@ warning when a digitally signed PDF would lose its signatures.
   default compression level, “Ask where to save each file” (native Save dialog), history toggle,
   clear history, clear all local data, version.
 - **About** and **Privacy** pages, open-source licence list, keyboard shortcuts.
-- **Popup**: open the app, nine quick tools (including AI Summary), recent tasks, theme switch.
+- **Popup**: open the app, nine quick tools (Chat with PDF and AI Summary first), recent tasks,
+  theme switch.
+- **Phones and tablets**: the main action of a tool floats at the bottom of the screen while you
+  scroll through pages; the editor and Redact have previous/next page buttons; page actions are
+  always visible on touch screens; pages and files can be reordered by long-press dragging.
+- **Speed**: the most used tools load in the background when the browser is idle and any tool
+  starts loading when you point at it, so tools open instantly; thumbnails render newest-first.
 - **Keyboard**: `Alt+Shift+P` open app tab, `Alt+Shift+U` open popup (configurable at
   `chrome://extensions/shortcuts`); full keyboard operation of dialogs, grids and forms.
 - **Offline**: everything works without a network connection after installation.

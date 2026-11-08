@@ -10,15 +10,15 @@ data must ship inside the package (the extension downloads no executable code or
 Chrome's built-in AI models are the one exception by design: they are downloaded, stored and run by
 the browser itself, on the device, and the extension only calls the browser's API.
 
-**Shipped in 1.1.0:** AI Summary (Chrome's on-device Summarizer API, with long-document support and
-a labelled non-AI fallback). See FEATURES.md.
+**Shipped:** AI Summary (1.1.0) and Chat with PDF (1.2.0), both part of Unique AI, built on Chrome's
+built-in AI APIs, with long-document support and labelled non-AI fallbacks. See FEATURES.md.
 
 ## Summary
 
 | Feature | Feasible locally? | Complexity | Main constraint | Recommendation |
 | --- | --- | --- | --- | --- |
-| Ask questions about a PDF (on-device AI) | Yes, where Chrome's model is available | Medium | Context window, model availability | Next minor release |
-| Translate summaries and text (on-device AI) | Yes, where Chrome's translator is available | Low–Medium | Language packs managed by Chrome | Next minor release |
+| Chat across several PDFs (Unique AI) | Yes, where Chrome's model is available | Medium | Context window, retrieval across files | Next minor release |
+| Translate summaries, answers and text (Unique AI) | Yes, where Chrome's translator is available | Low–Medium | Language packs managed by Chrome | Next minor release |
 | OCR | Yes | Medium | Size of language data, speed | Next major release |
 | Searchable PDF (from scans) | Yes (with OCR) | Medium | Depends on OCR | Ship with OCR |
 | PDF bookmarks / TOC editor | Yes | Medium | — | Next minor release |
@@ -34,20 +34,18 @@ a labelled non-AI fallback). See FEATURES.md.
 | PowerPoint → PDF | Not reliably | Very high | Needs a rendering engine | Not planned for the extension |
 | HTML → PDF | Not without extra permissions | High | Needs `debugger` permission or user print dialog | Not planned |
 
-## On-device AI: questions, translation, more summary options
+## Unique AI: next steps
 
-AI Summary uses Chrome's built-in Summarizer API. The same family of browser APIs makes further
-local AI features possible without any server:
+Chat with PDF and AI Summary run on Chrome's built-in AI APIs (Prompt API, Summarizer API). Next:
 
-- **Ask your PDF** — Chrome's Prompt API (available to extensions in recent Chrome versions) runs
-  Gemini Nano locally. Questions would be answered from the extracted text; documents larger than
-  the context window need retrieval (pick the most relevant passages first, e.g. by keyword scoring)
-  and answers should quote the passages they rely on. Same availability limits as AI Summary.
-- **Translate** — Chrome's Translator and Language Detector APIs translate on the device; Chrome
-  downloads language packs on demand. Useful for summaries first, then for text extraction exports.
-- **Constraints:** desktop Chrome only, hardware requirements (storage, GPU or RAM), and output
-  quality of a small model. Every AI feature keeps a clearly labelled non-AI path or explains why it
-  is unavailable, and AI output is always rendered as text.
+- **Several documents in one chat** — the same retrieval over passages from several files, with
+  citations that name the file and page.
+- **Translate** — Chrome's Translator and Language Detector APIs translate in the browser; Chrome
+  downloads language packs on demand. First for answers and summaries, then for text exports.
+- **Answers from scans** — once OCR exists, scanned pages get a text layer that chat can read.
+- **Constraints:** desktop Chrome only, hardware requirements (storage, GPU or RAM), and the output
+  quality of a small model. Every AI feature keeps a clearly labelled non-AI path, and AI output is
+  always rendered as text.
 - **Not planned:** any cloud AI. Sending documents to a server would contradict the product's
   promise.
 

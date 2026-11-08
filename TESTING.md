@@ -22,7 +22,7 @@ npm run test:e2e
 
 End-to-end tests (Playwright) load the production build from `dist/` as an unpacked extension in
 Chromium and drive the real UI. Outputs are captured from real downloads and verified in Node with
-PDF.js. About 75 seconds with two workers.
+PDF.js. About 90 seconds with two workers.
 
 Other checks run as part of a release:
 
@@ -36,14 +36,14 @@ npm run typecheck
 
 `npm run build` also runs `scripts/validate-build.mjs` (manifest, permission, CSP and bundle audit).
 
-## Latest results (v1.1.0, executed 2026-11-08)
+## Latest results (v1.2.0, executed 2026-11-08)
 
 | Suite | Result |
 | --- | --- |
 | ESLint | 0 errors, 0 warnings |
 | TypeScript (strict) | 0 errors |
-| Unit + component (Vitest) | **124 passed** in 12 files |
-| End-to-end (Playwright, Chromium with extension) | **53 passed** in 8 files (two consecutive full runs) |
+| Unit + component (Vitest) | **157 passed** in 15 files |
+| End-to-end (Playwright, Chromium with extension) | **65 passed** in 10 files (two consecutive full runs) |
 | Build validation | Passed (permissions `["storage"]`, no host permissions, strict CSP, no eval/remote code/source maps/fixtures) |
 | `npm audit` (all dependencies) | 0 vulnerabilities |
 | Packaged ZIP | Extracted, loaded in Chromium and exercised successfully |
@@ -64,6 +64,9 @@ npm run typecheck
 | `uiLogic.test.ts` | Router parsing (incl. unsafe ids), tool registry ids, safe file names, formatting, multi-select drag math, editor move/resize/aspect lock/clamping, signature normalisation, password strength, shared layout math. |
 | `components.test.tsx` | Page range field validation, keyboard-operable radio group, switch semantics, hostile file names rendered as text, alert roles. |
 | `ai.test.ts` | Summarizer wrapper against a fake API: single pass with streaming (delta and cumulative chunks, and no streaming), map-reduce for long documents within the input quota (with per-part context), every instance destroyed, cancellation, error mapping, availability states; text clean-up, chunking, extractive summary and the safe Markdown parser. |
+| `chat.test.ts` | Document chat: term normalisation, sentence-aligned passages per page, BM25 ranking, whole-document vs. search vs. overview context within a budget, history trimming, prompt layout, page-citation parsing (formats, ranges, invalid pages), suggestions per document type, and the Prompt API wrapper against a fake `LanguageModel` (cloned sessions destroyed, delta/cumulative/non-streaming, context window with current and older member names, follow-up retrieval, cancellation, error mapping, availability, non-AI search). |
+| `engineFixes.test.ts` | Regressions for privacy and correctness fixes: Redact removes form fields, values and XFA data and keeps links/bookmarks pointing at the flattened page without inherited rotation; Extract/Split/Delete don't carry other pages' field values; deleting pages removes annotations, alt text and bookmarks reached via the structure tree, reply chains and outlines; split re-points links within a part and drops others (and stays fast); PDF/A-1 in-place edits and Protect on PDF/A; encrypted page labels and language; owner-only restrictions kept, lifted by Unlock; XMP on images removed; array `/DecodeParms` predictors; EXIF stripping; page ranges with spaces; search across text items; vertical text geometry. |
+| `polyfills.test.ts` | Replacements for `Promise.try`, `URL.parse`, `Map#getOrInsertComputed`, `Math.sumPrecise` and `Uint8Array` hex/base64 behave correctly when the built-ins are missing. |
 
 ## End-to-end tests (`tests/e2e/`)
 
@@ -73,8 +76,10 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 
 | File | Scenarios |
 | --- | --- |
-| `app.spec.ts` | Home and 19 tool cards, search, navigation to every section, 404, theme persistence (Settings and sidebar switch, **no flash of the wrong theme on reload**), command palette (keyboard and button), history stored without content and cleared, clear all local data, popup quick tools open the app, options page, leave-guard confirmation. |
+| `app.spec.ts` | Home and 20 tool cards, search, navigation to every section, 404, theme persistence (Settings and sidebar switch, **no flash of the wrong theme on reload**), command palette (keyboard and button), history stored without content and cleared, clear all local data, popup quick tools open the app, options page, leave-guard confirmation. |
 | `ai.spec.ts` | AI Summary with a deterministic stand-in for Chrome's on-device model: options passed to the model (style, length, language, focus), streamed result rendered as a semantic list, copy as plain text, Markdown download, history; one-time model download with progress; long documents split into parts and combined; labelled non-AI Quick summary when the model is unavailable; missing API with a page range; scanned PDFs without text. |
+| `chat.spec.ts` | Chat with PDF against a stand-in for Chrome's Prompt API: streamed answer with page citations, clicking a citation highlights the page in the rail, the prompt contains the question and page-labelled excerpts, follow-ups carry the conversation, copy (plain text with page references), Markdown export, new chat; suggested questions, Stop (button and Escape), Regenerate; one-time setup with progress; long documents send only the most relevant passages within the context window; non-AI search mode with highlighted matches; scanned PDFs; citation preview dialog on phones. |
+| `ux.spec.ts` | Password field focused when the prompt opens (type and Enter), file dropped outside a drop zone doesn't replace the app, Back after confirming “Leave” returns to the right page, number fields can be cleared and retyped, floating action bar on phones. |
 | `organize.spec.ts` | Merge with reordering, split every page → ZIP contents, custom ranges with validation, extract by range, rotate selection, reverse order, **keyboard drag-and-drop with screen-reader announcements**, delete with confirmation, multi-file organize with delete and rotate. |
 | `convert.spec.ts` | Compress (size reduced, text kept, stats shown), maximum compression rasterises with warning, images → PDF with EXIF JPEG + PNG + WebP and page size, rejection of non-images, PDF → PNG ZIP with pixel dimensions, single JPEG, **cancelling a long job**. |
 | `edit.spec.ts` | Editor text + rectangle + undo/redo with pixel check, unsupported characters block saving, sign with the signature pad (ink verified), watermark on selected pages, page numbers skipping the first page. |
@@ -84,10 +89,12 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 
 ### Notes for the E2E suite
 
-- **On-device AI:** headless Chromium has no Gemini Nano model, so `tests/e2e/fakeAi.ts` installs a
-  stand-in for `window.Summarizer` with the same API shape (availability, `create()` with download
-  progress, `summarizeStreaming`, `measureInputUsage`, `inputQuota`) and records calls so tests can
-  assert what reached the model. Run the tool against the real model manually (checklist below).
+- **Unique AI:** headless Chromium has no AI model, so `tests/e2e/fakeAi.ts` installs stand-ins for
+  `window.Summarizer` and `window.LanguageModel` with the same API shapes (availability, `create()`
+  with download progress, streaming, token measuring, `clone()`, context window) and records calls so
+  tests can assert what reached the model. The chat stand-in answers with the excerpt sentence that
+  best matches the question and cites its page. Run the tools against the real model manually
+  (checklist below).
 - **View transitions:** while a transition runs, Chrome sends pointer events to `<html>`. The
   `settled()` helper waits for `<html data-transition>` to clear; `openTool()` uses it and waits for
   the tool's own drop zone (`[data-tool=<id>]`), since the home page has a drop zone too.
@@ -107,9 +114,10 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 3. Run each tool once with a real-world document of your own (not committed).
 4. Try a scanned PDF (JBIG2/JPEG 2000 images) in PDF → images and Compress.
 5. Toggle dark mode; resize the window to a narrow width; reload in dark mode (no white flash).
-6. AI Summary on a device that meets Chrome's requirements: first run downloads the model (progress
-   shown), then summarise a long real-world report in each style; check streaming, Copy, Download
-   and Cancel. On an unsupported device, confirm the status message and the Quick summary.
+6. Unique AI on a device that meets Chrome's requirements: the first question (or summary) downloads
+   the model with progress; then chat with a long real-world report (check citations, follow-ups,
+   Stop, Regenerate, Export) and summarise it in each style. On an unsupported device, confirm the
+   status message, search mode and Quick summary.
 7. Disconnect from the network and repeat one tool (and AI Summary, once the model is installed) to
    confirm offline operation.
 8. Check `chrome://extensions` shows only the expected permission (“storage” has no warning).

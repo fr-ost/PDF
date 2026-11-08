@@ -13,12 +13,12 @@
  *    parts and extracted pages, which should not inherit the whole source
  *    document's outline or forms.
  */
-import { PDFDocument, degrees, type PDFPage, type PDFRef } from '@cantoo/pdf-lib';
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFNull, PDFNumber, PDFRef, degrees, type PDFObject, type PDFPage } from '@cantoo/pdf-lib';
 import { PdfToolError } from '../errors';
 import { normalizeRotation } from './geometry';
 import { loadPdf, savePdf, type PdfSource } from './load';
 import { setPageOrder } from './pageTree';
-import { pruneDocument } from './prune';
+import { detachForeignWidgets, pruneDocument } from './prune';
 
 export interface PagePlanItem {
   /** Index into the sources array. */
@@ -79,10 +79,121 @@ async function copyForeignPages(target: PDFDocument, plan: PagePlanItem[], docs:
   });
   for (const [sourceIndex, planIndices] of bySource) {
     const src = docs.get(sourceIndex)!;
-    const pages = await target.copyPages(src, planIndices.map((i) => plan[i]!.page));
+    const sourcePages = planIndices.map((i) => plan[i]!.page);
+    const restore = isolateForCopy(src, sourcePages);
+    let pages: PDFPage[];
+    try {
+      pages = await target.copyPages(src, sourcePages);
+    } finally {
+      restore();
+    }
+    relinkCopiedPages(pages, sourcePages);
+    // The source's form tree isn't merged: keep the widgets' appearance, not other fields' data.
+    detachForeignWidgets(pages);
     planIndices.forEach((planIdx, k) => copied.set(planIdx, pages[k]!));
   }
   return copied;
+}
+
+const K = {
+  Annots: PDFName.of('Annots'),
+  P: PDFName.of('P'),
+  Parent: PDFName.of('Parent'),
+  IRT: PDFName.of('IRT'),
+  Subtype: PDFName.of('Subtype'),
+  Widget: PDFName.of('Widget'),
+  Link: PDFName.of('Link'),
+  Dest: PDFName.of('Dest'),
+  A: PDFName.of('A'),
+  S: PDFName.of('S'),
+  D: PDFName.of('D'),
+  GoTo: PDFName.of('GoTo'),
+};
+
+function destArrays(annot: PDFDict): PDFArray[] {
+  const out: PDFArray[] = [];
+  const dest = annot.lookup(K.Dest);
+  if (dest instanceof PDFArray) out.push(dest);
+  const action = annot.lookup(K.A);
+  if (action instanceof PDFDict && action.get(K.S) === K.GoTo) {
+    const d = action.lookup(K.D);
+    if (d instanceof PDFArray) out.push(d);
+  }
+  return out;
+}
+
+/**
+ * copyPages deep-copies everything reachable from a page. Annotation /P
+ * entries, link destinations, reply chains and form trees reach other pages
+ * (and through /Parent, the whole page tree with its images), which the
+ * pruner then has to throw away: quadratic for "split every page". These
+ * references are cut for the copy and restored afterwards; link destinations
+ * temporarily hold the source page index (see relinkCopiedPages).
+ */
+function isolateForCopy(src: PDFDocument, pageIndices: number[]): () => void {
+  const indexByRef = new Map<string, number>();
+  src.getPages().forEach((p, i) => indexByRef.set(`${p.ref.objectNumber} ${p.ref.generationNumber}`, i));
+  const undo: (() => void)[] = [];
+  const seenAnnots = new Set<PDFDict>();
+  const seenArrays = new Set<PDFArray>();
+  for (const index of new Set(pageIndices)) {
+    const annots = src.getPage(index).node.lookup(K.Annots);
+    if (!(annots instanceof PDFArray)) continue;
+    for (let i = 0; i < annots.size(); i++) {
+      const annot = annots.lookup(i);
+      if (!(annot instanceof PDFDict) || seenAnnots.has(annot)) continue;
+      seenAnnots.add(annot);
+      const keys = annot.get(K.Subtype) === K.Widget ? [K.P, K.IRT, K.Parent] : [K.P, K.IRT];
+      for (const key of keys) {
+        const value: PDFObject | undefined = annot.get(key);
+        if (value === undefined) continue;
+        annot.delete(key);
+        undo.push(() => annot.set(key, value));
+      }
+      for (const arr of destArrays(annot)) {
+        if (seenArrays.has(arr)) continue;
+        seenArrays.add(arr);
+        const first = arr.get(0);
+        if (!(first instanceof PDFRef)) continue;
+        const target = indexByRef.get(`${first.objectNumber} ${first.generationNumber}`);
+        if (target === undefined) continue;
+        arr.set(0, PDFNumber.of(target));
+        undo.push(() => arr.set(0, first));
+      }
+    }
+  }
+  return () => {
+    for (let i = undo.length - 1; i >= 0; i--) undo[i]!();
+  };
+}
+
+/** Points copied links at the copied pages; links to pages that were not copied are dropped. */
+function relinkCopiedPages(pages: PDFPage[], sourceIndices: number[]): void {
+  const byIndex = new Map<number, PDFRef>();
+  sourceIndices.forEach((index, k) => {
+    if (!byIndex.has(index)) byIndex.set(index, pages[k]!.ref);
+  });
+  for (const page of pages) {
+    const annots = page.node.lookup(K.Annots);
+    if (!(annots instanceof PDFArray)) continue;
+    for (let i = annots.size() - 1; i >= 0; i--) {
+      const annot = annots.lookup(i);
+      if (!(annot instanceof PDFDict)) continue;
+      annot.set(K.P, page.ref);
+      let dead = false;
+      for (const arr of destArrays(annot)) {
+        const first = arr.get(0);
+        if (!(first instanceof PDFNumber)) continue;
+        const target = byIndex.get(first.asNumber());
+        if (target) arr.set(0, target);
+        else {
+          arr.set(0, PDFNull);
+          dead = true;
+        }
+      }
+      if (dead && annot.get(K.Subtype) === K.Link) annots.remove(i);
+    }
+  }
 }
 
 export async function assembleInPlace(sources: PdfSource[], plan: PagePlanItem[], progress: ProgressFn = noop): Promise<Uint8Array> {

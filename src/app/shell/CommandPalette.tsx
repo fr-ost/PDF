@@ -46,6 +46,7 @@ interface Item {
   keywords: string;
   style?: React.CSSProperties;
   run: () => void;
+  preload?: () => void;
 }
 
 const page = (id: string, title: string, subtitle: string, icon: LucideIcon, route: Route): Item => ({
@@ -58,6 +59,8 @@ const page = (id: string, title: string, subtitle: string, icon: LucideIcon, rou
   run: () => navigate(routeHref(route)),
 });
 
+const GROUP_ORDER: Record<Item['group'], number> = { Tools: 0, Pages: 1, Actions: 2 };
+
 function buildItems(): Item[] {
   const tools: Item[] = TOOLS.map((t) => ({
     id: `tool-${t.id}`,
@@ -68,6 +71,7 @@ function buildItems(): Item[] {
     keywords: [t.name, t.description, CATEGORY_INFO[t.category].title, ...t.keywords].join(' ').toLowerCase(),
     style: accentStyle(t.category),
     run: () => navigate(routeHref({ name: 'tool', id: t.id })),
+    preload: t.preload,
   }));
   return [
     ...tools,
@@ -104,7 +108,8 @@ export function CommandPalette() {
       items
         .map((item) => ({ item, s: score(item, q) }))
         .filter((r) => r.s > 0)
-        .sort((a, b) => (q ? b.s - a.s : 0))
+        // Grouped (Tools, Pages, Actions), best match first within each group.
+        .sort((a, b) => GROUP_ORDER[a.item.group] - GROUP_ORDER[b.item.group] || (q ? b.s - a.s : 0))
         .map((r) => r.item)
         .slice(0, q ? 12 : items.length),
     [items, q],
@@ -124,7 +129,8 @@ export function CommandPalette() {
   useEffect(() => setActive(0), [q]);
   useEffect(() => {
     listRef.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
-  }, [active]);
+    results[active]?.preload?.(); // the highlighted tool opens instantly
+  }, [active, results]);
 
   const choose = (item: Item | undefined) => {
     if (!item) return;

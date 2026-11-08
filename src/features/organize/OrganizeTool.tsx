@@ -77,7 +77,7 @@ export default function OrganizeTool({ tool, initialFiles }: ToolProps) {
         <Button size="sm" variant="ghost" icon={Undo2} disabled={!ws.modified} onClick={ws.reset}>Reset</Button>
       </SelectionBar>
       <PageGrid
-        pages={toGridPages(ws.pages, ws.ready, { colors: SOURCE_COLORS }).map((p, i) => ({ ...p, label: `${i + 1}`, badge: p.rotation ? <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-fg">{p.rotation}°</span> : undefined }))}
+        pages={toGridPages(ws.pages, files.entries, { colors: SOURCE_COLORS }).map((p, i) => ({ ...p, label: `${i + 1}`, badge: p.rotation ? <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-fg">{p.rotation}°</span> : undefined }))}
         selected={ws.selected}
         onSelect={ws.setSelected}
         sortable

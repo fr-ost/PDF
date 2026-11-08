@@ -10,23 +10,43 @@ const MAX_ENTRIES = 600;
 const MAX_CONCURRENT = 3;
 const cache = new Map<string, string>(); // insertion order = LRU order
 const pending = new Map<string, Promise<string>>();
+/** Callers still waiting for each key (thumbnails that are mounted). */
+const interest = new Map<string, number>();
 let active = 0;
-const queue: (() => void)[] = [];
 
-function acquire(): Promise<void> {
+interface Waiter {
+  start: () => void;
+  drop: () => void;
+  wanted: () => boolean;
+}
+const queue: Waiter[] = [];
+
+function acquire(wanted: () => boolean): Promise<void> {
   if (active < MAX_CONCURRENT) {
     active++;
     return Promise.resolve();
   }
-  return new Promise((resolve) => queue.push(() => {
-    active++;
-    resolve();
-  }));
+  return new Promise((resolve, reject) =>
+    queue.push({
+      start: () => {
+        active++;
+        resolve();
+      },
+      drop: () => reject(new DOMException('Thumbnail no longer needed', 'AbortError')),
+      wanted,
+    }),
+  );
 }
 
 function release(): void {
   active--;
-  queue.shift()?.();
+  // Newest requests first: after fast scrolling they are the ones on screen.
+  // Requests nobody waits for any more are dropped.
+  while (queue.length) {
+    const next = queue.pop()!;
+    if (next.wanted()) return next.start();
+    next.drop();
+  }
 }
 
 function remember(key: string, url: string): void {
@@ -48,14 +68,28 @@ export function getCachedThumbnail(docId: string, pageIndex: number, width: numb
   return url;
 }
 
-export function renderThumbnail(docId: string, doc: PDFDocumentProxy, pageIndex: number, width: number): Promise<string> {
+export function renderThumbnail(docId: string, doc: PDFDocumentProxy, pageIndex: number, width: number, signal?: AbortSignal): Promise<string> {
   const key = `${docId}:${pageIndex}:${width}`;
   const cached = getCachedThumbnail(docId, pageIndex, width);
   if (cached) return Promise.resolve(cached);
+  if (signal) {
+    if (signal.aborted) return Promise.reject(new DOMException('Thumbnail no longer needed', 'AbortError'));
+    interest.set(key, (interest.get(key) ?? 0) + 1);
+    signal.addEventListener('abort', () => interest.set(key, (interest.get(key) ?? 1) - 1), { once: true });
+  } else {
+    interest.set(key, Number.POSITIVE_INFINITY); // no way to cancel: always wanted
+  }
   const inFlight = pending.get(key);
   if (inFlight) return inFlight;
   const job = (async () => {
-    await acquire();
+    try {
+      await acquire(() => (interest.get(key) ?? 0) > 0);
+    } catch (err) {
+      // Dropped before it started: forget it so a later request starts afresh.
+      pending.delete(key);
+      interest.delete(key);
+      throw err;
+    }
     try {
       const page = await doc.getPage(pageIndex + 1);
       const base = page.getViewport({ scale: 1 });
@@ -70,6 +104,7 @@ export function renderThumbnail(docId: string, doc: PDFDocumentProxy, pageIndex:
     } finally {
       release();
       pending.delete(key);
+      interest.delete(key);
     }
   })();
   pending.set(key, job);

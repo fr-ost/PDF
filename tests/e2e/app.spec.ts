@@ -5,7 +5,7 @@ test.describe('application shell', () => {
   test('home renders every tool and the privacy promise', async ({ app, errors }) => {
     await expect(app.locator('h1')).toHaveText('Everything you need to work with PDFs.');
     await expect(app.getByText('Powerful PDF tools. Completely free. Your files stay on your device.')).toBeVisible();
-    await expect(app.locator('[data-testid^=tool-card-]')).toHaveCount(19);
+    await expect(app.locator('[data-testid^=tool-card-]')).toHaveCount(20);
     await app.getByLabel('Search tools').fill('jpg');
     await expect(app.getByTestId('tool-card-images-to-pdf')).toBeVisible();
     await expect(app.getByTestId('tool-card-merge')).toHaveCount(0);
@@ -18,7 +18,7 @@ test.describe('application shell', () => {
       ['Convert PDF', 'Convert PDF'],
       ['Edit PDF', 'Edit PDF'],
       ['Security', 'Security'],
-      ['AI tools', 'AI tools'],
+      ['Unique AI', 'Unique AI'],
       ['Recent files', 'Recent files'],
       ['Settings', 'Settings'],
     ] as const) {

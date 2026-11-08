@@ -3,6 +3,63 @@
 All notable changes to Unique PDF are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses semantic versioning.
 
+## [1.2.0] — 2026-11-08
+
+### Added
+
+- **Chat with PDF** (Unique AI): ask questions about a document and get streamed answers with
+  clickable page citations, a Sources row and a page rail that jumps to the cited page (a page
+  preview on phones). Works for documents of any length (page-tagged passages, BM25 retrieval that
+  fits the model's context window), keeps the conversation for follow-ups, suggests first questions
+  that fit the document, and offers Stop, Regenerate, Copy, New chat, Export (Markdown) and a reply
+  language. Where the AI model isn't available, the same chat is a labelled non-AI passage search.
+- Floating action bar on phones and tablets, previous/next page buttons in the editor and Redact,
+  always-visible page actions and long-press dragging on touch screens.
+- Tools load in the background when the browser is idle and when you point at them, so they open
+  instantly.
+
+### Changed
+
+- The AI features are presented as **Unique AI** by Unique Labs; the AI tools section is now
+  “Unique AI”, with Chat with PDF first. New manifest description.
+- Minimum Chrome version 122. Small polyfills cover newer built-ins that PDF.js relies on, so PDFs
+  also open in older supported Chrome versions.
+- Thumbnails render newest-first and skip pages scrolled past; page grids no longer re-render every
+  card on each keystroke; splitting documents with internal links is up to ~25× faster.
+
+### Fixed
+
+- Privacy: Redact now also removes form fields (and their values), XFA form data and structure
+  elements of redacted pages; Extract and Split no longer carry field values of other pages; Delete
+  pages removes annotations, alternate text and bookmarks of deleted pages reached through the
+  structure tree, reply chains or outlines; “Remove all metadata” also removes XMP on images, fonts
+  and forms; redaction search finds words split across text runs and lines and handles vertical
+  text, and verification uses the same matching.
+- PDF/A files: in-place tools failed on PDF/A-1 and Protect failed on all PDF/A files.
+- Compress no longer corrupts images whose decode parameters are written as an array, and no longer
+  rotates photos that carry an EXIF orientation.
+- Protect: page labels, document language and other catalog strings are encrypted correctly.
+- Page ranges: “1 5” means pages 1 and 5 (it was read as page 15).
+- Files with author restrictions (owner password only) keep their restrictions after editing.
+- Redacted pages no longer inherit rotation or crop box from the page tree.
+- Usage-rights signatures (Reader extensions) are removed from edited files, avoiding an error in
+  Adobe Reader.
+- Interface: the password field is focused when the prompt opens (typing went to the Close button);
+  “Skip to content” no longer opens “Page not found”; Back after leaving a tool returns to the right
+  page; dropping a file outside a drop zone no longer replaces the app; the mobile menu is a proper
+  modal (focus, Escape); dialogs don't close when a text selection ends outside them; number fields
+  can be cleared and retyped; Retry in Edit metadata repeats the action that failed; Redo survives a
+  click that changes nothing; page changes clear the selection (so Delete can't remove an unseen
+  box); editor image URLs are released; result previews no longer leak documents; Watermark and Page
+  numbers previews fit small screens and reset for a new file; the signature dialog fits phones;
+  Extract applies a typed range to a new file; Organize file colours match the page stripes;
+  command palette results stay grouped; editor shortcuts no longer fire while typing in other
+  fields; a cancelled task can't reset a newer one; the toolbar button focuses the open app tab
+  instead of opening another.
+- Quick summary handles very large documents; underscores and asterisks inside words are kept;
+  Chinese and Japanese line breaks no longer insert spaces; streamed text can't be garbled by a
+  repeated chunk.
+
 ## [1.1.0] — 2026-11-08
 
 ### Added

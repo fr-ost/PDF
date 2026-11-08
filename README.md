@@ -2,10 +2,10 @@
 
 **Free PDF tools without subscriptions, watermarks or file uploads — by Unique Labs.**
 
-Unique PDF is a Chrome extension (Manifest V3) that brings 19 everyday PDF tools into a full-tab
-application, including an **AI Summary** that runs on Chrome's built-in, on-device model. Every file
-is processed locally in your browser — nothing is uploaded, there is no account, no quota, no
-watermark and no tracking. It keeps working offline once installed.
+Unique PDF is a Chrome extension (Manifest V3) that brings 20 PDF tools into a full-tab
+application, including **Unique AI** by Unique Labs: **chat with any PDF** (answers link to the pages
+they come from) and **AI Summary**. Every file is processed in your browser — nothing is uploaded,
+there is no account, no quota, no watermark and no tracking. It keeps working offline once installed.
 
 > Unique Labs — *Useful technology. Accessible to everyone.*
 
@@ -31,7 +31,7 @@ watermark and no tracking. It keeps working offline once installed.
 | **Convert** | Compress (image optimisation, deduplication, clean-up; optional page rasterisation) · Images → PDF (JPEG, PNG, WebP, GIF, BMP, AVIF) · PDF → images (PNG/JPEG, 72–600 DPI, ZIP) |
 | **Edit** | Editor (text, freehand, highlights, rectangles, ellipses, lines, arrows, images, undo/redo, zoom) · Sign (drawn vector signatures) · Watermark (text or image, opacity, rotation, position, tiling, behind content) · Page numbers |
 | **Security** | Protect (AES-256) · Unlock (with the real password only) · Redact (true removal + automatic verification) · Metadata (view, edit, remove; XMP kept in sync) |
-| **AI tools** | AI Summary — key points, TL;DR, teaser or headline written on your device by Chrome's built-in AI (Gemini Nano); long documents are summarised in parts; labelled non-AI “Quick summary” where the model isn't available |
+| **Unique AI** | Chat with PDF — ask anything; answers stream in with clickable page citations, sources and a page rail; follow-up questions, suggested questions, stop/regenerate, copy, export. AI Summary — key points, TL;DR, teaser or headline; long documents are summarised in parts. Where the AI model isn't available: labelled non-AI search and key-sentence summaries |
 
 Everything also includes: drag and drop everywhere (including onto tool cards), password prompts
 for encrypted PDFs, progress with cancel, recent-task history (names and sizes only), a command
@@ -44,14 +44,14 @@ See [FEATURES.md](FEATURES.md) for the precise behaviour of every tool.
 ## Install in Chrome (unpacked)
 
 **Option A — prebuilt package (no tools needed):** a production build of the current version is
-included at `release/unique-pdf-1.1.0.zip`. Extract it to a folder you will keep (for example
+included at `release/unique-pdf-1.2.0.zip`. Extract it to a folder you will keep (for example
 `Documents/unique-pdf`), then follow steps 2–5 below and select that folder.
 
 **Option B — build it yourself:** run `npm install` and `npm run build`; the extension is written to
 `dist/`.
 
 1. Get the extension folder (Option A or B above).
-2. Open `chrome://extensions` in Chrome (version 120 or later; AI Summary needs desktop Chrome 138+).
+2. Open `chrome://extensions` in Chrome (version 122 or later; Unique AI needs desktop Chrome 138+).
 3. Turn on **Developer mode** (top-right toggle).
 4. Click **Load unpacked** and select the extracted folder (Option A) or `dist/` (Option B).
 5. The Unique PDF tab opens automatically on first install. Afterwards, click the toolbar icon
@@ -141,8 +141,9 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md).
 ## Privacy
 
 - No uploads, no servers, no analytics, no account. The CSP blocks network connections outright.
-- AI Summary uses Chrome's on-device model; the document text never leaves the computer. Chrome
-  downloads and manages the model itself on first use.
+- Unique AI (chat and summaries) is built on the AI APIs built into Chrome: the document text is
+  processed in the browser and never sent to Unique Labs or any server. Chrome downloads and manages
+  the AI model itself on first use.
 - One permission: `storage` (settings and the optional recent-task list of file names and sizes).
 - Passwords live in memory only for the operation; documents are never stored.
 
@@ -165,10 +166,14 @@ Full policy: [PRIVACY.md](PRIVACY.md). Security model: [SECURITY.md](SECURITY.md
 - **Size**: files up to 1 GB are accepted; the practical limit depends on available memory.
   Very large or image-heavy documents can be slow.
 - XFA forms are not rendered, and PDF/A conformance is not guaranteed after editing.
-- **AI Summary** depends on Chrome's built-in model: desktop Chrome 138+ with enough disk space
-  (about 22 GB free) and a capable GPU or 16 GB RAM. Elsewhere the tool offers the labelled non-AI
-  Quick summary. Scanned PDFs without a text layer can't be summarised yet (no OCR), and a small
-  on-device model can make mistakes.
+- **Unique AI** needs desktop Chrome 138+ with enough disk space (about 22 GB free) and a capable GPU
+  or 16 GB RAM, because it runs on Chrome's built-in AI. Elsewhere, chat works as a labelled non-AI
+  passage search and AI Summary offers a key-sentence summary. Scanned PDFs without a text layer
+  can't be read yet (no OCR). Answers come only from the document and can contain mistakes; long
+  documents are searched for the most relevant passages, so a question about something mentioned
+  only in passing may miss it.
+- **Restricted files**: files that open without a password but carry author restrictions keep those
+  restrictions after editing; only Unlock (with the owner password) removes them.
 
 Roadmap items (OCR, Office conversion, form filling, digital signing, …) and their feasibility
 are analysed in [ROADMAP.md](ROADMAP.md).
@@ -184,8 +189,8 @@ are analysed in [ROADMAP.md](ROADMAP.md).
 | Thumbnails stay blank | The PDF may be damaged; try re-saving it from its original app. |
 | Keyboard shortcuts do nothing | Another extension may use them. Change them at `chrome://extensions/shortcuts`. |
 | E2E tests fail with “Run npm run build” | The tests load `dist/`; build first. |
-| AI Summary says on-device AI isn't available | Check the requirements shown in the tool (desktop Chrome 138+, free disk space, GPU/RAM). `chrome://on-device-internals` shows Chrome's model status. Quick summary works everywhere. |
-| The one-time AI setup seems stuck | Chrome downloads the model in the background (several GB). Keep Chrome open on an unmetered connection and try again later. |
+| Unique AI says it isn't available | Check the requirements shown in the tool (desktop Chrome 138+, free disk space, GPU/RAM). `chrome://on-device-internals` shows the status of Chrome's AI model. Search mode and Quick summary work everywhere. |
+| The one-time AI setup seems stuck | Chrome downloads the AI model in the background (several GB). Keep Chrome open on an unmetered connection and try again later. |
 
 ## Documentation index
 

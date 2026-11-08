@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useMeasuredWidth } from '../../hooks/useMeasuredWidth';
 import { Bold } from 'lucide-react';
 import type { ToolProps } from '../registry';
 import { ToolShell } from '../../components/tool/ToolShell';
@@ -24,6 +25,7 @@ const POSITIONS: NumberPosition[][] = [
 
 export default function PageNumberTool({ tool, initialFiles }: ToolProps) {
   const files = useToolFiles(tool, initialFiles);
+  const [previewRef, previewWidth] = useMeasuredWidth<HTMLDivElement>();
   const task = useTask<OutputFile[]>();
   const [position, setPosition] = useState<NumberPosition>('bottom-center');
   const [format, setFormat] = useState<NumberFormat>('n');
@@ -40,6 +42,9 @@ export default function PageNumberTool({ tool, initialFiles }: ToolProps) {
   const [previewPage, setPreviewPage] = useState(0);
   const entry = files.ready[0];
   const pageCount = entry?.pageCount ?? 0;
+  // One clamped index for the canvas, the overlay and the pager; a new file starts at page 1.
+  const shownPage = Math.min(previewPage, Math.max(0, pageCount - 1));
+  useEffect(() => setPreviewPage(0), [entry?.id]);
 
   const parsed = pagesMode === 'custom' ? parsePageRanges(range, pageCount || 1) : null;
   const pages =
@@ -108,10 +113,10 @@ export default function PageNumberTool({ tool, initialFiles }: ToolProps) {
       }
     >
       {entry ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface-2/60 p-4">
-          <PageCanvas docId={entry.id} pageIndex={Math.min(previewPage, Math.max(0, pageCount - 1))} maxWidth={560} maxHeight={720}>
+        <div ref={previewRef} className="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface-2/60 p-4">
+          <PageCanvas docId={entry.id} pageIndex={shownPage} maxWidth={Math.max(160, Math.min(560, previewWidth || 560))} maxHeight={720}>
             {(info) => {
-              const n = pages.indexOf(previewPage);
+              const n = pages.indexOf(shownPage);
               if (n < 0) return <div className="absolute inset-x-0 bottom-2 text-center text-xs text-fg-subtle">Not numbered</div>;
               const label = formatPageNumber(startNumber + n, total, { format, prefix, suffix });
               const width = measureTextWidth(label, font, fontSize, bold);
@@ -125,7 +130,7 @@ export default function PageNumberTool({ tool, initialFiles }: ToolProps) {
               );
             }}
           </PageCanvas>
-          <PreviewPager index={previewPage} count={pageCount} onChange={setPreviewPage} />
+          <PreviewPager index={shownPage} count={pageCount} onChange={setPreviewPage} />
         </div>
       ) : null}
     </ToolShell>

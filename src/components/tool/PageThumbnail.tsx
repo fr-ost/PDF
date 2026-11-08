@@ -12,12 +12,21 @@ export const PageThumbnail = memo(function PageThumbnail({ docId, pageIndex, rot
   const [url, setUrl] = useState<string | undefined>(() => getCachedThumbnail(docId, pageIndex, width));
   const [ratio, setRatio] = useState(1.414);
   const [failed, setFailed] = useState(false);
+  // Showing another page (or size) in the same component: start over for it.
+  const key = `${docId}:${pageIndex}:${width}`;
+  const [shownKey, setShownKey] = useState(key);
+  if (shownKey !== key) {
+    setShownKey(key);
+    setUrl(getCachedThumbnail(docId, pageIndex, width));
+    setFailed(false);
+  }
 
   useEffect(() => {
     if (url) return;
     const el = ref.current;
     if (!el) return;
     let cancelled = false;
+    const controller = new AbortController();
     const observer = new IntersectionObserver(
       (items) => {
         if (!items.some((i) => i.isIntersecting)) return;
@@ -25,7 +34,7 @@ export const PageThumbnail = memo(function PageThumbnail({ docId, pageIndex, rot
         const docPromise = getDocumentProxy(docId);
         if (!docPromise) return;
         docPromise
-          .then((doc) => renderThumbnail(docId, doc, pageIndex, width))
+          .then((doc) => renderThumbnail(docId, doc, pageIndex, width, controller.signal))
           .then((u) => !cancelled && setUrl(u))
           .catch(() => !cancelled && setFailed(true));
       },
@@ -34,6 +43,7 @@ export const PageThumbnail = memo(function PageThumbnail({ docId, pageIndex, rot
     observer.observe(el);
     return () => {
       cancelled = true;
+      controller.abort(); // a queued render nobody needs any more is skipped
       observer.disconnect();
     };
   }, [docId, pageIndex, width, url]);

@@ -3,13 +3,14 @@
  * selection, keyboard operation, drag-and-drop reordering (moving the whole
  * selection when a selected page is dragged), and per-page actions.
  */
-import { memo, useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -59,6 +60,33 @@ interface CardProps {
   onSelect: (key: string, mode: SelectMode) => void;
   actions?: (page: GridPage) => ReactNode;
   dragBadge?: number;
+}
+
+/**
+ * Cards re-render only when something they show changed. Grid pages are
+ * rebuilt on every parent render (new objects, new badge elements), so they
+ * are compared by value; badges change together with rotation/dimmed/label.
+ */
+function sameCard(a: CardProps, b: CardProps): boolean {
+  const p = a.page;
+  const q = b.page;
+  return (
+    a.selected === b.selected &&
+    a.sortable === b.sortable &&
+    a.selectable === b.selectable &&
+    a.thumbWidth === b.thumbWidth &&
+    a.onSelect === b.onSelect &&
+    a.actions === b.actions &&
+    p.key === q.key &&
+    p.docId === q.docId &&
+    p.pageIndex === q.pageIndex &&
+    p.rotation === q.rotation &&
+    p.label === q.label &&
+    p.color === q.color &&
+    !!p.dimmed === !!q.dimmed &&
+    !!p.badge === !!q.badge &&
+    !!p.before === !!q.before
+  );
 }
 
 const PageCard = memo(function PageCard({ page, selected, sortable, selectable, thumbWidth, onSelect, actions }: CardProps) {
@@ -116,7 +144,7 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
           ) : null}
           {page.badge ? <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">{page.badge}</div> : null}
           {actions ? (
-            <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+            <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-data-[selected]:opacity-100 [@media(hover:none)]:opacity-100" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
               {actions(page)}
             </div>
           ) : null}
@@ -125,7 +153,7 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
       </div>
     </div>
   );
-});
+}, sameCard);
 
 export function PageGrid({
   pages,
@@ -149,12 +177,20 @@ export function PageGrid({
   const [anchor, setAnchor] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Mouse drags start after a small move; touch drags after a long press, so swiping still scrolls.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates, keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space'] } }),
   );
   const keys = useMemo(() => pages.map((p) => p.key), [pages]);
 
-  const handleSelect = (key: string, mode: SelectMode) => {
+  // Stable callbacks (read the latest props from a ref) so memoized cards don't all re-render.
+  const latest = useRef({ selected, anchor, keys, onSelect, actions });
+  useLayoutEffect(() => {
+    latest.current = { selected, anchor, keys, onSelect, actions };
+  });
+  const handleSelect = useCallback((key: string, mode: SelectMode) => {
+    const { selected, anchor, keys, onSelect } = latest.current;
     if (!onSelect) return;
     const next = new Set(mode === 'only' ? [] : selected);
     if (mode === 'range' && anchor && keys.includes(anchor)) {
@@ -167,7 +203,9 @@ export function PageGrid({
     }
     setAnchor(key);
     onSelect(next);
-  };
+  }, []);
+  const hasActions = !!actions;
+  const renderActions = useMemo(() => (hasActions ? (page: GridPage) => latest.current.actions?.(page) : undefined), [hasActions]);
 
   const onDragStart = (e: DragStartEvent) => setActiveKey(String(e.active.id));
   const onDragEnd = (e: DragEndEvent) => {
@@ -195,7 +233,7 @@ export function PageGrid({
   const grid = (
     <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${thumbWidth}px, 1fr))` }} data-testid="page-grid">
       {pages.map((page) => (
-        <PageCard key={page.key} page={page} selected={selected.has(page.key)} sortable={sortable} selectable={selectable && !!onSelect} thumbWidth={thumbWidth} onSelect={handleSelect} actions={actions} />
+        <PageCard key={page.key} page={page} selected={selected.has(page.key)} sortable={sortable} selectable={selectable && !!onSelect} thumbWidth={thumbWidth} onSelect={handleSelect} actions={renderActions} />
       ))}
     </div>
   );

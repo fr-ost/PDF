@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eraser } from 'lucide-react';
 import type { ToolProps } from '../registry';
 import { ToolShell } from '../../components/tool/ToolShell';
@@ -88,13 +88,17 @@ export default function MetadataTool({ tool, initialFiles }: ToolProps) {
     };
   }, [entry]);
 
-  const save = (strip: boolean) =>
-    task.run(async ({ signal }) => {
+  // Retry repeats the action that failed (save or remove all).
+  const lastStrip = useRef(false);
+  const save = (strip: boolean) => {
+    lastStrip.current = strip;
+    return task.run(async ({ signal }) => {
       const { bytes, metadata } = await runInWorker('writeMetadata', { source: await toSource(entry!), values: strip ? null : values }, { signal });
       const outputs = [makeOutput(outputName(entry!.name, strip ? 'clean' : 'edited'), bytes, 'pdf', { pageCount: metadata.pageCount })];
       recordHistory(tool, [entry!], outputs);
       return { outputs, metadata, stripped: strip };
     });
+  };
 
   const set = (key: keyof EditableMetadata, value: string | null) => values && setValues({ ...values, [key]: value });
 
@@ -104,7 +108,7 @@ export default function MetadataTool({ tool, initialFiles }: ToolProps) {
       files={files}
       task={task}
       primary={{ label: 'Save metadata', onClick: () => void save(false), disabled: !values }}
-      onRetry={() => void save(false)}
+      onRetry={() => void save(lastStrip.current)}
       result={
         task.result ? (
           <ResultPanel outputs={task.result.outputs} title={task.result.stripped ? 'Metadata removed' : 'Metadata saved'} onBack={task.reset} onStartOver={() => { task.reset(); files.clear(); }}>

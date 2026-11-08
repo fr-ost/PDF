@@ -31,8 +31,13 @@ export function parsePageRanges(input: string, pageCount: number): RangeParseRes
   if (!trimmed) return { ok: false, error: 'Enter at least one page or range, for example “1-3, 5”.' };
 
   const groups: number[][] = [];
-  for (const rawItem of trimmed.split(ITEM_SEPARATOR)) {
-    const item = rawItem.trim().toLowerCase().replace(/\s+/g, '');
+  // Spaces around a dash are fine ("1 - 3"); spaces between numbers separate
+  // items ("1 5" means pages 1 and 5, never page 15).
+  const items = trimmed
+    .split(ITEM_SEPARATOR)
+    .flatMap((part) => part.replace(/\s*-\s*/g, '-').trim().split(/\s+/));
+  for (const rawItem of items) {
+    const item = rawItem.trim().toLowerCase();
     if (!item) continue;
 
     if (item === 'odd' || item === 'even') {

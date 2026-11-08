@@ -1,37 +1,31 @@
 /**
- * AI Summary — on-device summarisation with Chrome's built-in AI.
+ * AI Summary — Unique AI summaries, built on Chrome's built-in Summarizer API.
  * Document text is extracted locally with PDF.js and summarised by the
- * browser's local model; nothing is uploaded. Where the on-device model is
+ * browser's model; nothing is uploaded. Where the model is
  * not available, a clearly labelled non-AI "key sentences" summary is offered.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, Cpu, Download, HardDrive, Heading1, Info, ListChecks, Megaphone, Quote, RefreshCw, ScanText, Sparkles, Wand2, Zap } from 'lucide-react';
+import { Copy, Download, Heading1, Info, ListChecks, Megaphone, Quote, RefreshCw, ScanText, Sparkles, Wand2, Zap } from 'lucide-react';
 import type { ToolProps } from '../registry';
 import { ToolShell } from '../../components/tool/ToolShell';
 import { PageThumbnail } from '../../components/tool/PageThumbnail';
 import { PageRangeField, recordHistory, useToolFiles } from '../../components/tool/helpers';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { Alert, Badge, Skeleton } from '../../components/ui/Feedback';
+import { Alert, Badge } from '../../components/ui/Feedback';
 import { ChoiceCards, Field, Segmented, Select, TextInput, type ChoiceOption } from '../../components/ui/Form';
 import { useToast } from '../../components/ui/Toast';
 import { useTask } from '../../hooks/useTask';
-import { getDocumentProxy } from '../../pdf/renderers/documents';
 import { parsePageRanges } from '../../pdf/pageRanges';
-import { cleanExtractedText, countWords, pageTextFromItems, type TextItemish } from '../../ai/text';
 import { extractiveSummary } from '../../ai/extractive';
 import { blocksToPlainText, parseSummaryBlocks } from '../../ai/markdown';
 import { OUTPUT_LANGUAGES, checkAiStatus, summarizeDocument, type AiStatus, type SummaryLength, type SummaryStage, type SummaryStyle } from '../../ai/summarizer';
 import { makeOutput, saveOutput } from '../../services/export-service/download';
 import { baseName } from '../../utils/filenames';
 import { pluralize } from '../../utils/format';
-import { cn } from '../../utils/cn';
 import { SummaryView } from './SummaryView';
-
-interface Extracted {
-  pages: string[];
-  words: number;
-}
+import { useDocumentText } from '../ai-shared/useDocumentText';
+import { AiStatusCard } from '../ai-shared/AiStatusCard';
 
 interface SummaryResult {
   markdown: string;
@@ -48,7 +42,7 @@ const STYLES: ChoiceOption<SummaryStyle>[] = [
 function stageLabel(stage: SummaryStage): string {
   switch (stage.kind) {
     case 'download':
-      return `Chrome is downloading its on-device AI model… ${Math.round(stage.progress * 100)}%`;
+      return `Setting up Unique AI… ${Math.round(stage.progress * 100)}%`;
     case 'preparing':
       return 'Reading the document';
     case 'chunk':
@@ -67,43 +61,6 @@ function stageProgress(stage: SummaryStage): number | null {
   return null;
 }
 
-function AiStatusCard({ status }: { status: AiStatus | 'checking' }) {
-  if (status === 'checking') return <Skeleton className="h-16 w-full rounded-xl" />;
-  const box = 'rounded-xl border p-3.5 text-[13px] leading-snug';
-  if (status === 'available')
-    return (
-      <div className={cn(box, 'border-success-line bg-success-soft')} data-testid="ai-status" data-status={status}>
-        <p className="flex items-center gap-2 font-medium text-fg"><span className="live-dot" aria-hidden /> On-device AI ready</p>
-        <p className="mt-1 text-fg-muted">Runs locally with Chrome’s built-in model. Your document never leaves this computer.</p>
-      </div>
-    );
-  if (status === 'downloadable' || status === 'downloading')
-    return (
-      <div className={cn(box, 'border-primary-line bg-primary-soft/70')} data-testid="ai-status" data-status={status}>
-        <p className="flex items-center gap-2 font-medium text-fg"><HardDrive size={15} className="text-primary" aria-hidden /> One-time AI setup</p>
-        <p className="mt-1 text-fg-muted">
-          {status === 'downloading' ? 'Chrome is downloading its on-device AI model.' : 'Chrome will download its on-device AI model once (it manages the download and storage).'} After that, summaries work offline.
-        </p>
-      </div>
-    );
-  return (
-    <div className={cn(box, 'border-line bg-surface-2/70')} data-testid="ai-status" data-status={status}>
-      <p className="flex items-center gap-2 font-medium text-fg"><Cpu size={15} className="text-fg-subtle" aria-hidden /> On-device AI isn’t available here</p>
-      <p className="mt-1 text-fg-muted">
-        {status === 'no-api' ? 'It needs Chrome 138 or newer on Windows, macOS, Linux or a Chromebook Plus.' : 'This device doesn’t meet Chrome’s requirements for its built-in model.'} You can still get a Quick summary of key sentences.
-      </p>
-      <details className="mt-2 text-xs text-fg-subtle">
-        <summary className="cursor-pointer select-none">Requirements</summary>
-        <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
-          <li>Desktop Chrome 138+ (not mobile)</li>
-          <li>About 22 GB of free disk space for the model</li>
-          <li>A GPU with more than 4 GB of memory, or 16 GB RAM and 4+ CPU cores</li>
-        </ul>
-      </details>
-    </div>
-  );
-}
-
 export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
   const files = useToolFiles(tool, initialFiles);
   const task = useTask<SummaryResult>();
@@ -115,16 +72,14 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
   const [pagesMode, setPagesMode] = useState<'all' | 'custom'>('all');
   const [range, setRange] = useState('');
   const [status, setStatus] = useState<AiStatus | 'checking'>('checking');
-  const [extracted, setExtracted] = useState<Extracted | null>(null);
-  const [extracting, setExtracting] = useState<{ done: number; total: number } | null>(null);
-  const [extractError, setExtractError] = useState<string | null>(null);
   const [streamText, setStreamText] = useState('');
   const [result, setResult] = useState<SummaryResult | null>(null);
   const entry = files.ready[0];
   const pageCount = entry?.pageCount ?? 0;
   const runId = useRef(0);
+  const { text: extracted, progress: extracting, error: extractError } = useDocumentText(entry?.id);
 
-  // Availability of Chrome's on-device model for the chosen options.
+  // Availability of the model for the chosen options.
   useEffect(() => {
     let cancelled = false;
     setStatus('checking');
@@ -134,39 +89,11 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
     };
   }, [style, length, language]);
 
-  // Extract the text once per document, locally, with PDF.js.
+  // A new document starts with an empty summary.
   useEffect(() => {
-    setExtracted(null);
-    setExtractError(null);
     setResult(null);
     setStreamText('');
-    if (!entry) return;
-    let cancelled = false;
-    void (async () => {
-      const doc = await getDocumentProxy(entry.id);
-      if (!doc) return;
-      const pages: string[] = [];
-      setExtracting({ done: 0, total: doc.numPages });
-      try {
-        for (let i = 1; i <= doc.numPages; i++) {
-          if (cancelled) return;
-          const page = await doc.getPage(i);
-          const content = await page.getTextContent();
-          pages.push(cleanExtractedText(pageTextFromItems(content.items as TextItemish[])));
-          page.cleanup();
-          if (i % 5 === 0 || i === doc.numPages) setExtracting({ done: i, total: doc.numPages });
-        }
-        if (!cancelled) setExtracted({ pages, words: countWords(pages.join(' ')) });
-      } catch {
-        if (!cancelled) setExtractError('The text of this PDF could not be read.');
-      } finally {
-        if (!cancelled) setExtracting(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [entry]);
+  }, [entry?.id]);
 
   const parsedRange = pagesMode === 'custom' ? parsePageRanges(range, pageCount || 1) : null;
   const selectedPages = useMemo(() => {
@@ -230,7 +157,7 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
   };
 
   const download = async () => {
-    const header = `# Summary of ${entry?.name ?? 'document'}\n\n_${shownKind === 'quick' ? 'Key sentences extracted from the document (not AI-generated).' : 'Generated on-device with Chrome’s built-in AI. Check important details against the document.'}_\n\n`;
+    const header = `# Summary of ${entry?.name ?? 'document'}\n\n_${shownKind === 'quick' ? 'Key sentences extracted from the document (not AI-generated).' : 'Generated by Unique AI. Check important details against the document.'}_\n\n`;
     const output = makeOutput(`${stem}-summary.md`, new Blob([header + shown + '\n'], { type: 'text/markdown' }), 'text');
     if (await saveOutput(output)) toast.show(`Saved ${output.name}`, 'success');
   };
@@ -238,19 +165,19 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
   const primaryDisabled = !entry || !hasText || !selectedText || status === 'checking';
   const primary = aiReady
     ? { label: status === 'available' ? 'Summarize with AI' : 'Set up AI & summarize', onClick: () => void runAi(), disabled: primaryDisabled }
-    : { label: 'Quick summary', onClick: runQuick, disabled: !entry || !hasText || !selectedText, hint: 'On-device AI isn’t available on this device.' };
+    : { label: 'Quick summary', onClick: runQuick, disabled: !entry || !hasText || !selectedText, hint: 'Unique AI isn’t available on this device.' };
 
   return (
     <ToolShell
       tool={tool}
       files={files}
       task={task}
-      emptyHint="Summaries are written on your computer by Chrome’s built-in AI. Your PDF is never uploaded."
+      emptyHint="Unique AI turns long PDFs into clear key points in seconds. Your PDF stays private."
       primary={primary}
       onRetry={() => void runAi()}
       options={
         <>
-          <AiStatusCard status={status} />
+          <AiStatusCard status={status} feature="summary" />
           <Field label="Summary style">
             <ChoiceCards label="Summary style" value={style} onChange={setStyle} options={STYLES} />
           </Field>
@@ -298,7 +225,7 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
             {extracting ? (
               <span className="text-xs text-fg-subtle" aria-live="polite">Reading text… {extracting.done}/{extracting.total}</span>
             ) : (
-              <span className="hidden items-center gap-1.5 text-xs text-fg-subtle sm:inline-flex"><ScanText size={14} aria-hidden /> Text extracted on this device</span>
+              <span className="hidden items-center gap-1.5 text-xs text-fg-subtle sm:inline-flex"><ScanText size={14} aria-hidden /> Ready for Unique AI</span>
             )}
           </Card>
 
@@ -317,7 +244,7 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
                   <Sparkles size={14} aria-hidden />
                 </span>
                 <h2 className="text-[15px] font-semibold tracking-tight">Summary</h2>
-                {shownKind === 'ai' ? <Badge tone="primary">On-device AI</Badge> : shownKind === 'quick' ? <Badge>Key sentences · not AI</Badge> : null}
+                <span data-testid="summary-kind">{shownKind === 'ai' ? <Badge tone="primary">Unique AI</Badge> : shownKind === 'quick' ? <Badge>Key sentences · not AI</Badge> : null}</span>
               </div>
               {shown && !task.running ? (
                 <div className="flex items-center gap-1">
@@ -350,7 +277,7 @@ export default function AiSummaryTool({ tool, initialFiles }: ToolProps) {
                 <Info size={13} className="mt-px shrink-0" aria-hidden />
                 {shownKind === 'quick'
                   ? 'These sentences are copied from the document by a simple statistical method — no AI was used.'
-                  : 'Written on this device by Chrome’s built-in AI. AI can make mistakes, so check important details against the document.'}
+                  : 'Written by Unique AI. AI can make mistakes, so check important details against the document.'}
               </p>
             ) : null}
           </Card>

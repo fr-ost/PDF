@@ -39,7 +39,7 @@ export function buildManifest({ version, development }: ManifestOptions): Record
     short_name: 'Unique PDF',
     version,
     description:
-      'Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact and get AI summaries on-device. Nothing is uploaded.',
+      'Chat with PDFs & get AI summaries. Edit, merge, split, compress, convert JPG to PDF, sign, protect & redact. Free, nothing uploaded.',
     icons,
     action: {
       default_title: 'Unique PDF',
@@ -68,7 +68,8 @@ export function buildManifest({ version, development }: ManifestOptions): Record
     content_security_policy: {
       extension_pages: EXTENSION_CSP,
     },
-    minimum_chrome_version: '120',
+    // pdf.js 6 needs Chrome 122 features (Set methods, iterator helpers); newer ones are polyfilled.
+    minimum_chrome_version: '122',
     incognito: 'not_allowed',
   };
 }

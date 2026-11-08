@@ -69,6 +69,37 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  // A file dropped outside a drop zone would make Chrome open it in place of
+  // the app (losing any work). Drop zones handle their own events first.
+  useEffect(() => {
+    const isFileDrag = (e: DragEvent) => !!e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files');
+    const onDragOver = (e: DragEvent) => {
+      if (!isFileDrag(e) || e.defaultPrevented) return;
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'none';
+    };
+    const onDrop = (e: DragEvent) => {
+      if (isFileDrag(e) && !e.defaultPrevented) e.preventDefault();
+    };
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
+
+  // When the browser is idle, load the most used tools so they open instantly.
+  useEffect(() => {
+    const preload = () => ['ai-chat', 'merge', 'compress', 'split', 'ai-summary', 'edit'].forEach((id) => getTool(id)?.preload());
+    const idle = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const handle = idle ? idle(preload, { timeout: 4000 }) : window.setTimeout(preload, 2500);
+    return () => {
+      const cancel = (globalThis as { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback;
+      if (idle && cancel) cancel(handle);
+      else window.clearTimeout(handle);
+    };
+  }, []);
   useEffect(() => {
     const t = titleFor(route);
     document.title = t ? `${t} · Unique PDF` : 'Unique PDF — Free PDF Toolkit';

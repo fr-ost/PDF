@@ -31,7 +31,7 @@ Upload `release/unique-pdf-<version>.zip` (contents of `dist/`, `manifest.json` 
 The name comes from the manifest (`scripts/manifest.ts`); the dashboard shows it as is.
 
 **Summary (≤ 132 characters, the manifest description):**
-Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact and get AI summaries on-device. Nothing is uploaded.
+Chat with PDFs & get AI summaries. Edit, merge, split, compress, convert JPG to PDF, sign, protect & redact. Free, nothing uploaded.
 
 **Category:** Productivity → Tools
 
@@ -39,11 +39,12 @@ Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact an
 
 > Unique PDF brings everyday PDF tools into your browser — completely free, with no uploads.
 >
-> AI SUMMARY — Turn long PDFs into clear key points, a TL;DR, a teaser or a headline. Summaries are
-> written on your computer by Chrome's built-in AI (Gemini Nano), so your document never leaves
-> your device. Long reports are summarised in parts and combined. Needs desktop Chrome 138+ on a
-> device that supports Chrome's on-device AI; elsewhere a clearly labelled key-sentence summary
-> (no AI) is available.
+> UNIQUE AI — Chat with any PDF. Ask a question in plain language and Unique AI answers in seconds,
+> with page references you can click to see where each answer comes from. Ask follow-ups, pick a
+> suggested question, export the conversation. AI Summary turns a 100-page report into key points,
+> a TL;DR or a headline. Your document is never uploaded. Needs desktop Chrome 138+ on a computer
+> that supports Chrome's built-in AI; elsewhere chat works as a labelled passage search and a
+> key-sentence summary (no AI) is available.
 >
 > ORGANIZE — Merge PDFs, split by page or range, reorder, rotate, delete and extract pages, or
 > combine pages from several files in one workspace.
@@ -61,14 +62,14 @@ Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact an
 > analytics, no ads, no watermarks, no limits. Works offline.
 >
 > Note: the editor adds new content; it does not change text that already exists in a PDF. AI
-> summaries can contain mistakes; check important details against the document.
+> answers and summaries can contain mistakes; check important details against the document.
 
 **Screenshots (1280×800):** generate with `npm run screenshots` →
-`store-assets/screenshots/01-home.png` … `09-compress-result-dark.png` (`10-popup.png` shows the
-toolbar popup). Suggested five: `01-home`, `02-ai-summary`, `03-editor`, `05-organize`,
-`07-home-dark`. The AI Summary shots are the real interface driven by the same deterministic
-stand-in for Chrome's model that the E2E tests use (headless Chromium has no model); the summary
-text is sample content.
+`store-assets/screenshots/01-home.png` … `11-popup.png`. Suggested five: `01-home`,
+`02-ai-chat`, `03-ai-summary`, `04-editor`, `08-ai-chat-dark`. The Unique AI shots are the real
+interface driven by the same deterministic stand-ins for Chrome's AI that the E2E tests use
+(headless Chromium has no model); the answers and summaries are sample content that matches the
+sample document.
 
 **Icon:** `public/icons/icon-128.png` (store tile source: `store-assets/icon-512.png`). These are
 neutral product glyphs; replace with the official Unique Labs artwork when available
@@ -78,8 +79,8 @@ neutral product glyphs; replace with the official Unique Labs artwork when avail
 
 ## 3. Privacy practices tab
 
-**Single purpose:** "Unique PDF lets users view, organise, convert, edit, summarise, protect and
-redact PDF files locally in the browser."
+**Single purpose:** "Unique PDF lets users view, organise, convert, edit, protect, redact, summarise
+and ask questions about PDF files locally in the browser."
 
 **Permission justifications:**
 
@@ -93,8 +94,9 @@ No host permissions, no remote code.
 package. (`wasm-unsafe-eval` is used only to compile the bundled PDF.js image decoders.)
 
 **Data usage disclosures:** select **none** of the data types (the extension does not collect or
-transmit user data). AI Summary uses Chrome's built-in on-device Summarizer API; no document text is
-sent to the developer or any third party. Certify that data is not sold, not used for unrelated purposes and not used
+transmit user data). Unique AI (chat and summaries) uses Chrome's built-in AI APIs (Prompt API,
+Summarizer API), which run in the browser; no document text, question or answer is sent to the
+developer or any third party. Certify that data is not sold, not used for unrelated purposes and not used
 for creditworthiness.
 
 **Privacy policy URL:** publish the contents of `PRIVACY.md` on the Unique Labs website and link it.

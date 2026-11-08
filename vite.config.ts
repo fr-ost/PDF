@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: development ? 'dist-dev' : 'dist',
       emptyOutDir: true,
-      target: 'chrome120',
+      target: 'chrome122',
       sourcemap: development,
       minify: !development,
       // Chrome supports modulepreload natively; the polyfill would be dead code.

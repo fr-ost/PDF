@@ -71,17 +71,21 @@ export function getPendingNavigation(): { hash: string; message: string } | null
 
 export function confirmPendingNavigation(): void {
   const target = pendingHash;
+  const delta = pendingDelta;
   pendingHash = null;
+  pendingDelta = 0;
   guardMessage = null;
   if (target !== null) {
-    currentHash = target;
-    location.hash = target;
+    // Replay the step through history that was held back, or follow the link.
+    if (delta !== 0) history.go(delta);
+    else location.hash = target;
   }
   emit();
 }
 
 export function cancelPendingNavigation(): void {
   pendingHash = null;
+  pendingDelta = 0;
   emit();
 }
 
@@ -95,18 +99,40 @@ export function navigate(hash: string): void {
   location.hash = hash;
 }
 
+/** Index of the current session-history entry (Navigation API, Chrome 102+), or -1. */
+function historyIndex(): number {
+  return (globalThis as { navigation?: { currentEntry?: { index: number } | null } }).navigation?.currentEntry?.index ?? -1;
+}
+let committedIndex = typeof window !== 'undefined' ? historyIndex() : -1;
+let pendingDelta = 0;
+
 if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
-    if (guardMessage && location.hash !== currentHash) {
-      // Browser back/forward while work is in progress: restore and ask first.
-      const target = location.hash;
+    const hash = location.hash;
+    // In-page anchors (e.g. "#main") are not routes: keep the current page.
+    if (hash && !hash.startsWith('#/')) {
       history.replaceState(null, '', currentHash || '#/');
-      pendingHash = target;
-      emit();
-    } else {
-      currentHash = location.hash;
-      withViewTransition(emit);
+      return;
     }
+    const index = historyIndex();
+    if (hash === currentHash) {
+      committedIndex = index; // returned to the page after a held-back step
+      return;
+    }
+    if (guardMessage) {
+      // A link, Back or Forward while work is in progress: step back to this
+      // page without rewriting history entries, and ask first.
+      const delta = index >= 0 && committedIndex >= 0 ? index - committedIndex : 0;
+      pendingHash = hash;
+      pendingDelta = delta;
+      if (delta !== 0) history.go(-delta);
+      else history.replaceState(null, '', currentHash || '#/');
+      emit();
+      return;
+    }
+    currentHash = hash;
+    committedIndex = index;
+    withViewTransition(emit);
   });
   window.addEventListener('beforeunload', (e) => {
     if (guardMessage) {
@@ -123,7 +149,9 @@ function subscribe(fn: () => void): () => void {
 let cachedHash = '';
 let cachedRoute: Route = { name: 'home' };
 function getRoute(): Route {
-  const hash = typeof location !== 'undefined' ? location.hash : '';
+  // The committed location, not location.hash: while the leave guard holds a
+  // navigation back (history.go is asynchronous), the URL briefly shows the target.
+  const hash = currentHash;
   if (hash !== cachedHash) {
     cachedHash = hash;
     cachedRoute = parseHash(hash);

@@ -92,3 +92,37 @@ function readExifOrientation(view: DataView, tiffStart: number, end: number): nu
 export function orientationSwapsAxes(orientation: number): boolean {
   return orientation >= 5 && orientation <= 8;
 }
+
+/**
+ * Removes EXIF (APP1 "Exif") segments so decoders don't apply the orientation
+ * tag; used where the PDF already handles orientation in its placement matrix.
+ */
+export function stripExifSegments(bytes: Uint8Array): Uint8Array {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return bytes;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const parts: Uint8Array[] = [bytes.subarray(0, 2)];
+  let offset = 2;
+  let removed = false;
+  while (offset + 4 <= bytes.length && bytes[offset] === 0xff) {
+    const marker = bytes[offset + 1]!;
+    if (marker === 0xff) {
+      offset++; // fill byte
+      continue;
+    }
+    if (marker === 0xda) break; // start of scan: the rest is image data
+    const length = view.getUint16(offset + 2);
+    if (length < 2 || offset + 2 + length > bytes.length) break;
+    if (marker === 0xe1 && ascii(bytes, offset + 4, 4) === 'Exif') removed = true;
+    else parts.push(bytes.subarray(offset, offset + 2 + length));
+    offset += 2 + length;
+  }
+  if (!removed) return bytes;
+  parts.push(bytes.subarray(offset));
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) {
+    out.set(p, at);
+    at += p.length;
+  }
+  return out;
+}

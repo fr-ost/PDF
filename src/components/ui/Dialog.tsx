@@ -12,9 +12,16 @@ export function Dialog({ open, onClose, title, description, children, footer, si
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (open && !el.open) el.showModal();
+    if (open && !el.open) {
+      el.showModal();
+      // React's autoFocus runs before showModal() (while the dialog is still
+      // hidden), so focus the marked element here instead of the Close button.
+      el.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    }
     if (!open && el.open) el.close();
   }, [open]);
+  // A press that starts inside the dialog and ends on the backdrop must not close it.
+  const downOnBackdrop = useRef(false);
 
   return (
     <dialog
@@ -23,8 +30,12 @@ export function Dialog({ open, onClose, title, description, children, footer, si
         e.preventDefault();
         if (dismissible) onClose();
       }}
+      onPointerDown={(e) => {
+        downOnBackdrop.current = e.target === ref.current;
+      }}
       onClick={(e) => {
-        if (dismissible && e.target === ref.current) onClose();
+        if (dismissible && e.target === ref.current && downOnBackdrop.current) onClose();
+        downOnBackdrop.current = false;
       }}
       className={cn(
         'm-auto w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-line bg-surface p-0 text-fg shadow-pop open:animate-pop-in',
@@ -44,7 +55,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             {dismissible ? <IconButton icon={X} label="Close" size="sm" onClick={onClose} className="-mr-2 -mt-1" /> : null}
           </div>
           {children ? <div className="overflow-y-auto px-6 py-3">{children}</div> : null}
-          {footer ? <div className="flex justify-end gap-2 px-6 pb-6 pt-3">{footer}</div> : null}
+          {footer ? <div className="flex flex-wrap justify-end gap-2 px-6 pb-6 pt-3">{footer}</div> : null}
         </div>
       ) : null}
     </dialog>
@@ -60,10 +71,11 @@ export function ConfirmDialog({ open, onCancel, onConfirm, title, message, confi
       size="sm"
       footer={
         <>
-          <Button variant="secondary" onClick={onCancel}>
+          {/* Destructive confirmations start on Cancel; others on the confirm button. */}
+          <Button variant="secondary" onClick={onCancel} data-autofocus={tone === 'danger' ? true : undefined}>
             Cancel
           </Button>
-          <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} autoFocus>
+          <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} data-autofocus={tone === 'danger' ? undefined : true}>
             {confirmLabel}
           </Button>
         </>

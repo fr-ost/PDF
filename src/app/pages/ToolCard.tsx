@@ -6,12 +6,26 @@ import { handOffFiles, navigate, routeHref } from '../router';
 import { cn } from '../../utils/cn';
 import { filesFromDataTransfer } from '../../components/tool/Dropzone';
 
-/** Moves the spotlight glow to the pointer without re-rendering. */
+const spotlightFrames = new WeakMap<HTMLElement, { frame: number; x: number; y: number }>();
+
+/** Moves the spotlight glow to the pointer without re-rendering (at most once per frame). */
 export function trackSpotlight(e: PointerEvent<HTMLElement>): void {
+  if (e.pointerType !== 'mouse') return;
   const el = e.currentTarget;
-  const rect = el.getBoundingClientRect();
-  el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-  el.style.setProperty('--my', `${e.clientY - rect.top}px`);
+  const pending = spotlightFrames.get(el);
+  if (pending) {
+    pending.x = e.clientX;
+    pending.y = e.clientY;
+    return;
+  }
+  const state = { frame: 0, x: e.clientX, y: e.clientY };
+  spotlightFrames.set(el, state);
+  state.frame = requestAnimationFrame(() => {
+    spotlightFrames.delete(el);
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', `${state.x - rect.left}px`);
+    el.style.setProperty('--my', `${state.y - rect.top}px`);
+  });
 }
 
 /** Tool card. Dropping files onto it opens the tool with those files. */
@@ -25,6 +39,8 @@ export function ToolCard({ tool, showCategory, index = 0 }: { tool: ToolDefiniti
       href={routeHref({ name: 'tool', id: tool.id })}
       data-testid={`tool-card-${tool.id}`}
       onPointerMove={trackSpotlight}
+      onPointerEnter={tool.preload}
+      onFocus={tool.preload}
       onDragOver={(e) => {
         e.preventDefault();
         setOver(true);

@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import type { Page } from '@playwright/test';
 import { addFiles, expect, openTool, pdfFile, settled, test, waitForPages } from '../e2e/fixtures';
-import { installFakeSummarizer } from '../e2e/fakeAi';
+import { installFakeLanguageModel, installFakeSummarizer } from '../e2e/fakeAi';
 import { makeImagePdf, makeProsePdf } from '../helpers/fixtures';
 /**
  * Generates Chrome Web Store screenshots (1280×800) into store-assets/screenshots.
@@ -36,6 +36,22 @@ async function theme(app: Page, name: 'Light theme' | 'Dark theme') {
   await app.waitForTimeout(300); // let colour transitions finish
 }
 
+async function aiChat(app: Page) {
+  await openTool(app, 'ai-chat');
+  await addFiles(app, [pdfFile('annual-report-2026.pdf', await makeProsePdf())]);
+  const input = app.getByTestId('chat-input');
+  await expect(input).toBeEnabled();
+  for (const question of ['How many warehouses were merged?', 'What are the main risks?']) {
+    await input.fill(question);
+    await input.press('Enter');
+    await expect(app.getByTestId('chat-assistant-message').last()).toHaveAttribute('data-status', 'done');
+  }
+  await app.getByTestId('citation').last().click();
+  await app.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }));
+  await app.mouse.move(0, 0);
+  await app.waitForTimeout(800);
+}
+
 async function aiSummary(app: Page) {
   await openTool(app, 'ai-summary');
   await addFiles(app, [pdfFile('annual-report-2026.pdf', await makeProsePdf())]);
@@ -48,15 +64,20 @@ async function aiSummary(app: Page) {
 }
 
 test('screens', async ({ app }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   await installFakeSummarizer(app, 'available');
+  await installFakeLanguageModel(app, 'available');
   await app.reload();
   await app.setViewportSize({ width: 1280, height: 800 });
   await app.waitForTimeout(900);
   await app.screenshot({ path: out('01-home') });
 
+  await aiChat(app);
+  await app.screenshot({ path: out('02-ai-chat') });
+  await leave(app);
+
   await aiSummary(app);
-  await app.screenshot({ path: out('02-ai-summary') });
+  await app.screenshot({ path: out('03-ai-summary') });
   await leave(app);
 
   await openTool(app, 'edit');
@@ -79,7 +100,7 @@ test('screens', async ({ app }) => {
   await app.mouse.down();
   await app.mouse.move(b.x + b.width * 0.85, b.y + b.height * 0.48, { steps: 4 });
   await app.mouse.up();
-  await app.screenshot({ path: out('03-editor') });
+  await app.screenshot({ path: out('04-editor') });
   await leave(app);
 
   await openTool(app, 'redact');
@@ -89,7 +110,7 @@ test('screens', async ({ app }) => {
   await app.getByRole('button', { name: 'Search' }).click();
   await app.getByRole('button', { name: 'Mark all' }).click();
   await app.waitForTimeout(400);
-  await app.screenshot({ path: out('04-redact') });
+  await app.screenshot({ path: out('05-redact') });
   await leave(app);
 
   await openTool(app, 'organize');
@@ -99,19 +120,19 @@ test('screens', async ({ app }) => {
   await app.getByTestId('page-card').nth(3).click();
   await app.mouse.move(0, 0);
   await app.waitForTimeout(600);
-  await app.screenshot({ path: out('05-organize') });
+  await app.screenshot({ path: out('06-organize') });
   await leave(app);
 
   await openTool(app, 'watermark');
   await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
   await app.waitForTimeout(800);
-  await app.screenshot({ path: out('06-watermark') });
+  await app.screenshot({ path: out('10-watermark') });
   await leave(app);
 
   await theme(app, 'Dark theme');
   await app.screenshot({ path: out('07-home-dark') });
-  await aiSummary(app);
-  await app.screenshot({ path: out('08-ai-summary-dark') });
+  await aiChat(app);
+  await app.screenshot({ path: out('08-ai-chat-dark') });
   await leave(app);
   await openTool(app, 'compress');
   await addFiles(app, [pdfFile('photos.pdf', await makeImagePdf())]);
@@ -128,6 +149,6 @@ test('popup', async ({ extContext, extensionId }) => {
   await p.setViewportSize({ width: 380, height: 560 });
   await p.goto(`chrome-extension://${extensionId}/popup.html`);
   await p.waitForTimeout(600);
-  await p.screenshot({ path: out('10-popup') });
+  await p.screenshot({ path: out('11-popup') });
   await p.close();
 });

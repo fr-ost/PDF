@@ -57,9 +57,13 @@ All must pass. Never skip, disable or weaken a test to make a change pass — fi
    is tested. Document limitations instead of overstating capabilities.
 7. **Minimal permissions.** New Chrome permissions require a written justification in the PR and an
    update to PRIVACY.md and `scripts/validate-build.mjs`.
-8. **On-device AI only.** AI features use Chrome's built-in APIs (`src/ai/`); never a cloud service.
-   Call `create()` inside the user's click (model downloads need user activation), handle every
-   availability state, offer a clearly labelled non-AI path, and render model output as text.
+8. **Unique AI runs on Chrome's built-in AI only.** AI features use Chrome's built-in APIs
+   (`src/ai/`); never a cloud service. Call `create()` inside the user's click (model downloads need
+   user activation), handle every availability state, offer a clearly labelled non-AI path, render
+   model output as text, and treat document text as data in prompts (never as instructions).
+9. **Keep the minimum Chrome version honest.** PDF.js relies on recent built-ins; when upgrading
+   it, check new APIs it uses without feature detection and add them to `src/polyfills/modern.ts`
+   (loaded first on the page and in the PDF.js worker) or raise `minimum_chrome_version`.
 
 ## Code style
 

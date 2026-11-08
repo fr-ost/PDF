@@ -1,5 +1,5 @@
 /**
- * On-device summarization with Chrome's built-in Summarizer API.
+ * Unique AI summaries, built on Chrome's built-in Summarizer API.
  *
  * The model runs locally (Chrome downloads it once and manages it); no
  * document text ever leaves the device. Long documents are summarised with
@@ -7,7 +7,7 @@
  * input quota.
  */
 import { PdfToolError } from '../pdf/errors';
-import { accumulateStream, chunkTexts, estimateTokens } from './chunk';
+import { chunkTexts, createStreamAccumulator, estimateTokens } from './chunk';
 
 export type AiStatus = 'no-api' | AiAvailability;
 export type SummaryStyle = SummarizerType;
@@ -69,22 +69,23 @@ function sharedContext(options: SummaryOptions): string | undefined {
 function mapError(err: unknown): unknown {
   const name = (err as { name?: string })?.name;
   if (name === 'AbortError') return new PdfToolError('CANCELLED', 'Summarizing was cancelled.');
-  if (name === 'NotAllowedError') return new PdfToolError('UNSUPPORTED', 'Chrome needs a click to start downloading its on-device AI model. Press the button again.');
-  if (name === 'NotSupportedError') return new PdfToolError('UNSUPPORTED', 'This combination of language and summary style is not supported by Chrome’s on-device AI yet.');
-  if (name === 'QuotaExceededError') return new PdfToolError('UNSUPPORTED', 'A section of this document is too long for the on-device model. Try a smaller page range.');
-  if (name === 'InvalidStateError' || name === 'OperationError') return new PdfToolError('UNSUPPORTED', 'Chrome’s on-device AI is not ready on this device right now. Try again later.');
+  if (name === 'NotAllowedError') return new PdfToolError('UNSUPPORTED', 'Unique AI needs a click to finish its one-time setup. Press the button again.');
+  if (name === 'NotSupportedError') return new PdfToolError('UNSUPPORTED', 'Unique AI doesn’t support this combination of language and summary style yet.');
+  if (name === 'QuotaExceededError') return new PdfToolError('UNSUPPORTED', 'A section of this document is too long for Unique AI. Try a smaller page range.');
+  if (name === 'InvalidStateError' || name === 'OperationError') return new PdfToolError('UNSUPPORTED', 'Unique AI isn’t ready on this device right now. Try again later.');
   return err;
 }
 
 async function readStream(stream: ReadableStream<string>, onText: (t: string) => void, signal?: AbortSignal): Promise<string> {
   const reader = stream.getReader();
+  const accumulate = createStreamAccumulator();
   let text = '';
   try {
     for (;;) {
       if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
       const { value, done } = await reader.read();
       if (done) break;
-      text = accumulateStream(text, value);
+      text = accumulate(value);
       onText(text);
     }
   } finally {
@@ -105,7 +106,7 @@ export async function summarizeDocument(
   signal?: AbortSignal,
   api = getSummarizerApi(),
 ): Promise<string> {
-  if (!api) throw new PdfToolError('UNSUPPORTED', 'Chrome’s on-device AI is not available in this browser.');
+  if (!api) throw new PdfToolError('UNSUPPORTED', 'Unique AI isn’t available in this browser.');
   const { onStage = () => undefined, onText = () => undefined } = callbacks;
   const context = sharedContext(options);
   const monitor = (m: AiCreateMonitor) =>

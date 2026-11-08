@@ -25,12 +25,13 @@ export default function ExtractTool({ tool, initialFiles }: ToolProps) {
   const keys = ws.pages.map((p) => p.key);
   const indices = ws.pages.map((p, i) => (ws.selected.has(p.key) ? i : -1)).filter((i) => i >= 0);
 
-  // Keep the range field and the visual selection in sync.
+  // Keep the range field and the visual selection in sync (also once a new file's pages load).
+  const keySignature = keys.join('|');
   useEffect(() => {
     const r = parsePageRanges(range, keys.length);
     if (r.ok) ws.setSelected(new Set(r.pages.map((i) => keys[i]!)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range]);
+  }, [range, keySignature]);
   const onSelect = (s: Set<string>) => {
     ws.setSelected(s);
     setRange(formatPageList(ws.pages.map((p, i) => (s.has(p.key) ? i : -1)).filter((i) => i >= 0)));

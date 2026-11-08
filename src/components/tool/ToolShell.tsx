@@ -2,7 +2,8 @@
  * Common layout for every tool: header, file intake, workspace, options
  * panel with the primary action, progress, errors and results.
  */
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronRight, X } from 'lucide-react';
 import { CATEGORY_INFO, type ToolDefinition } from '../../features/registry';
 import { accentStyle } from '../../features/categories';
@@ -10,6 +11,7 @@ import { routeHref, setLeaveGuard } from '../../app/router';
 import type { FileListApi } from '../../hooks/useFileList';
 import type { TaskStatus } from '../../hooks/useTask';
 import { Button } from '../ui/Button';
+import { cn } from '../../utils/cn';
 import { Card } from '../ui/Card';
 import { Alert } from '../ui/Feedback';
 import { Dropzone } from './Dropzone';
@@ -24,6 +26,8 @@ export interface TaskView {
   cancel: () => void;
   reset: () => void;
 }
+
+const IDLE_TASK: TaskView = { status: 'idle', progress: null, cancel: () => undefined, reset: () => undefined };
 
 export interface PrimaryAction {
   label: string;
@@ -57,7 +61,7 @@ export function ToolHeader({ tool }: { tool: ToolDefinition }) {
         </div>
       </div>
       <p className="inline-flex items-center gap-2 self-start rounded-full border border-line bg-surface/80 px-3 py-1.5 text-xs font-medium text-fg-muted shadow-card sm:self-auto">
-        <span className="live-dot" aria-hidden /> On-device · nothing uploaded
+        <span className="live-dot" aria-hidden /> Private · nothing uploaded
       </p>
     </header>
   );
@@ -105,10 +109,11 @@ export function ToolShell({
   emptyHint,
   onRetry,
   intake,
+  layout = 'split',
 }: {
   tool: ToolDefinition;
   files: FileListApi;
-  task: TaskView;
+  task?: TaskView;
   children: ReactNode;
   options?: ReactNode;
   primary?: PrimaryAction;
@@ -117,11 +122,25 @@ export function ToolShell({
   onRetry?: () => void;
   /** Replaces the default dropzone shown before any file is added. */
   intake?: ReactNode;
+  /** `full`: the tool lays out its own workspace (no options panel). */
+  layout?: 'split' | 'full';
 }) {
+  task ??= IDLE_TASK;
   const hasFiles = files.entries.length > 0;
   const showResult = task.status === 'success' && !!result;
   const asideRef = useRef<HTMLElement>(null);
-  useFitToViewport(asideRef, hasFiles && !showResult);
+  useFitToViewport(asideRef, hasFiles && !showResult && layout === 'split');
+  const footer = task.status === 'error' || task.status === 'running' || !!primary;
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerInView, setFooterInView] = useState(true);
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el || !hasFiles || showResult || layout !== 'split') return;
+    const observer = new IntersectionObserver(([item]) => setFooterInView(!!item?.isIntersecting), { rootMargin: '0px 0px -8px 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasFiles, showResult, layout, footer]);
+  const floating = !footerInView && !!primary && hasFiles && !showResult && layout === 'split' && task.status !== 'running';
 
   useEffect(() => {
     setLeaveGuard(hasFiles && !showResult ? 'Your selected files and changes in this tool will be discarded.' : null);
@@ -129,7 +148,7 @@ export function ToolShell({
   }, [hasFiles, showResult]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10" data-tool={tool.id}>
+    <div className={cn('mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10', floating && 'pb-28 lg:pb-8')} data-tool={tool.id}>
       <ToolHeader tool={tool} />
       {files.rejections.length > 0 ? (
         <Alert
@@ -164,6 +183,8 @@ export function ToolShell({
           result
         ) : !hasFiles ? (
           <div className="enter" style={{ ['--i' as string]: 1 }}>{intake ?? <Dropzone accept={[tool.accepts]} multiple={tool.multiple} onFiles={(f) => void files.add(f)} hint={emptyHint} />}</div>
+        ) : layout === 'full' ? (
+          <div className="enter" style={{ ['--i' as string]: 1 }}>{children}</div>
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_348px]">
             <div className="enter min-w-0" style={{ ['--i' as string]: 1 }}>{children}</div>
@@ -171,7 +192,8 @@ export function ToolShell({
               {/* On large screens the panel fits the viewport: options scroll inside it and the action stays visible. */}
               <Card className="flex flex-col overflow-hidden lg:max-h-[var(--panel-max,calc(100vh-3rem))]">
                 {options ? <div className="scroll-fade min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-5">{options}</div> : null}
-                <div className="shrink-0 space-y-3 border-t border-line bg-surface-2/40 p-5 first:border-t-0 dark:bg-surface-2/30">
+                {footer ? (
+                <div ref={footerRef} className="shrink-0 space-y-3 border-t border-line bg-surface-2/40 p-5 first:border-t-0 dark:bg-surface-2/30">
                   {task.status === 'error' ? <ErrorPanel error={task.error} onRetry={onRetry ?? primary?.onClick} onDismiss={task.reset} /> : null}
                   {task.status === 'running' ? (
                     <TaskProgress progress={task.progress} label={task.label} onCancel={task.cancel} />
@@ -184,11 +206,23 @@ export function ToolShell({
                     </>
                   ) : null}
                 </div>
+                ) : null}
               </Card>
             </aside>
           </div>
         )}
       </div>
+      {floating && primary
+        ? createPortal(
+            // Below lg the options panel comes after the workspace; keep the action within reach.
+            <div className="glass fixed inset-x-0 bottom-0 z-30 animate-pop-in border-t border-line px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 lg:hidden" data-testid="floating-action">
+              <Button variant={primary.tone === 'danger' ? 'danger' : 'primary'} size="lg" className="w-full" onClick={primary.onClick} disabled={primary.disabled || files.busy}>
+                {primary.label}
+              </Button>
+            </div>,
+            document.body,
+          )
+        : null}
       <PasswordPrompt files={files} />
     </div>
   );

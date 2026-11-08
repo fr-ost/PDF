@@ -1,4 +1,4 @@
-import { useId, useRef, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useId, useRef, useState, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { Check, ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -41,21 +41,25 @@ export function NumberInput({
   className,
   ...rest
 }: Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'> & { value: number; onChange: (value: number) => void; min?: number; max?: number; step?: number; suffix?: string }) {
+  // What the user is typing (may be empty or partial); the number is applied as it becomes valid.
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className={cn('relative', className)}>
       <input
         type="number"
         inputMode="decimal"
         className={cn(control, 'h-10 tabular-nums', suffix && 'pr-11')}
-        value={Number.isFinite(value) ? value : ''}
+        value={draft ?? (Number.isFinite(value) ? String(value) : '')}
         min={min}
         max={max}
         step={step}
         onChange={(e) => {
+          setDraft(e.target.value);
           const v = e.target.valueAsNumber;
           if (Number.isFinite(v)) onChange(v);
         }}
         onBlur={(e) => {
+          setDraft(null);
           let v = e.target.valueAsNumber;
           if (!Number.isFinite(v)) v = min ?? 0;
           if (min !== undefined) v = Math.max(min, v);

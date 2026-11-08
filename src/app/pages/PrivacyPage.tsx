@@ -7,7 +7,7 @@ const DOES = [
   'Saves results only when you click Download.',
   'Keeps your settings, and — if enabled — a short list of recent file names and sizes, in this browser’s local extension storage (a light or dark theme choice is mirrored in local web storage so the page opens in the right colours).',
   'Uses passwords only in memory, for the operation you asked for.',
-  'Runs AI Summary with Chrome’s built-in on-device model — the text is processed on your computer.',
+  'Runs Unique AI (chat and summaries) on the AI built into Chrome — your document text is never sent to Unique Labs or any server.',
 ];
 const DOES_NOT = [
   'Upload, sync or back up your documents anywhere.',

@@ -40,7 +40,10 @@ export function useTask<R>() {
       setStatus('success');
       return value;
     } catch (err) {
-      if (ac.signal.aborted || isCancelled(err)) {
+      // Cancelled or superseded: whoever aborted this run already set the state
+      // (a newer run may be in progress, so don't touch it).
+      if (ac.signal.aborted) return undefined;
+      if (isCancelled(err)) {
         setStatus('idle');
         return undefined;
       }

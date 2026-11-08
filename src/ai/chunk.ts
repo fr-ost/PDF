@@ -81,10 +81,19 @@ export async function chunkTexts(parts: string[], maxTokens: number, measure?: M
 }
 
 /**
- * Streaming APIs have returned either cumulative text or deltas depending on
- * the Chrome version. This accepts both.
+ * Collects a text stream. Chrome's built-in AI streams deltas (Chrome 138+);
+ * very early builds sent the cumulative text. The mode is decided once, from
+ * the second chunk, so a delta that happens to repeat the text so far (e.g.
+ * "1", "1 key findings") is never mistaken for a cumulative chunk later on.
  */
-export function accumulateStream(previous: string, chunk: string): string {
-  if (previous && chunk.startsWith(previous)) return chunk;
-  return previous + chunk;
+export function createStreamAccumulator(): (chunk: string) => string {
+  let text = '';
+  let chunks = 0;
+  let cumulative = false;
+  return (chunk: string) => {
+    chunks++;
+    if (chunks === 2) cumulative = text.length > 0 && chunk.length > text.length && chunk.startsWith(text);
+    text = cumulative ? chunk : text + chunk;
+    return text;
+  };
 }

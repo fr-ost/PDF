@@ -7,8 +7,10 @@ const APP_PATH = 'app.html';
 async function openApp(hash = ''): Promise<void> {
   const url = chrome.runtime.getURL(`${APP_PATH}${hash}`);
   try {
-    const contexts = await chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB], documentUrls: [chrome.runtime.getURL(`${APP_PATH}*`)] });
-    const existing = contexts.find((c) => c.tabId !== undefined && c.tabId >= 0);
+    // documentUrls only takes exact URLs (no wildcards, and the hash differs), so filter here.
+    const appUrl = chrome.runtime.getURL(APP_PATH);
+    const contexts = await chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] });
+    const existing = contexts.find((c) => c.tabId !== undefined && c.tabId >= 0 && !!c.documentUrl?.startsWith(appUrl));
     if (existing?.tabId !== undefined) {
       await chrome.tabs.update(existing.tabId, { active: true, ...(hash ? { url } : {}) });
       if (existing.windowId !== undefined && existing.windowId >= 0) await chrome.windows.update(existing.windowId, { focused: true });

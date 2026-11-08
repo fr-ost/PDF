@@ -7,7 +7,7 @@ import { useApplyTheme } from '../hooks/useTheme';
 import { relativeTime } from '../utils/format';
 import { ThemeToggle } from '../app/shell/ThemeToggle';
 
-const QUICK = ['merge', 'compress', 'ai-summary', 'split', 'images-to-pdf', 'pdf-to-images', 'edit', 'sign', 'protect'];
+const QUICK = ['ai-chat', 'ai-summary', 'merge', 'compress', 'split', 'images-to-pdf', 'edit', 'sign', 'protect'];
 
 async function open(hash = '#/'): Promise<void> {
   try {

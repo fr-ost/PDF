@@ -22,7 +22,8 @@ export function useHotkeys(map: HotkeyMap, enabled = true): void {
     const handler = (e: KeyboardEvent) => {
       if (document.querySelector('dialog[open]')) return;
       const mod = e.ctrlKey || e.metaKey;
-      if (!mod && isTyping(e.target)) return;
+      // Fields keep their own keys, including Ctrl/⌘+Z for text undo.
+      if (isTyping(e.target)) return;
       const key = e.key.toLowerCase();
       const combo = `${e.shiftKey ? 'shift+' : ''}${mod ? 'mod+' : ''}${e.altKey ? 'alt+' : ''}${key}`;
       const fn = ref.current[combo];
