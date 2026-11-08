@@ -25,8 +25,19 @@ function draw(size) {
   const ctx = canvas.getContext('2d');
   const s = size / 128;
   // Tile
-  roundRect(ctx, 4 * s, 4 * s, 120 * s, 120 * s, 28 * s);
-  ctx.fillStyle = '#2563EB';
+  roundRect(ctx, 4 * s, 4 * s, 120 * s, 120 * s, 32 * s);
+  const tile = ctx.createLinearGradient(0, 0, size, size);
+  tile.addColorStop(0, '#3D5AFE');
+  tile.addColorStop(0.62, '#7C4DFF');
+  tile.addColorStop(1, '#B14DFF');
+  ctx.fillStyle = tile;
+  ctx.fill();
+  // Soft top highlight for depth.
+  const shine = ctx.createLinearGradient(0, 0, 0, size * 0.55);
+  shine.addColorStop(0, 'rgba(255,255,255,0.28)');
+  shine.addColorStop(1, 'rgba(255,255,255,0)');
+  roundRect(ctx, 4 * s, 4 * s, 120 * s, 60 * s, 32 * s);
+  ctx.fillStyle = shine;
   ctx.fill();
   // Document with folded corner
   const x = 34 * s, y = 22 * s, w = 60 * s, h = 84 * s, fold = 18 * s;
@@ -50,11 +61,11 @@ function draw(size) {
   ctx.quadraticCurveTo(x + w - fold, y + fold, x + w - fold + 4 * s, y + fold);
   ctx.lineTo(x + w, y + fold);
   ctx.closePath();
-  ctx.fillStyle = '#BFDBFE';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.fill();
   // Text lines (omitted at 16px where they would blur)
   if (size >= 32) {
-    ctx.fillStyle = '#2563EB';
+    ctx.fillStyle = '#5B4DFF';
     const lw = Math.max(1, 6 * s);
     const lines = [[x + 12 * s, y + 38 * s, 36 * s], [x + 12 * s, y + 52 * s, 36 * s], [x + 12 * s, y + 66 * s, 24 * s]];
     for (const [lx, ly, len] of lines) {

@@ -3,7 +3,8 @@ import { ArrowRight, History, Trash2 } from 'lucide-react';
 import { clearHistory, removeHistoryEntry, useHistory } from '../../services/history-service/history';
 import { updateSettings, useSettings } from '../../services/settings-service/settings';
 import { getTool } from '../../features/registry';
-import { Card } from '../../components/ui/Card';
+import { accentStyle } from '../../features/categories';
+import { Card, PageHeader } from '../../components/ui/Card';
 import { Button, IconButton } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/ui/Dialog';
 import { EmptyState } from '../../components/ui/Feedback';
@@ -16,22 +17,23 @@ export function RecentPage() {
   const settings = useSettings();
   const [confirm, setConfirm] = useState(false);
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Recent files</h1>
-          <p className="mt-1 text-sm text-fg-muted">Only file names, sizes and the tool used are remembered — never the documents themselves.</p>
-        </div>
-        {history.length > 0 ? (
-          <Button variant="secondary" icon={Trash2} onClick={() => setConfirm(true)}>
-            Clear history
-          </Button>
-        ) : null}
-      </div>
-      <Card className="mt-6 p-4">
+    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <PageHeader
+        title="Recent files"
+        description="Only file names, sizes and the tool used are remembered — never the documents themselves."
+        icon={<span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-line bg-surface text-fg-muted shadow-card"><History size={20} aria-hidden /></span>}
+        actions={
+          history.length > 0 ? (
+            <Button variant="secondary" icon={Trash2} onClick={() => setConfirm(true)}>
+              Clear history
+            </Button>
+          ) : null
+        }
+      />
+      <Card className="enter mt-7 p-4" style={{ ['--i' as string]: 1 }}>
         <Switch checked={settings.historyEnabled} onChange={(v) => void updateSettings({ historyEnabled: v })} label="Remember recent tasks" description="Stored only in this browser profile. Turn off to stop recording new tasks." />
       </Card>
-      <Card className="mt-4">
+      <Card className="enter mt-4 overflow-hidden" style={{ ['--i' as string]: 2 }}>
         {history.length === 0 ? (
           <EmptyState icon={History} title="No recent tasks" action={<a href="#/" className="text-sm font-medium text-primary hover:underline">Browse tools</a>}>
             Files you process will be listed here so you can quickly repeat a task.
@@ -42,8 +44,8 @@ export function RecentPage() {
               const tool = getTool(entry.toolId);
               const Icon = tool?.icon ?? History;
               return (
-                <li key={entry.id} className="flex items-center gap-4 px-4 py-3.5">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                <li key={entry.id} className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2/50" style={tool ? accentStyle(tool.category) : undefined}>
+                  <div className={tool ? 'tint-tile flex h-9 w-9 shrink-0 items-center justify-center rounded-xl' : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-fg-muted'}>
                     <Icon size={17} aria-hidden />
                   </div>
                   <div className="min-w-0 flex-1">

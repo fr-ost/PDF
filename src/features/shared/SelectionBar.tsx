@@ -10,7 +10,7 @@ export function SelectionBar({ keys, selected, onChange, children, noun = 'page'
     if (r.ok) onChange(new Set(r.pages.map((i) => keys[i]!)));
   };
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-x-1 gap-y-2 rounded-xl border border-line bg-surface px-2 py-1.5 shadow-card" role="toolbar" aria-label="Selection">
+    <div className="mb-4 flex flex-wrap items-center gap-x-1 gap-y-2 rounded-2xl border border-line bg-surface/90 px-2 py-1.5 shadow-card" role="toolbar" aria-label="Selection">
       <span className="px-2 text-[13px] font-medium tabular-nums" aria-live="polite">
         {selected.size > 0 ? `${pluralize(selected.size, noun)} selected` : `${pluralize(keys.length, noun)}`}
       </span>

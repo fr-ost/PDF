@@ -16,10 +16,10 @@ function FileTile({ entry, index, count, files }: { entry: FileEntry; index: num
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn('group relative flex flex-col rounded-xl border border-line bg-surface p-2.5 shadow-card', isDragging && 'z-10 opacity-60 shadow-pop')}
+      className={cn('group relative flex flex-col rounded-2xl border border-line bg-surface/90 p-2.5 shadow-card transition-[transform,box-shadow] duration-300 ease-[var(--ease-out-expo)] hover:-translate-y-0.5 hover:shadow-raised', isDragging && 'z-10 scale-[1.02] opacity-80 shadow-pop')}
       data-testid="file-tile"
     >
-      <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg bg-surface-2 p-2">
+      <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl bg-surface-2/80 p-2.5">
         {entry.status === 'ready' && entry.kind === 'pdf' ? (
           <PageThumbnail docId={entry.id} pageIndex={0} width={150} className="max-h-full" />
         ) : entry.status === 'ready' && entry.previewUrl ? (
@@ -31,7 +31,7 @@ function FileTile({ entry, index, count, files }: { entry: FileEntry; index: num
         ) : (
           <AlertCircle size={22} className="text-danger" aria-label="Error" />
         )}
-        <span className="absolute left-1.5 top-1.5 rounded-md bg-fg/70 px-1.5 py-0.5 text-[11px] font-semibold text-white">{index + 1}</span>
+        <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-white backdrop-blur-sm">{index + 1}</span>
         <button
           type="button"
           {...attributes}

@@ -53,7 +53,7 @@ export const PageThumbnail = memo(function PageThumbnail({ docId, pageIndex, rot
             const img = e.currentTarget;
             if (img.naturalWidth) setRatio(img.naturalHeight / img.naturalWidth);
           }}
-          className="page-shadow absolute bg-white transition-transform duration-200"
+          className="page-shadow absolute animate-fade-in bg-white transition-transform duration-500 ease-[var(--ease-out-expo)]"
           style={
             sideways
               ? { width: `${(1 / boxRatio) * 100}%`, transform: `rotate(${quarter}deg)` }
@@ -66,7 +66,7 @@ export const PageThumbnail = memo(function PageThumbnail({ docId, pageIndex, rot
           <span className="text-[11px]">Preview unavailable</span>
         </div>
       ) : (
-        <div className="h-full w-full animate-pulse rounded-sm bg-surface-2" />
+        <div className="skeleton h-full w-full rounded-md" />
       )}
     </div>
   );

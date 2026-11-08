@@ -21,6 +21,62 @@ export async function makeTextPdf(options: { pages?: number; sizes?: [number, nu
   return doc.save();
 }
 
+/** Sentences for prose fixtures: each page reads like a section of a short report. */
+export const PROSE_PAGES: string[][] = [
+  [
+    'Northwind Analytics closed the fiscal year with revenue of 412 million dollars, an increase of 18 percent.',
+    'Subscription renewals were the main driver of growth, rising to 94 percent across enterprise customers.',
+    'The company added 1,240 new business accounts, most of them in healthcare and logistics.',
+    'Gross margin improved to 71 percent because cloud hosting contracts were renegotiated in March.',
+    'Customer satisfaction scores reached a record high after the support team expanded to three time zones.',
+    'Management expects revenue growth to continue next year, although at a slower pace.',
+  ],
+  [
+    'Operating costs fell by 6 percent after the warehouse consolidation finished in the second quarter.',
+    'Two regional warehouses were merged into a single automated facility near Rotterdam.',
+    'The warehouse project cost 23 million dollars and is expected to pay for itself within three years.',
+    'Delivery times improved by a full day for most European customers.',
+    'Energy use per shipment dropped by a quarter thanks to the new solar roof and electric forklifts.',
+    'A small number of staff moved to new roles, and no involuntary layoffs were required.',
+  ],
+  [
+    'The board approved a share buyback of 40 million dollars to be completed over the next eighteen months.',
+    'An expansion into the Asia Pacific region is planned, starting with an office in Singapore.',
+    'The main risks are supplier concentration, rising interest rates and stricter data regulations.',
+    'Three suppliers currently provide almost half of all hardware components.',
+    'The company will qualify two additional suppliers before the end of the coming year.',
+    'Shareholders will vote on the new dividend policy at the annual meeting in June.',
+  ],
+];
+
+/** A text PDF of real sentences, wrapped across lines (for summary tests and screenshots). */
+export async function makeProsePdf(options: { pages?: string[][]; repeat?: number; title?: string } = {}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const sections = options.pages ?? PROSE_PAGES;
+  const total = sections.length * (options.repeat ?? 1);
+  for (let p = 0; p < total; p++) {
+    const sentences = sections[p % sections.length]!;
+    const page = doc.addPage([595.28, 841.89]);
+    page.drawText(`${options.title ?? 'Annual Report 2026'} — Section ${p + 1}`, { x: 60, y: 770, size: 18, font: bold });
+    const words = sentences.join(' ').split(' ');
+    const lines: string[] = [];
+    let line = '';
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (font.widthOfTextAtSize(next, 11) > 475) {
+        lines.push(line);
+        line = word;
+      } else line = next;
+    }
+    if (line) lines.push(line);
+    lines.forEach((text, i) => page.drawText(text, { x: 60, y: 730 - i * 17, size: 11, font }));
+  }
+  doc.setTitle(options.title ?? 'Annual Report 2026');
+  return doc.save();
+}
+
 export function source(bytes: Uint8Array, name = 'fixture.pdf', password?: string): PdfSource {
   return password === undefined ? { bytes: bytes.slice(), name } : { bytes: bytes.slice(), name, password };
 }

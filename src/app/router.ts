@@ -4,8 +4,10 @@
  * files by navigating away accidentally.
  */
 import { useSyncExternalStore } from 'react';
+import { flushSync } from 'react-dom';
+import { runViewTransition } from './viewTransition';
 
-export type Category = 'organize' | 'convert' | 'edit' | 'security';
+export type Category = 'organize' | 'convert' | 'edit' | 'security' | 'ai';
 export type Route =
   | { name: 'home' }
   | { name: 'category'; category: Category }
@@ -16,7 +18,7 @@ export type Route =
   | { name: 'privacy' }
   | { name: 'not-found' };
 
-const CATEGORIES: Category[] = ['organize', 'convert', 'edit', 'security'];
+const CATEGORIES: Category[] = ['organize', 'convert', 'edit', 'security', 'ai'];
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '').replace(/\/+$/, '') || '/';
@@ -42,6 +44,14 @@ export function routeHref(route: Route): string {
     default:
       return `#/${route.name}`;
   }
+}
+
+// ---- view transitions --------------------------------------------------------
+export { prefersReducedMotion } from './viewTransition';
+
+/** Runs a route update inside a View Transition when supported and allowed. */
+export function withViewTransition(update: () => void): void {
+  runViewTransition(() => flushSync(update));
 }
 
 // ---- leave guard -----------------------------------------------------------
@@ -92,10 +102,11 @@ if (typeof window !== 'undefined') {
       const target = location.hash;
       history.replaceState(null, '', currentHash || '#/');
       pendingHash = target;
+      emit();
     } else {
       currentHash = location.hash;
+      withViewTransition(emit);
     }
-    emit();
   });
   window.addEventListener('beforeunload', (e) => {
     if (guardMessage) {

@@ -11,6 +11,14 @@ export function useApplyTheme(): void {
       document.documentElement.classList.toggle('dark', dark);
     };
     apply();
+    try {
+      // Mirrored for public/theme-init.js, which applies it before the first paint.
+      // The default ("system") needs no entry, so clearing local data leaves none.
+      if (theme === 'system') localStorage.removeItem('unique-pdf:theme');
+      else localStorage.setItem('unique-pdf:theme', theme);
+    } catch {
+      /* storage unavailable */
+    }
     media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);
   }, [theme]);

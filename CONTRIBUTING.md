@@ -57,6 +57,9 @@ All must pass. Never skip, disable or weaken a test to make a change pass — fi
    is tested. Document limitations instead of overstating capabilities.
 7. **Minimal permissions.** New Chrome permissions require a written justification in the PR and an
    update to PRIVACY.md and `scripts/validate-build.mjs`.
+8. **On-device AI only.** AI features use Chrome's built-in APIs (`src/ai/`); never a cloud service.
+   Call `create()` inside the user's click (model downloads need user activation), handle every
+   availability state, offer a clearly labelled non-AI path, and render model output as text.
 
 ## Code style
 
@@ -66,7 +69,12 @@ All must pass. Never skip, disable or weaken a test to make a change pass — fi
   (`bg-surface`, `text-fg-muted`, `border-line`, `bg-primary`…) so dark mode works automatically.
 - User-facing copy: short, calm, specific about what happened and how to recover.
 - Accessibility: every interactive element is reachable by keyboard and has an accessible name;
-  use the existing `Dialog`, `Switch`, `Segmented` and `IconButton` primitives.
+  use the existing `Dialog`, `Switch`, `Segmented`, `ChoiceCards` and `IconButton` primitives.
+- Motion: animate `transform` and `opacity`; entrance animations fill `backwards` (a transform
+  animation that keeps filling turns its element into a containing block for `position: fixed`
+  descendants); portal fixed overlays to `<body>`; everything must still work with
+  `prefers-reduced-motion: reduce`. Keep view transitions short — clicks go to `<html>` while one
+  runs.
 
 ## Tests
 

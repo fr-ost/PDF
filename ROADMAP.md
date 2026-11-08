@@ -6,12 +6,19 @@ feasibility, candidate libraries, local-processing options, licensing, performan
 complexity and external dependencies.
 
 Licensing notes use SPDX identifiers. "Bundle size" means added extension size, since all code and
-data must ship inside the package (no runtime downloads of executable code or models).
+data must ship inside the package (the extension downloads no executable code or models at runtime).
+Chrome's built-in AI models are the one exception by design: they are downloaded, stored and run by
+the browser itself, on the device, and the extension only calls the browser's API.
+
+**Shipped in 1.1.0:** AI Summary (Chrome's on-device Summarizer API, with long-document support and
+a labelled non-AI fallback). See FEATURES.md.
 
 ## Summary
 
 | Feature | Feasible locally? | Complexity | Main constraint | Recommendation |
 | --- | --- | --- | --- | --- |
+| Ask questions about a PDF (on-device AI) | Yes, where Chrome's model is available | Medium | Context window, model availability | Next minor release |
+| Translate summaries and text (on-device AI) | Yes, where Chrome's translator is available | Low–Medium | Language packs managed by Chrome | Next minor release |
 | OCR | Yes | Medium | Size of language data, speed | Next major release |
 | Searchable PDF (from scans) | Yes (with OCR) | Medium | Depends on OCR | Ship with OCR |
 | PDF bookmarks / TOC editor | Yes | Medium | — | Next minor release |
@@ -26,6 +33,23 @@ data must ship inside the package (no runtime downloads of executable code or mo
 | Word → PDF | Not reliably | Very high | Needs a layout engine | Not planned for the extension |
 | PowerPoint → PDF | Not reliably | Very high | Needs a rendering engine | Not planned for the extension |
 | HTML → PDF | Not without extra permissions | High | Needs `debugger` permission or user print dialog | Not planned |
+
+## On-device AI: questions, translation, more summary options
+
+AI Summary uses Chrome's built-in Summarizer API. The same family of browser APIs makes further
+local AI features possible without any server:
+
+- **Ask your PDF** — Chrome's Prompt API (available to extensions in recent Chrome versions) runs
+  Gemini Nano locally. Questions would be answered from the extracted text; documents larger than
+  the context window need retrieval (pick the most relevant passages first, e.g. by keyword scoring)
+  and answers should quote the passages they rely on. Same availability limits as AI Summary.
+- **Translate** — Chrome's Translator and Language Detector APIs translate on the device; Chrome
+  downloads language packs on demand. Useful for summaries first, then for text extraction exports.
+- **Constraints:** desktop Chrome only, hardware requirements (storage, GPU or RAM), and output
+  quality of a small model. Every AI feature keeps a clearly labelled non-AI path or explains why it
+  is unavailable, and AI output is always rendered as text.
+- **Not planned:** any cloud AI. Sending documents to a server would contradict the product's
+  promise.
 
 ## OCR and searchable PDFs
 

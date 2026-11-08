@@ -1,12 +1,13 @@
-import { Check, X } from 'lucide-react';
-import { Card } from '../../components/ui/Card';
+import { Check, ShieldCheck, X } from 'lucide-react';
+import { Card, PageHeader } from '../../components/ui/Card';
 
 const DOES = [
   'Reads the files you choose directly in this browser tab.',
   'Processes them on your device using bundled code (PDF.js, pdf-lib) running in background workers.',
   'Saves results only when you click Download.',
-  'Keeps your settings, and — if enabled — a short list of recent file names and sizes, in this browser’s local extension storage.',
+  'Keeps your settings, and — if enabled — a short list of recent file names and sizes, in this browser’s local extension storage (a light or dark theme choice is mirrored in local web storage so the page opens in the right colours).',
   'Uses passwords only in memory, for the operation you asked for.',
+  'Runs AI Summary with Chrome’s built-in on-device model — the text is processed on your computer.',
 ];
 const DOES_NOT = [
   'Upload, sync or back up your documents anywhere.',
@@ -19,11 +20,9 @@ const DOES_NOT = [
 
 export function PrivacyPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-8 sm:px-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Privacy</h1>
-        <p className="mt-1 text-fg-muted">How Unique PDF handles your files — in plain language.</p>
-      </div>
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 sm:px-6">
+      <PageHeader title="Privacy" description="How Unique PDF handles your files — in plain language." icon={<span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-line bg-surface text-fg-muted shadow-card"><ShieldCheck size={20} aria-hidden /></span>} />
+      <div className="h-2" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="p-5">
           <h2 className="text-[15px] font-semibold">What Unique PDF does</h2>

@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { Monitor, Moon, Sun, Trash2 } from 'lucide-react';
+import { Monitor, Moon, Settings as SettingsIcon, Sun, Trash2 } from 'lucide-react';
 import { resetSettings, updateSettings, useSettings } from '../../services/settings-service/settings';
 import { clearHistory, useHistory } from '../../services/history-service/history';
 import { COMPRESSION_PRESETS } from '../../pdf/compressionPresets';
 import { PAPER_SIZES, type PaperSize } from '../../pdf/paper';
-import { Card } from '../../components/ui/Card';
+import { Card, PageHeader } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/ui/Dialog';
 import { Field, Segmented, Select, Slider, Switch } from '../../components/ui/Form';
 import { useToast } from '../../components/ui/Toast';
+import { setTheme } from '../theme';
 import { BrandMark } from '../../components/BrandMark';
 
 function Group({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <Card className="p-5">
-      <h2 className="text-[15px] font-semibold">{title}</h2>
+    <Card className="enter p-6">
+      <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
       {description ? <p className="mt-0.5 text-sm text-fg-muted">{description}</p> : null}
       <div className="mt-4 space-y-5">{children}</div>
     </Card>
@@ -29,18 +30,16 @@ export function SettingsPage() {
   const hasPicker = typeof (globalThis as { showSaveFilePicker?: unknown }).showSaveFilePicker === 'function';
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-8 sm:px-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-fg-muted">Preferences are saved in this browser only.</p>
-      </div>
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 sm:px-6">
+      <PageHeader title="Settings" description="Preferences are saved in this browser only." icon={<span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-line bg-surface text-fg-muted shadow-card"><SettingsIcon size={20} aria-hidden /></span>} />
+      <div className="h-2" />
 
       <Group title="Appearance">
         <Field label="Theme">
           <Segmented
             label="Theme"
             value={s.theme}
-            onChange={(theme) => void updateSettings({ theme })}
+            onChange={(theme) => setTheme(theme)}
             options={[
               { value: 'system', label: <span className="inline-flex items-center gap-1.5"><Monitor size={14} aria-hidden /> System</span> },
               { value: 'light', label: <span className="inline-flex items-center gap-1.5"><Sun size={14} aria-hidden /> Light</span> },

@@ -21,7 +21,10 @@ The manifest is generated from `scripts/manifest.ts` at build time so the versio
 
 ```
 src/
-  app/                  App shell, router (hash + leave guard), pages
+  ai/                   On-device AI: Summarizer API wrapper (map-reduce for long documents),
+                        text clean-up, chunking, non-AI extractive summary, safe Markdown parser
+  app/                  App shell, router (hash + leave guard + view transitions), theme,
+                        command palette, ambient background, pages
   components/
     ui/                 Design-system primitives (Button, Form, Dialog, Toast, Feedback…)
     tool/               Tool workflow components (ToolShell, Dropzone, PageGrid, PageCanvas,
@@ -37,7 +40,8 @@ src/
     *.ts                Pure, dependency-free modules shared by UI and engines
                         (pageRanges, imageLayout, placement, redaction, winAnsi, paper…)
   services/             storage, settings, history, file intake, export/download, zip
-  styles/               Tailwind entry and design tokens (light + dark)
+  styles/               Tailwind entry, design tokens (light + dark), motion and effects
+  types/                Ambient types (Chrome's built-in AI APIs)
 tests/
   unit/                 Vitest: engines, pure logic, components (jsdom)
   e2e/                  Playwright: the built extension in Chromium
@@ -55,7 +59,7 @@ validator fails if pdf-lib appears in any chunk other than the processing worker
 
 Resulting production bundles (approximate, minified): processing worker ≈ 610 KB, PDF.js main
 library ≈ 470 KB (loaded with the first tool), PDF.js worker ≈ 1.3 MB, React/UI ≈ 250 KB, each tool
-chunk 5–30 KB. PDF.js character maps, standard fonts and WebAssembly decoders ship under
+chunk 5–30 KB (AI Summary ≈ 24 KB). The Geist variable font (OFL) ships with the extension. PDF.js character maps, standard fonts and WebAssembly decoders ship under
 `vendor/pdfjs/` so rendering works offline.
 
 ## Data flow of a tool
@@ -157,6 +161,29 @@ JPEGs (with an explicit warning that text becomes non-searchable).
 5. The UI re-opens the output with PDF.js and extracts text: any text intersecting a box aborts the
    export; search terms still present elsewhere are reported.
 
+### AI Summary (`src/ai`, `features/ai-summary`)
+
+The tool extracts each page's text locally with PDF.js (`getTextContent`), cleans it
+(`ai/text.ts`: de-hyphenation, line joins) and calls Chrome's built-in **Summarizer API**
+(`ai/summarizer.ts`), which runs Gemini Nano on the device:
+
+1. `availability()` decides the state shown to the user (ready, one-time download, unavailable, or
+   API missing). `create()` is called synchronously inside the click handler, because Chrome needs
+   a user activation to start the one-time model download; `downloadprogress` events drive the
+   progress bar.
+2. If the text exceeds ~80% of the instance's `inputQuota` (measured with `measureInputUsage`), it
+   is packed into chunks (`ai/chunk.ts`), each summarised as key points by a helper instance, and the
+   partial summaries are combined, recursively for up to four rounds ("summary of summaries").
+3. The final pass streams with `summarizeStreaming`; `accumulateStream` accepts both delta and
+   cumulative chunks. Every instance is destroyed afterwards; an `AbortSignal` cancels the job.
+4. Output Markdown is parsed into headings, paragraphs and lists with inline bold/italic/code
+   (`ai/markdown.ts`) and rendered as React text — never as HTML.
+
+Without the API (or on unsupported hardware) the **Quick summary** uses `ai/extractive.ts`
+(sentence scoring by word frequency with stop-word lists and a position boost), labelled as non-AI.
+Unit tests drive the wrapper with a fake API; E2E tests inject a deterministic stand-in for
+`window.Summarizer` (`tests/e2e/fakeAi.ts`) because headless Chromium has no model.
+
 ### Editor (`features/editor`)
 
 Objects (`engines/annotations.ts`) are stored in display space and rendered as SVG over the PDF.js
@@ -164,6 +191,24 @@ canvas with the same geometry helpers the exporter uses (`pointsToSvgPath`, arro
 tables), so the preview matches the output. Undo/redo keeps snapshots with checkpoint/commit for
 continuous gestures. Export draws everything inside a display-space transform with pdf-lib
 (standard fonts, SVG paths, ellipses, blend-mode highlights, embedded images).
+
+## Interface and motion
+
+- **Design tokens** live in `src/styles/index.css` (`@theme` for Tailwind colours; brand gradient,
+  glow, grid and ambient colours as CSS variables). Dark mode is a `.dark` class on `<html>`
+  (light, dark or system), applied before first paint.
+- **View transitions:** route changes run inside `document.startViewTransition` (`app/viewTransition.ts`,
+  `flushSync` so React commits inside the callback); the main column cross-fades and the sidebar's
+  active pill morphs. Theme changes use a circular clip-path reveal from the click point. While a
+  transition runs Chrome sends pointer events to `<html>`, so transitions are short (≤ 280 ms)
+  and `<html data-transition>` marks them (tests wait for it to clear).
+- **Animation rules:** entrance animations fill `backwards` only — a transform animation that keeps
+  filling makes its element a containing block for `position: fixed` descendants (it offset the
+  drag preview). The drag preview is portalled to `<body>` for the same reason. Decorative motion is
+  compositor-only (transform/opacity); the ambient background pauses inside tools; everything is
+  disabled under `prefers-reduced-motion`.
+- **Command palette** (`app/shell/CommandPalette.tsx`): a modal `<dialog>` with a combobox/listbox,
+  ranking by prefix, substring and keywords.
 
 ## Rendering and performance
 

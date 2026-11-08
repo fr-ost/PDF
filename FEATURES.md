@@ -140,17 +140,48 @@ warning when a digitally signed PDF would lose its signatures.
   match (PDF/A identification is kept). **Remove all metadata** strips the Info dictionary, XMP and
   private application data. The saved values are read back from the new file and displayed.
 
+## AI tools
+
+### AI Summary
+- Summaries are written **on the device** by Chrome's built-in Summarizer API (Gemini Nano). The
+  document's text is extracted locally with PDF.js and passed to the browser's local model; nothing
+  is uploaded and the extension's network policy stays closed.
+- Options: style (**Key points**, **TL;DR**, **Teaser**, **Headline**), length (short, medium,
+  long), output language (English, Spanish, Japanese), optional focus (“deadlines, costs and
+  risks”), and all pages or a page range.
+- Long documents are split into parts that fit the model's input quota (measured with the model's
+  own token counter) and summarised part by part, then combined (“summary of summaries”), with
+  progress for each step. Cancel stops the job.
+- The summary streams in as it is written. **Copy** puts plain text on the clipboard;
+  **Download** saves Markdown (`<name>-summary.md`) with a note on how it was produced;
+  **Regenerate** writes a new one. Output is rendered as text (never as HTML).
+- First use: when Chrome reports the model as downloadable, the button reads **Set up AI &
+  summarize**; Chrome downloads and manages the model once (progress shown), then summaries work
+  offline.
+- Availability: desktop Chrome 138+ on Windows, macOS, Linux or Chromebook Plus with enough storage
+  and memory for the model (Chrome's requirements: about 22 GB free disk space; a GPU with more than
+  4 GB of memory, or 16 GB RAM and 4+ CPU cores). The tool shows the device's status and the
+  requirements.
+- **Quick summary (no AI)**: on any device, key sentences are selected from the document by a
+  simple statistical method and labelled “Key sentences · not AI”.
+- PDFs without selectable text (scans) are detected and explained; OCR is on the roadmap.
+- AI output can be wrong: the summary carries a reminder to check important details.
+
 ## Application
 
-- **Home**: headline, drop zone with tool suggestions, searchable tool grid grouped by category;
-  drop files on any tool card to open it with those files.
+- **Home**: headline, hero drop zone with tool suggestions, featured AI Summary card, searchable
+  tool grid with category filters; drop files on any tool card to open it with those files.
+- **Command palette**: `Ctrl K` / `⌘ K` (or the search button) finds tools, pages and theme actions
+  by name or keyword; full keyboard operation.
 - **Recent files**: last 50 tasks (tool, input and output names, sizes, time), per-entry removal,
   clear all, toggle recording.
+- **Themes**: light, dark or match the system, from the sidebar, popup or Settings (with a circular
+  reveal animation). All animation is disabled when the system asks to reduce motion.
 - **Settings**: theme (system/light/dark), default image format/DPI/JPEG quality, default page size,
   default compression level, “Ask where to save each file” (native Save dialog), history toggle,
   clear history, clear all local data, version.
 - **About** and **Privacy** pages, open-source licence list, keyboard shortcuts.
-- **Popup**: open the app, eight quick tools, recent tasks.
+- **Popup**: open the app, nine quick tools (including AI Summary), recent tasks, theme switch.
 - **Keyboard**: `Alt+Shift+P` open app tab, `Alt+Shift+U` open popup (configurable at
   `chrome://extensions/shortcuts`); full keyboard operation of dialogs, grids and forms.
 - **Offline**: everything works without a network connection after installation.

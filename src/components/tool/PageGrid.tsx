@@ -4,6 +4,7 @@
  * selection when a selected page is dragged), and per-page actions.
  */
 import { memo, useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   DragOverlay,
@@ -93,8 +94,8 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
         data-testid="page-card"
         data-selected={selected || undefined}
         className={cn(
-          'group relative flex select-none flex-col rounded-xl border p-2 outline-none transition-[border-color,box-shadow,opacity] focus-visible:ring-2 focus-visible:ring-primary',
-          selected ? 'border-primary bg-primary-soft shadow-raised' : 'border-transparent hover:border-line hover:bg-surface',
+          'group relative flex select-none flex-col rounded-2xl border p-2 outline-none transition-[border-color,box-shadow,opacity,transform,background] duration-300 ease-[var(--ease-out-expo)] focus-visible:ring-2 focus-visible:ring-primary',
+          selected ? 'border-primary/50 bg-primary-soft shadow-raised ring-1 ring-primary/25' : 'border-transparent hover:-translate-y-0.5 hover:border-line hover:bg-surface hover:shadow-card',
           isDragging && 'opacity-30',
           sortable ? 'cursor-grab active:cursor-grabbing' : selectable ? 'cursor-pointer' : '',
         )}
@@ -105,8 +106,8 @@ const PageCard = memo(function PageCard({ page, selected, sortable, selectable, 
           {selectable ? (
             <span
               className={cn(
-                'absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md border shadow-sm transition-colors',
-                selected ? 'border-primary bg-primary text-primary-fg' : 'border-line-strong bg-surface/90 text-transparent group-hover:text-fg-subtle',
+                'absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md border shadow-sm transition-all duration-300 ease-[var(--ease-spring)]',
+                selected ? 'scale-110 border-transparent bg-[image:var(--brand-gradient)] text-white' : 'border-line-strong bg-surface/90 text-transparent group-hover:text-fg-subtle',
               )}
               aria-hidden
             >
@@ -212,14 +213,18 @@ export function PageGrid({
       <SortableContext items={keys} strategy={rectSortingStrategy}>
         {grid}
       </SortableContext>
-      <DragOverlay>
-        {activePage ? (
-          <div className="relative w-full rotate-2 rounded-xl border border-primary bg-surface p-2 shadow-pop" style={{ width: thumbWidth + 16 }}>
-            <PageThumbnail docId={activePage.docId} pageIndex={activePage.pageIndex} rotation={activePage.rotation} width={thumbWidth} />
-            {dragCount > 1 ? <span className="absolute -right-2 -top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-fg shadow">{dragCount}</span> : null}
-          </div>
-        ) : null}
-      </DragOverlay>
+      {/* Portalled to <body> so ancestors with transforms or filters can't offset the fixed-position preview. */}
+      {createPortal(
+        <DragOverlay>
+          {activePage ? (
+            <div className="relative w-full rotate-3 scale-105 rounded-2xl border border-primary/60 bg-surface p-2 shadow-pop" style={{ width: thumbWidth + 16 }}>
+              <PageThumbnail docId={activePage.docId} pageIndex={activePage.pageIndex} rotation={activePage.rotation} width={thumbWidth} />
+              {dragCount > 1 ? <span className="absolute -right-2 -top-2 rounded-full bg-[image:var(--brand-gradient)] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_6px_14px_-4px_var(--glow)]">{dragCount}</span> : null}
+            </div>
+          ) : null}
+        </DragOverlay>,
+        document.body,
+      )}
     </DndContext>
   );
 }

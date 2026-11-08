@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CheckCircle2, Download, ExternalLink, FileArchive, FileText, Image as ImageIcon, RefreshCw, RotateCcw } from 'lucide-react';
+import { Download, ExternalLink, FileArchive, FileText, Image as ImageIcon, RefreshCw, RotateCcw, ScrollText } from 'lucide-react';
 import { describeError } from '../../pdf/errors';
 import { openPdfDocument, destroyPdfDocument } from '../../pdf/renderers/pdfjs';
 import { renderPageToCanvas } from '../../pdf/renderers/render';
@@ -13,11 +13,11 @@ import { useToast } from '../ui/Toast';
 
 export function TaskProgress({ progress, label, onCancel, title = 'Processing…' }: { progress: number | null; label?: string; onCancel: () => void; title?: string }) {
   return (
-    <div className="space-y-3" data-testid="task-progress">
+    <div className="animate-fade-in space-y-3" data-testid="task-progress">
       <div className="flex items-center gap-2.5">
         <Spinner size={16} className="text-primary" />
         <p className="text-sm font-medium">{title}</p>
-        {progress !== null ? <span className="ml-auto text-xs tabular-nums text-fg-muted">{Math.round(progress * 100)}%</span> : null}
+        {progress !== null ? <span className="ml-auto font-mono text-xs tabular-nums text-fg-muted">{Math.round(progress * 100)}%</span> : null}
       </div>
       <ProgressBar value={progress} label={title} />
       <div className="flex items-center justify-between gap-3">
@@ -58,10 +58,23 @@ export function ErrorPanel({ error, onRetry, onDismiss }: { error: unknown; onRe
   );
 }
 
-function OutputIcon({ kind }: { kind: OutputFile['kind'] }) {
-  const Icon = kind === 'zip' ? FileArchive : kind === 'image' ? ImageIcon : FileText;
+/** Animated success badge: a ring burst and a check mark that draws itself. */
+export function SuccessBadge({ size = 44 }: { size?: number }) {
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+    <span className="relative inline-flex shrink-0" style={{ width: size, height: size }} aria-hidden>
+      <span className="absolute inset-0 rounded-full bg-success/30" style={{ animation: 'ring-burst 1100ms var(--ease-out-expo) both' }} />
+      <svg viewBox="0 0 44 44" className="relative" width={size} height={size}>
+        <circle cx="22" cy="22" r="21" fill="var(--color-success)" />
+        <path d="M13.5 22.5l5.8 5.8L31 16.6" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="30" strokeDashoffset="30" style={{ animation: 'check-draw 520ms 160ms var(--ease-out-expo) forwards' }} />
+      </svg>
+    </span>
+  );
+}
+
+function OutputIcon({ kind }: { kind: OutputFile['kind'] }) {
+  const Icon = kind === 'zip' ? FileArchive : kind === 'image' ? ImageIcon : kind === 'text' ? ScrollText : FileText;
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
       <Icon size={18} aria-hidden />
     </div>
   );
@@ -91,7 +104,12 @@ function PdfPreview({ blob }: { blob: Blob }) {
     };
   }, [blob]);
   if (failed) return null;
-  return <canvas ref={canvasRef} className="page-shadow w-[120px] rounded-sm bg-white" aria-label="Preview of the first page" />;
+  return (
+    <div className="relative">
+      <div aria-hidden className="absolute -inset-4 rounded-3xl bg-[radial-gradient(closest-side,var(--blob-a),transparent)]" />
+      <canvas ref={canvasRef} className="page-shadow relative w-[128px] -rotate-2 rounded-md bg-white transition-transform duration-500 hover:rotate-0" aria-label="Preview of the first page" />
+    </div>
+  );
 }
 
 export function ResultPanel({
@@ -137,24 +155,28 @@ export function ResultPanel({
   };
 
   return (
-    <Card className="animate-pop-in overflow-hidden" data-testid="result-panel">
-      <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-start">
+    <Card className="relative animate-pop-in overflow-hidden" data-testid="result-panel">
+      <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--color-success),transparent)] opacity-60" />
+      <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-success)_14%,transparent),transparent)]" />
+      <div className="relative flex flex-col gap-8 p-7 sm:flex-row sm:items-start">
         {single?.kind === 'pdf' ? (
-          <div className="hidden shrink-0 sm:block">
+          <div className="hidden shrink-0 pt-1 sm:block">
             <PdfPreview blob={single.blob} />
           </div>
         ) : null}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-success">
-            <CheckCircle2 size={20} aria-hidden />
-            <h2 className="text-lg font-semibold text-fg">{title}</h2>
+          <div className="flex items-center gap-3.5">
+            <SuccessBadge />
+            <div>
+              <h2 className="text-xl font-semibold tracking-[-0.02em] text-fg">{title}</h2>
+              <p className="mt-0.5 text-sm text-fg-muted">
+                {outputs.length === 1 ? 'Processed entirely on your device.' : `${pluralize(outputs.length, 'file')} processed entirely on your device.`}
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-fg-muted">
-            {outputs.length === 1 ? 'Processed entirely on your device.' : `${pluralize(outputs.length, 'file')} processed entirely on your device.`}
-          </p>
 
           {single ? (
-            <div className="mt-5 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button variant="primary" size="lg" icon={Download} onClick={() => void download(single)} data-testid="download-button">
                 Download
               </Button>
@@ -163,24 +185,27 @@ export function ResultPanel({
                   Open
                 </Button>
               ) : null}
-              <div className="min-w-0 text-sm">
-                <p className="truncate font-medium" data-testid="output-name">
-                  {single.name}
-                </p>
-                <p className="text-fg-muted">
-                  {formatBytes(single.size)}
-                  {single.pageCount ? ` · ${pluralize(single.pageCount, 'page')}` : ''}
-                </p>
+              <div className="flex min-w-0 items-center gap-3 rounded-xl border border-line bg-surface-2/60 py-2 pl-2 pr-4">
+                <OutputIcon kind={single.kind} />
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-medium" data-testid="output-name">
+                    {single.name}
+                  </p>
+                  <p className="text-xs text-fg-muted">
+                    {formatBytes(single.size)}
+                    {single.pageCount ? ` · ${pluralize(single.pageCount, 'page')}` : ''}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="mt-5 space-y-3">
+            <div className="mt-6 space-y-3">
               <Button variant="primary" size="lg" icon={Download} loading={zipping} onClick={() => void downloadAll()} data-testid="download-all-button">
                 Download all as ZIP
               </Button>
-              <ul className="max-h-80 divide-y divide-line overflow-y-auto rounded-lg border border-line" aria-label="Output files">
+              <ul className="max-h-80 divide-y divide-line overflow-y-auto rounded-xl border border-line" aria-label="Output files">
                 {outputs.map((o) => (
-                  <li key={o.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <li key={o.id} className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-surface-2/60">
                     <OutputIcon kind={o.kind} />
                     <div className="min-w-0 flex-1 text-sm">
                       <p className="truncate font-medium">{o.name}</p>
@@ -197,10 +222,10 @@ export function ResultPanel({
               </ul>
             </div>
           )}
-          {children ? <div className="mt-5">{children}</div> : null}
+          {children ? <div className="mt-6">{children}</div> : null}
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/60 px-6 py-3">
+      <div className="relative flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/40 px-7 py-3.5">
         {onBack ? (
           <Button variant="ghost" icon={RotateCcw} onClick={onBack}>
             Back to options

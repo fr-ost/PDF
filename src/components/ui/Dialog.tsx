@@ -27,7 +27,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
         if (dismissible && e.target === ref.current) onClose();
       }}
       className={cn(
-        'm-auto w-[calc(100%-2rem)] rounded-xl border border-line bg-surface p-0 text-fg shadow-pop open:animate-pop-in',
+        'm-auto w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-line bg-surface p-0 text-fg shadow-pop open:animate-pop-in',
         size === 'sm' && 'max-w-sm',
         size === 'md' && 'max-w-md',
         size === 'lg' && 'max-w-2xl',
@@ -36,15 +36,15 @@ export function Dialog({ open, onClose, title, description, children, footer, si
     >
       {open ? (
         <div className="flex max-h-[85vh] flex-col">
-          <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-5">
+          <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-6">
             <div>
-              <h2 className="text-base font-semibold leading-6">{title}</h2>
-              {description ? <p className="mt-1 text-sm text-fg-muted">{description}</p> : null}
+              <h2 className="text-[17px] font-semibold leading-6 tracking-tight">{title}</h2>
+              {description ? <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">{description}</p> : null}
             </div>
-            {dismissible ? <IconButton icon={X} label="Close" size="sm" onClick={onClose} className="-mr-1.5 -mt-1" /> : null}
+            {dismissible ? <IconButton icon={X} label="Close" size="sm" onClick={onClose} className="-mr-2 -mt-1" /> : null}
           </div>
-          {children ? <div className="overflow-y-auto px-5 py-3">{children}</div> : null}
-          {footer ? <div className="flex justify-end gap-2 border-t border-line bg-surface-2/50 px-5 py-3">{footer}</div> : null}
+          {children ? <div className="overflow-y-auto px-6 py-3">{children}</div> : null}
+          {footer ? <div className="flex justify-end gap-2 px-6 pb-6 pt-3">{footer}</div> : null}
         </div>
       ) : null}
     </dialog>
@@ -69,7 +69,7 @@ export function ConfirmDialog({ open, onCancel, onConfirm, title, message, confi
         </>
       }
     >
-      <div className="text-sm text-fg-muted">{message}</div>
+      <div className="text-sm leading-relaxed text-fg-muted">{message}</div>
     </Dialog>
   );
 }

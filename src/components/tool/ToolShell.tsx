@@ -2,9 +2,10 @@
  * Common layout for every tool: header, file intake, workspace, options
  * panel with the primary action, progress, errors and results.
  */
-import { useEffect, type ReactNode } from 'react';
-import { ChevronRight, ShieldCheck, X } from 'lucide-react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { ChevronRight, X } from 'lucide-react';
 import { CATEGORY_INFO, type ToolDefinition } from '../../features/registry';
+import { accentStyle } from '../../features/categories';
 import { routeHref, setLeaveGuard } from '../../app/router';
 import type { FileListApi } from '../../hooks/useFileList';
 import type { TaskStatus } from '../../hooks/useTask';
@@ -35,28 +36,62 @@ export interface PrimaryAction {
 export function ToolHeader({ tool }: { tool: ToolDefinition }) {
   const Icon = tool.icon;
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="enter flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" style={accentStyle(tool.category)}>
       <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
-          <Icon size={22} aria-hidden />
+        <div className="relative shrink-0">
+          <div aria-hidden className="absolute inset-0 rounded-2xl bg-[linear-gradient(135deg,var(--c1),var(--c2))] opacity-45 blur-xl" />
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--c1),var(--c2))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] ring-1 ring-white/15">
+            <Icon size={22} aria-hidden />
+          </div>
         </div>
         <div>
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs font-medium text-fg-subtle">
-            <a href={routeHref({ name: 'category', category: tool.category })} className="hover:text-fg">
+            <a href={routeHref({ name: 'category', category: tool.category })} className="transition-colors hover:text-fg">
               {CATEGORY_INFO[tool.category].title}
             </a>
             <ChevronRight size={12} aria-hidden />
             <span aria-current="page">{tool.name}</span>
           </nav>
-          <h1 className="mt-0.5 text-[22px] font-semibold tracking-tight">{tool.name}</h1>
-          <p className="mt-0.5 text-sm text-fg-muted">{tool.description}</p>
+          <h1 className="display mt-0.5 text-[26px] leading-tight">{tool.name}</h1>
+          <p className="mt-1 text-sm text-fg-muted">{tool.description}</p>
         </div>
       </div>
-      <p className="flex items-center gap-1.5 text-xs font-medium text-fg-subtle">
-        <ShieldCheck size={14} className="text-success" aria-hidden /> Processed locally on this device
+      <p className="inline-flex items-center gap-2 self-start rounded-full border border-line bg-surface/80 px-3 py-1.5 text-xs font-medium text-fg-muted shadow-card sm:self-auto">
+        <span className="live-dot" aria-hidden /> On-device · nothing uploaded
       </p>
     </header>
   );
+}
+
+/**
+ * Keeps the options panel within the visible part of the viewport (from its
+ * current top edge, or the sticky offset once scrolled) so the primary action
+ * is never pushed below the fold; the options scroll inside the panel instead.
+ */
+function useFitToViewport(ref: RefObject<HTMLElement | null>, active: boolean) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !active) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const top = Math.max(24, el.getBoundingClientRect().top);
+      el.style.setProperty('--panel-max', `${Math.round(Math.max(320, window.innerHeight - top - 24))}px`);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    el.addEventListener('animationend', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      el.removeEventListener('animationend', schedule);
+    };
+  }, [ref, active]);
 }
 
 export function ToolShell({
@@ -85,6 +120,8 @@ export function ToolShell({
 }) {
   const hasFiles = files.entries.length > 0;
   const showResult = task.status === 'success' && !!result;
+  const asideRef = useRef<HTMLElement>(null);
+  useFitToViewport(asideRef, hasFiles && !showResult);
 
   useEffect(() => {
     setLeaveGuard(hasFiles && !showResult ? 'Your selected files and changes in this tool will be discarded.' : null);
@@ -92,7 +129,7 @@ export function ToolShell({
   }, [hasFiles, showResult]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10" data-tool={tool.id}>
       <ToolHeader tool={tool} />
       {files.rejections.length > 0 ? (
         <Alert
@@ -126,14 +163,15 @@ export function ToolShell({
         {showResult ? (
           result
         ) : !hasFiles ? (
-          (intake ?? <Dropzone accept={[tool.accepts]} multiple={tool.multiple} onFiles={(f) => void files.add(f)} hint={emptyHint} />)
+          <div className="enter" style={{ ['--i' as string]: 1 }}>{intake ?? <Dropzone accept={[tool.accepts]} multiple={tool.multiple} onFiles={(f) => void files.add(f)} hint={emptyHint} />}</div>
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="min-w-0">{children}</div>
-            <aside className="lg:sticky lg:top-6">
-              <Card className="overflow-hidden">
-                {options ? <div className="space-y-5 p-5">{options}</div> : null}
-                <div className="space-y-3 border-t border-line bg-surface-2/50 p-5 first:border-t-0">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_348px]">
+            <div className="enter min-w-0" style={{ ['--i' as string]: 1 }}>{children}</div>
+            <aside ref={asideRef} className="enter lg:sticky lg:top-6" style={{ ['--i' as string]: 2 }}>
+              {/* On large screens the panel fits the viewport: options scroll inside it and the action stays visible. */}
+              <Card className="flex flex-col overflow-hidden lg:max-h-[var(--panel-max,calc(100vh-3rem))]">
+                {options ? <div className="scroll-fade min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-5">{options}</div> : null}
+                <div className="shrink-0 space-y-3 border-t border-line bg-surface-2/40 p-5 first:border-t-0 dark:bg-surface-2/30">
                   {task.status === 'error' ? <ErrorPanel error={task.error} onRetry={onRetry ?? primary?.onClick} onDismiss={task.reset} /> : null}
                   {task.status === 'running' ? (
                     <TaskProgress progress={task.progress} label={task.label} onCancel={task.cancel} />

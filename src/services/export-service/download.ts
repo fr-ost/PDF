@@ -12,10 +12,10 @@ export interface OutputFile {
   blob: Blob;
   size: number;
   pageCount?: number;
-  kind: 'pdf' | 'zip' | 'image';
+  kind: 'pdf' | 'zip' | 'image' | 'text';
 }
 
-const MIME: Record<OutputFile['kind'], string> = { pdf: 'application/pdf', zip: 'application/zip', image: 'image/png' };
+const MIME: Record<OutputFile['kind'], string> = { pdf: 'application/pdf', zip: 'application/zip', image: 'image/png', text: 'text/markdown' };
 
 export function makeOutput(name: string, data: Uint8Array | Blob, kind: OutputFile['kind'], extra: { pageCount?: number; mime?: string } = {}): OutputFile {
   const blob = data instanceof Blob ? data : new Blob([data as BlobPart], { type: extra.mime ?? MIME[kind] });
@@ -24,7 +24,7 @@ export function makeOutput(name: string, data: Uint8Array | Blob, kind: OutputFi
 
 function safeName(name: string, kind: OutputFile['kind']): string {
   const dot = name.lastIndexOf('.');
-  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : kind === 'image' ? 'png' : kind;
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : kind === 'image' ? 'png' : kind === 'text' ? 'md' : kind;
   const stem = sanitizeFileName(dot > 0 ? name.slice(0, dot) : name, 'output');
   return `${stem}.${ext || kind}`;
 }

@@ -12,6 +12,7 @@ import { useApplyTheme } from '../hooks/useTheme';
 import { ToastProvider } from '../components/ui/Toast';
 import { ConfirmDialog } from '../components/ui/Dialog';
 import { useEffect } from 'react';
+import { CommandPalette, toggleCommandPalette } from './shell/CommandPalette';
 import { CATEGORY_INFO, getTool } from '../features/registry';
 
 function titleFor(route: Route): string {
@@ -59,6 +60,16 @@ export function App() {
   const route = useRoute();
   const pending = usePendingNavigation();
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  useEffect(() => {
     const t = titleFor(route);
     document.title = t ? `${t} · Unique PDF` : 'Unique PDF — Free PDF Toolkit';
   }, [route]);
@@ -67,6 +78,7 @@ export function App() {
       <Layout>
         <Page route={route} />
       </Layout>
+      <CommandPalette />
       <ConfirmDialog
         open={!!pending}
         onCancel={cancelPendingNavigation}

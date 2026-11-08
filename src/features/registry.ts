@@ -22,6 +22,7 @@ import {
   RotateCw,
   Scissors,
   Signature,
+  Sparkles,
   Tags,
   type LucideIcon,
 } from 'lucide-react';
@@ -50,6 +51,7 @@ export const CATEGORY_INFO: Record<Category, { title: string; description: strin
   convert: { title: 'Convert PDF', description: 'Compress PDFs and convert between PDFs and images.' },
   edit: { title: 'Edit PDF', description: 'Add text, drawings, signatures, watermarks and page numbers.' },
   security: { title: 'Security', description: 'Protect, unlock, redact and clean up documents.' },
+  ai: { title: 'AI tools', description: 'On-device AI. Your documents never leave this computer.' },
 };
 
 export const TOOLS: ToolDefinition[] = [
@@ -70,6 +72,7 @@ export const TOOLS: ToolDefinition[] = [
   { id: 'protect', name: 'Protect PDF', description: 'Encrypt a PDF with a password using AES-256.', category: 'security', icon: Lock, accepts: 'pdf', multiple: false, keywords: ['encrypt', 'password', 'secure'], component: lazy(() => import('./security/ProtectTool')) },
   { id: 'unlock', name: 'Unlock PDF', description: 'Remove password protection from a PDF you have the password for.', category: 'security', icon: LockOpen, accepts: 'pdf', multiple: false, keywords: ['decrypt', 'remove password'], component: lazy(() => import('./security/UnlockTool')) },
   { id: 'redact', name: 'Redact PDF', description: 'Permanently remove sensitive text and areas — not just cover them.', category: 'security', icon: EyeOff, accepts: 'pdf', multiple: false, keywords: ['black out', 'censor', 'privacy', 'hide'], component: lazy(() => import('./security/RedactTool')) },
+  { id: 'ai-summary', name: 'AI Summary', description: 'Get the key points of any PDF in seconds with on-device AI. Nothing is uploaded.', category: 'ai', icon: Sparkles, accepts: 'pdf', multiple: false, keywords: ['summarize', 'summary', 'tldr', 'key points', 'ai', 'gemini nano', 'digest'], component: lazy(() => import('./ai-summary/AiSummaryTool')) },
   { id: 'metadata', name: 'Edit metadata', description: 'View, edit or remove the title, author and other hidden properties.', category: 'security', icon: Tags, accepts: 'pdf', multiple: false, keywords: ['properties', 'author', 'title', 'remove metadata'], component: lazy(() => import('./metadata/MetadataTool')) },
 ];
 

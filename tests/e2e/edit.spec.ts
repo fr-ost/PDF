@@ -18,9 +18,11 @@ test.describe('edit tools', () => {
     await expect(app.getByTestId('object-text')).toHaveCount(1);
 
     await app.getByTestId('tool-rect').click();
-    await app.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.6);
+    // Measure again: placing text or clicking the toolbar may have scrolled the page.
+    const page2 = (await overlay.boundingBox())!;
+    await app.mouse.move(page2.x + page2.width * 0.5, page2.y + page2.height * 0.6);
     await app.mouse.down();
-    await app.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.7, { steps: 5 });
+    await app.mouse.move(page2.x + page2.width * 0.7, page2.y + page2.height * 0.7, { steps: 5 });
     await app.mouse.up();
     await expect(app.getByTestId('object-rect')).toHaveCount(1);
 

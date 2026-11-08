@@ -26,16 +26,24 @@ Upload `release/unique-pdf-<version>.zip` (contents of `dist/`, `manifest.json` 
 
 ## 2. Store listing
 
-**Name:** Unique PDF — Free PDF Toolkit
+**Name (≤ 75 characters):** Unique PDF: Offline PDF Editor – AI Summary, Merge, Compress & Sign
 
-**Summary (≤ 132 characters):**
-Free PDF tools that run on your device: merge, split, compress, convert, edit, sign, protect and redact. No uploads, no watermarks.
+The name comes from the manifest (`scripts/manifest.ts`); the dashboard shows it as is.
+
+**Summary (≤ 132 characters, the manifest description):**
+Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact and get AI summaries on-device. Nothing is uploaded.
 
 **Category:** Productivity → Tools
 
 **Description:**
 
 > Unique PDF brings everyday PDF tools into your browser — completely free, with no uploads.
+>
+> AI SUMMARY — Turn long PDFs into clear key points, a TL;DR, a teaser or a headline. Summaries are
+> written on your computer by Chrome's built-in AI (Gemini Nano), so your document never leaves
+> your device. Long reports are summarised in parts and combined. Needs desktop Chrome 138+ on a
+> device that supports Chrome's on-device AI; elsewhere a clearly labelled key-sentence summary
+> (no AI) is available.
 >
 > ORGANIZE — Merge PDFs, split by page or range, reorder, rotate, delete and extract pages, or
 > combine pages from several files in one workspace.
@@ -52,10 +60,15 @@ Free PDF tools that run on your device: merge, split, compress, convert, edit, s
 > PRIVATE BY DESIGN — Your files are processed on your device and never uploaded. No account, no
 > analytics, no ads, no watermarks, no limits. Works offline.
 >
-> Note: the editor adds new content; it does not change text that already exists in a PDF.
+> Note: the editor adds new content; it does not change text that already exists in a PDF. AI
+> summaries can contain mistakes; check important details against the document.
 
 **Screenshots (1280×800):** generate with `npm run screenshots` →
-`store-assets/screenshots/01-home.png` … `08-compress-result-dark.png` (pick up to 5; `09-popup.png` shows the toolbar popup).
+`store-assets/screenshots/01-home.png` … `09-compress-result-dark.png` (`10-popup.png` shows the
+toolbar popup). Suggested five: `01-home`, `02-ai-summary`, `03-editor`, `05-organize`,
+`07-home-dark`. The AI Summary shots are the real interface driven by the same deterministic
+stand-in for Chrome's model that the E2E tests use (headless Chromium has no model); the summary
+text is sample content.
 
 **Icon:** `public/icons/icon-128.png` (store tile source: `store-assets/icon-512.png`). These are
 neutral product glyphs; replace with the official Unique Labs artwork when available
@@ -65,8 +78,8 @@ neutral product glyphs; replace with the official Unique Labs artwork when avail
 
 ## 3. Privacy practices tab
 
-**Single purpose:** "Unique PDF lets users view, organise, convert, edit, protect and redact PDF
-files locally in the browser."
+**Single purpose:** "Unique PDF lets users view, organise, convert, edit, summarise, protect and
+redact PDF files locally in the browser."
 
 **Permission justifications:**
 
@@ -80,7 +93,8 @@ No host permissions, no remote code.
 package. (`wasm-unsafe-eval` is used only to compile the bundled PDF.js image decoders.)
 
 **Data usage disclosures:** select **none** of the data types (the extension does not collect or
-transmit user data). Certify that data is not sold, not used for unrelated purposes and not used
+transmit user data). AI Summary uses Chrome's built-in on-device Summarizer API; no document text is
+sent to the developer or any third party. Certify that data is not sold, not used for unrelated purposes and not used
 for creditworthiness.
 
 **Privacy policy URL:** publish the contents of `PRIVACY.md` on the Unique Labs website and link it.

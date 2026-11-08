@@ -1,7 +1,7 @@
 import { Component, Suspense, useState, type ReactNode } from 'react';
 import { getTool } from '../../features/registry';
 import { takeHandedOffFiles } from '../router';
-import { Spinner } from '../../components/ui/Feedback';
+import { Skeleton, Spinner } from '../../components/ui/Feedback';
 import { Alert } from '../../components/ui/Feedback';
 import { Button } from '../../components/ui/Button';
 import { NotFoundPage } from './NotFoundPage';
@@ -38,8 +38,18 @@ export function ToolPage({ id }: { id: string }) {
     <ToolErrorBoundary key={id}>
       <Suspense
         fallback={
-          <div className="flex items-center justify-center gap-2 py-32 text-sm text-fg-muted">
-            <Spinner /> Loading {tool.name}…
+          <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10" aria-busy="true" aria-label={`Loading ${tool.name}`}>
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-2xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-6 w-56" />
+              </div>
+            </div>
+            <Skeleton className="mt-8 h-72 w-full rounded-[28px]" />
+            <span className="sr-only">
+              <Spinner /> Loading {tool.name}…
+            </span>
           </div>
         }
       >

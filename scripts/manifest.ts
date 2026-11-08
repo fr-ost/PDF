@@ -35,11 +35,11 @@ export function buildManifest({ version, development }: ManifestOptions): Record
   const icons = { '16': 'icons/icon-16.png', '32': 'icons/icon-32.png', '48': 'icons/icon-48.png', '128': 'icons/icon-128.png' };
   return {
     manifest_version: 3,
-    name: development ? 'Unique PDF (Development)' : 'Unique PDF — Free PDF Toolkit',
+    name: development ? 'Unique PDF (Development)' : 'Unique PDF: Offline PDF Editor – AI Summary, Merge, Compress & Sign',
     short_name: 'Unique PDF',
     version,
     description:
-      'Free PDF tools that run on your device: merge, split, compress, convert, edit, sign, protect and redact. No uploads, no watermarks.',
+      'Edit, merge, split & compress PDFs, convert JPG to PDF, sign, protect, redact and get AI summaries on-device. Nothing is uploaded.',
     icons,
     action: {
       default_title: 'Unique PDF',

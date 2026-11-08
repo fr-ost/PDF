@@ -76,9 +76,20 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
 export { expect };
 
+/**
+ * Waits until no view transition is running. During a transition Chrome sends
+ * pointer events to <html>, so clicks made then would not reach the page.
+ */
+export async function settled(page: Page): Promise<void> {
+  await page.waitForFunction(() => !document.documentElement.hasAttribute('data-transition'));
+}
+
 export async function openTool(page: Page, id: string): Promise<void> {
   await page.evaluate((hash) => (location.hash = hash), `#/tool/${id}`);
-  await expect(page.locator('[data-testid=dropzone]')).toBeVisible();
+  // Route changes run inside a view transition (one frame later), and the home
+  // page has its own drop zone, so wait for this tool's drop zone specifically.
+  await expect(page.locator(`[data-tool="${id}"] [data-testid=dropzone]`)).toBeVisible();
+  await settled(page);
 }
 
 export async function addFiles(page: Page, files: FileSpec[]): Promise<void> {

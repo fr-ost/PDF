@@ -1,7 +1,14 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
-import { addFiles, expect, openTool, pdfFile, test, waitForPages } from '../e2e/fixtures';
-import { makeImagePdf } from '../helpers/fixtures';
-/** Generates Chrome Web Store screenshots (1280×800) into store-assets/screenshots. Run: npm run screenshots */
+import type { Page } from '@playwright/test';
+import { addFiles, expect, openTool, pdfFile, settled, test, waitForPages } from '../e2e/fixtures';
+import { installFakeSummarizer } from '../e2e/fakeAi';
+import { makeImagePdf, makeProsePdf } from '../helpers/fixtures';
+/**
+ * Generates Chrome Web Store screenshots (1280×800) into store-assets/screenshots.
+ * Run: npm run screenshots. The AI Summary shots use the same deterministic
+ * stand-in for Chrome's on-device model as the E2E tests (headless Chromium
+ * has no model); the UI shown is the real extension UI.
+ */
 const out = (n: string) => `store-assets/screenshots/${n}.png`;
 
 async function richPdf() {
@@ -16,9 +23,42 @@ async function richPdf() {
   return doc.save();
 }
 
+async function leave(app: Page) {
+  await app.evaluate(() => (location.hash = '#/'));
+  await app.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
+  await expect(app.locator('h1')).toHaveText('Everything you need to work with PDFs.');
+  await settled(app);
+}
+
+async function theme(app: Page, name: 'Light theme' | 'Dark theme') {
+  await app.getByRole('radiogroup', { name: 'Theme' }).first().getByRole('radio', { name }).click();
+  await settled(app);
+  await app.waitForTimeout(300); // let colour transitions finish
+}
+
+async function aiSummary(app: Page) {
+  await openTool(app, 'ai-summary');
+  await addFiles(app, [pdfFile('annual-report-2026.pdf', await makeProsePdf())]);
+  await expect(app.getByTestId('ai-status')).toHaveAttribute('data-status', 'available');
+  await app.getByTestId('primary-action').click();
+  await expect(app.getByTestId('copy-summary')).toBeVisible();
+  await app.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }));
+  await app.mouse.move(0, 0);
+  await app.waitForTimeout(500);
+}
+
 test('screens', async ({ app }) => {
+  test.setTimeout(120_000);
+  await installFakeSummarizer(app, 'available');
+  await app.reload();
   await app.setViewportSize({ width: 1280, height: 800 });
+  await app.waitForTimeout(900);
   await app.screenshot({ path: out('01-home') });
+
+  await aiSummary(app);
+  await app.screenshot({ path: out('02-ai-summary') });
+  await leave(app);
+
   await openTool(app, 'edit');
   await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
   const overlay = app.getByTestId('editor-overlay');
@@ -39,9 +79,8 @@ test('screens', async ({ app }) => {
   await app.mouse.down();
   await app.mouse.move(b.x + b.width * 0.85, b.y + b.height * 0.48, { steps: 4 });
   await app.mouse.up();
-  await app.screenshot({ path: out('02-editor') });
-  await app.evaluate(() => (location.hash = '#/'));
-  await app.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
+  await app.screenshot({ path: out('03-editor') });
+  await leave(app);
 
   await openTool(app, 'redact');
   await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
@@ -50,47 +89,45 @@ test('screens', async ({ app }) => {
   await app.getByRole('button', { name: 'Search' }).click();
   await app.getByRole('button', { name: 'Mark all' }).click();
   await app.waitForTimeout(400);
-  await app.screenshot({ path: out('03-redact') });
-  await app.evaluate(() => (location.hash = '#/'));
-  await app.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
-
-  await openTool(app, 'watermark');
-  await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
-  await app.waitForTimeout(800);
-  await app.screenshot({ path: out('04-watermark') });
-  await app.evaluate(() => (location.hash = '#/'));
-  await app.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
+  await app.screenshot({ path: out('04-redact') });
+  await leave(app);
 
   await openTool(app, 'organize');
   await addFiles(app, [pdfFile('a.pdf', await richPdf()), pdfFile('b.pdf', await makeImagePdf())]);
   await waitForPages(app, 5);
   await app.getByTestId('page-card').nth(1).click();
   await app.getByTestId('page-card').nth(3).click();
+  await app.mouse.move(0, 0);
   await app.waitForTimeout(600);
   await app.screenshot({ path: out('05-organize') });
-  await app.evaluate(() => (location.hash = '#/'));
-  await app.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
+  await leave(app);
 
-  await app.evaluate(() => (location.hash = '#/settings'));
-  await app.getByRole('radio', { name: /Dark/ }).click();
-  await app.evaluate(() => (location.hash = '#/'));
-  await app.screenshot({ path: out('06-home-dark') });
+  await openTool(app, 'watermark');
+  await addFiles(app, [pdfFile('report.pdf', await richPdf())]);
+  await app.waitForTimeout(800);
+  await app.screenshot({ path: out('06-watermark') });
+  await leave(app);
+
+  await theme(app, 'Dark theme');
+  await app.screenshot({ path: out('07-home-dark') });
+  await aiSummary(app);
+  await app.screenshot({ path: out('08-ai-summary-dark') });
+  await leave(app);
   await openTool(app, 'compress');
   await addFiles(app, [pdfFile('photos.pdf', await makeImagePdf())]);
-  await app.waitForTimeout(500);
-  await app.screenshot({ path: out('07-compress-dark') });
   await app.getByTestId('primary-action').click();
   await expect(app.getByTestId('compression-stats')).toBeVisible();
-  await app.screenshot({ path: out('08-compress-result-dark') });
-  await app.evaluate(() => (location.hash = '#/settings'));
-  await app.getByRole('radio', { name: /Light/ }).click();
-
+  await app.mouse.move(0, 0);
+  await app.waitForTimeout(500);
+  await app.screenshot({ path: out('09-compress-result-dark') });
+  await theme(app, 'Light theme');
 });
 
 test('popup', async ({ extContext, extensionId }) => {
   const p = await extContext.newPage();
-  await p.setViewportSize({ width: 360, height: 600 });
+  await p.setViewportSize({ width: 380, height: 560 });
   await p.goto(`chrome-extension://${extensionId}/popup.html`);
-  await p.waitForTimeout(400);
-  await p.screenshot({ path: out('09-popup') });
+  await p.waitForTimeout(600);
+  await p.screenshot({ path: out('10-popup') });
+  await p.close();
 });

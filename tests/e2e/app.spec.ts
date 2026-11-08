@@ -1,11 +1,11 @@
-import { addFiles, expect, expectNoErrors, openTool, pdfFile, test } from './fixtures';
+import { addFiles, expect, expectNoErrors, openTool, pdfFile, settled, test } from './fixtures';
 import { makeTextPdf } from '../helpers/fixtures';
 
 test.describe('application shell', () => {
   test('home renders every tool and the privacy promise', async ({ app, errors }) => {
     await expect(app.locator('h1')).toHaveText('Everything you need to work with PDFs.');
     await expect(app.getByText('Powerful PDF tools. Completely free. Your files stay on your device.')).toBeVisible();
-    await expect(app.locator('[data-testid^=tool-card-]')).toHaveCount(18);
+    await expect(app.locator('[data-testid^=tool-card-]')).toHaveCount(19);
     await app.getByLabel('Search tools').fill('jpg');
     await expect(app.getByTestId('tool-card-images-to-pdf')).toBeVisible();
     await expect(app.getByTestId('tool-card-merge')).toHaveCount(0);
@@ -18,11 +18,13 @@ test.describe('application shell', () => {
       ['Convert PDF', 'Convert PDF'],
       ['Edit PDF', 'Edit PDF'],
       ['Security', 'Security'],
+      ['AI tools', 'AI tools'],
       ['Recent files', 'Recent files'],
       ['Settings', 'Settings'],
     ] as const) {
       await app.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: label }).click();
       await expect(app.locator('h1')).toHaveText(heading);
+      await settled(app);
     }
     await app.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About Unique PDF' }).click();
     await expect(app.getByText('Free PDF tools without subscriptions, watermarks or file uploads.')).toBeVisible();
@@ -35,12 +37,53 @@ test.describe('application shell', () => {
 
   test('theme preference applies and persists', async ({ app, errors }) => {
     await app.evaluate(() => (location.hash = '#/settings'));
-    await app.getByRole('radio', { name: /Dark/ }).click();
+    const settings = app.getByRole('main');
+    await settings.getByRole('radio', { name: 'Dark', exact: true }).click();
     await expect(app.locator('html')).toHaveClass(/dark/);
     await app.reload();
     await expect(app.locator('html')).toHaveClass(/dark/);
-    await app.getByRole('radio', { name: /Light/ }).click();
+    await settings.getByRole('radio', { name: 'Light', exact: true }).click();
     await expect(app.locator('html')).not.toHaveClass(/dark/);
+    expectNoErrors(errors);
+  });
+
+  test('sidebar theme switcher changes and stores the theme', async ({ app, errors }) => {
+    const switcher = app.getByRole('radiogroup', { name: 'Theme' }).first();
+    await switcher.getByRole('radio', { name: 'Dark theme' }).click();
+    await expect(app.locator('html')).toHaveClass(/dark/);
+    await expect(switcher.getByRole('radio', { name: 'Dark theme' })).toHaveAttribute('aria-checked', 'true');
+    await expect.poll(() => app.evaluate(async () => JSON.stringify(await chrome.storage.local.get(null)))).toContain('"theme":"dark"');
+    // No flash of the light theme: the dark class is set before the app's scripts have run.
+    await app.addInitScript(() => {
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'interactive') (window as unknown as { __darkEarly: boolean }).__darkEarly = document.documentElement.classList.contains('dark');
+      });
+    });
+    await app.reload();
+    expect(await app.evaluate(() => (window as unknown as { __darkEarly?: boolean }).__darkEarly)).toBe(true);
+    await settled(app);
+    await switcher.getByRole('radio', { name: 'Light theme' }).click();
+    await expect(app.locator('html')).not.toHaveClass(/dark/);
+    expectNoErrors(errors);
+  });
+
+  test('command palette finds and opens tools from the keyboard', async ({ app, errors }) => {
+    await app.keyboard.press('Control+K');
+    const input = app.getByTestId('command-input');
+    await expect(input).toBeFocused();
+    await input.fill('compress');
+    await expect(app.getByRole('option').first()).toContainText('Compress PDF');
+    await app.keyboard.press('Enter');
+    await expect(app.locator('h1')).toHaveText('Compress PDF');
+    await expect(input).toBeHidden();
+    await settled(app);
+    // The palette also opens from the sidebar search button and closes with Escape.
+    await app.getByRole('button', { name: 'Open command palette' }).click();
+    await expect(input).toBeFocused();
+    await input.fill('summ');
+    await expect(app.getByRole('option').first()).toContainText('AI Summary');
+    await app.keyboard.press('Escape');
+    await expect(input).toBeHidden();
     expectNoErrors(errors);
   });
 

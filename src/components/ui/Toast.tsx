@@ -7,6 +7,7 @@ interface ToastItem {
   id: number;
   tone: ToastTone;
   message: string;
+  duration: number;
 }
 interface ToastApi {
   show(message: string, tone?: ToastTone): void;
@@ -21,8 +22,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback(
     (message: string, tone: ToastTone = 'info') => {
       const id = nextId.current++;
-      setItems((list) => [...list.slice(-3), { id, tone, message }]);
-      setTimeout(() => dismiss(id), tone === 'error' ? 7000 : 4000);
+      const duration = tone === 'error' ? 7000 : 4000;
+      setItems((list) => [...list.slice(-3), { id, tone, message, duration }]);
+      setTimeout(() => dismiss(id), duration);
     },
     [dismiss],
   );
@@ -30,16 +32,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-[min(380px,calc(100%-2rem))] flex-col gap-2">
+      <div aria-live="polite" className="pointer-events-none fixed bottom-5 right-5 z-50 flex w-[min(380px,calc(100%-2.5rem))] flex-col gap-2">
         {items.map((t) => {
           const Icon = t.tone === 'success' ? CheckCircle2 : t.tone === 'error' ? XCircle : Info;
           return (
-            <div key={t.id} role={t.tone === 'error' ? 'alert' : 'status'} className="pointer-events-auto flex animate-pop-in items-start gap-2.5 rounded-lg border border-line bg-surface px-3.5 py-3 text-sm shadow-pop">
+            <div
+              key={t.id}
+              role={t.tone === 'error' ? 'alert' : 'status'}
+              className="glass pointer-events-auto relative flex animate-pop-in items-start gap-3 overflow-hidden rounded-2xl border border-line px-4 py-3 text-sm shadow-pop"
+            >
               <Icon size={18} className={cn('mt-px shrink-0', t.tone === 'success' && 'text-success', t.tone === 'error' && 'text-danger', t.tone === 'info' && 'text-primary')} aria-hidden />
               <p className="min-w-0 flex-1 leading-5">{t.message}</p>
-              <button type="button" onClick={() => dismiss(t.id)} className="-m-1 rounded p-1 text-fg-subtle hover:text-fg" aria-label="Dismiss notification">
+              <button type="button" onClick={() => dismiss(t.id)} className="-m-1 rounded-md p-1 text-fg-subtle hover:text-fg" aria-label="Dismiss notification">
                 <X size={14} />
               </button>
+              <span
+                aria-hidden
+                className={cn('absolute bottom-0 left-0 h-0.5 origin-left', t.tone === 'success' ? 'bg-success' : t.tone === 'error' ? 'bg-danger' : 'bg-primary')}
+                style={{ width: '100%', animation: `toast-life ${t.duration}ms linear both` }}
+              />
             </div>
           );
         })}

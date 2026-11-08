@@ -17,12 +17,13 @@ const LICENSES = [
 
 export function AboutPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-8 sm:px-6">
-      <Card className="p-6">
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 sm:px-6">
+      <Card className="enter relative overflow-hidden p-7">
+        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(closest-side,var(--blob-b),transparent)]" />
         <BrandMark />
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Free PDF tools without subscriptions, watermarks or file uploads.</h1>
+        <h1 className="display relative mt-6 text-[28px] leading-tight">Free PDF tools without subscriptions, watermarks or file uploads.</h1>
         <p className="mt-2 text-fg-muted">
-          Unique PDF brings {TOOLS.length} everyday PDF tools into your browser. Everything runs locally on your device, so your documents stay private — and it works offline.
+          Unique PDF brings {TOOLS.length} everyday PDF tools — including on-device AI summaries — into your browser. Everything runs locally on your device, so your documents stay private, and it works offline.
         </p>
         <p className="mt-4 text-sm text-fg-subtle">
           Made by <UniqueLabsAttribution className="text-fg" /> — <em>Useful technology. Accessible to everyone.</em>

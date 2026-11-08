@@ -22,7 +22,7 @@ npm run test:e2e
 
 End-to-end tests (Playwright) load the production build from `dist/` as an unpacked extension in
 Chromium and drive the real UI. Outputs are captured from real downloads and verified in Node with
-PDF.js. About 40 seconds with two workers.
+PDF.js. About 75 seconds with two workers.
 
 Other checks run as part of a release:
 
@@ -36,14 +36,14 @@ npm run typecheck
 
 `npm run build` also runs `scripts/validate-build.mjs` (manifest, permission, CSP and bundle audit).
 
-## Latest results (v1.0.0, executed 2026-11-07)
+## Latest results (v1.1.0, executed 2026-11-08)
 
 | Suite | Result |
 | --- | --- |
 | ESLint | 0 errors, 0 warnings |
 | TypeScript (strict) | 0 errors |
-| Unit + component (Vitest) | **111 passed** in 11 files |
-| End-to-end (Playwright, Chromium with extension) | **45 passed** in 7 files |
+| Unit + component (Vitest) | **124 passed** in 12 files |
+| End-to-end (Playwright, Chromium with extension) | **53 passed** in 8 files (two consecutive full runs) |
 | Build validation | Passed (permissions `["storage"]`, no host permissions, strict CSP, no eval/remote code/source maps/fixtures) |
 | `npm audit` (all dependencies) | 0 vulnerabilities |
 | Packaged ZIP | Extracted, loaded in Chromium and exercised successfully |
@@ -63,6 +63,7 @@ npm run typecheck
 | `robustness.test.ts` | Empty, HTML and PNG files named .pdf, junk after a header, truncated files, document JavaScript not carried over, unusual page sizes (up to 14 400 pt), 400-page documents, error serialisation, ZIP names and path sanitising. |
 | `uiLogic.test.ts` | Router parsing (incl. unsafe ids), tool registry ids, safe file names, formatting, multi-select drag math, editor move/resize/aspect lock/clamping, signature normalisation, password strength, shared layout math. |
 | `components.test.tsx` | Page range field validation, keyboard-operable radio group, switch semantics, hostile file names rendered as text, alert roles. |
+| `ai.test.ts` | Summarizer wrapper against a fake API: single pass with streaming (delta and cumulative chunks, and no streaming), map-reduce for long documents within the input quota (with per-part context), every instance destroyed, cancellation, error mapping, availability states; text clean-up, chunking, extractive summary and the safe Markdown parser. |
 
 ## End-to-end tests (`tests/e2e/`)
 
@@ -72,7 +73,8 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 
 | File | Scenarios |
 | --- | --- |
-| `app.spec.ts` | Home and 18 tool cards, search, navigation to every section, 404, theme persistence, history stored without content and cleared, clear all local data, popup quick tools open the app, options page, leave-guard confirmation. |
+| `app.spec.ts` | Home and 19 tool cards, search, navigation to every section, 404, theme persistence (Settings and sidebar switch, **no flash of the wrong theme on reload**), command palette (keyboard and button), history stored without content and cleared, clear all local data, popup quick tools open the app, options page, leave-guard confirmation. |
+| `ai.spec.ts` | AI Summary with a deterministic stand-in for Chrome's on-device model: options passed to the model (style, length, language, focus), streamed result rendered as a semantic list, copy as plain text, Markdown download, history; one-time model download with progress; long documents split into parts and combined; labelled non-AI Quick summary when the model is unavailable; missing API with a page range; scanned PDFs without text. |
 | `organize.spec.ts` | Merge with reordering, split every page → ZIP contents, custom ranges with validation, extract by range, rotate selection, reverse order, **keyboard drag-and-drop with screen-reader announcements**, delete with confirmation, multi-file organize with delete and rotate. |
 | `convert.spec.ts` | Compress (size reduced, text kept, stats shown), maximum compression rasterises with warning, images → PDF with EXIF JPEG + PNG + WebP and page size, rejection of non-images, PDF → PNG ZIP with pixel dimensions, single JPEG, **cancelling a long job**. |
 | `edit.spec.ts` | Editor text + rectangle + undo/redo with pixel check, unsupported characters block saving, sign with the signature pad (ink verified), watermark on selected pages, page numbers skipping the first page. |
@@ -80,10 +82,21 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 | `errors.spec.ts` | Fake/empty/damaged PDFs, drag-and-drop onto the drop zone, onto a tool card and onto the home screen (images → Images to PDF, PDF → tool chooser), digital-signature warning shown and not shown. |
 | `large.spec.ts` | 300-page document (lazy thumbnails, responsive frames, full processing) and a ~30 MB image-heavy PDF split. |
 
+### Notes for the E2E suite
+
+- **On-device AI:** headless Chromium has no Gemini Nano model, so `tests/e2e/fakeAi.ts` installs a
+  stand-in for `window.Summarizer` with the same API shape (availability, `create()` with download
+  progress, `summarizeStreaming`, `measureInputUsage`, `inputQuota`) and records calls so tests can
+  assert what reached the model. Run the tool against the real model manually (checklist below).
+- **View transitions:** while a transition runs, Chrome sends pointer events to `<html>`. The
+  `settled()` helper waits for `<html data-transition>` to clear; `openTool()` uses it and waits for
+  the tool's own drop zone (`[data-tool=<id>]`), since the home page has a drop zone too.
+
 ## Test fixtures
 
-- `tests/helpers/fixtures.ts` — text PDFs (custom sizes, rotations), photo-like JPEGs, PNGs, EXIF
-  injection, image-heavy PDFs, nested page trees, PDFs with signature fields.
+- `tests/helpers/fixtures.ts` — text PDFs (custom sizes, rotations), prose PDFs with real sentences
+  (summaries), photo-like JPEGs, PNGs, EXIF injection, image-heavy PDFs, nested page trees, PDFs with
+  signature fields.
 - `tests/fixtures/*.pdf` — small pypdf-encrypted files (RC4-40, RC4-128, AES-128, AES-256,
   owner-only); regenerate with `python3 tests/fixtures/generate_encrypted.py`.
 
@@ -93,9 +106,13 @@ a request leaves the extension** (anything other than `chrome-extension:`, `blob
 2. Popup: open the app and two quick tools; check recent tasks appear after a job.
 3. Run each tool once with a real-world document of your own (not committed).
 4. Try a scanned PDF (JBIG2/JPEG 2000 images) in PDF → images and Compress.
-5. Toggle dark mode; resize the window to a narrow width.
-6. Disconnect from the network and repeat one tool to confirm offline operation.
-7. Check `chrome://extensions` shows only the expected permission (“storage” has no warning).
+5. Toggle dark mode; resize the window to a narrow width; reload in dark mode (no white flash).
+6. AI Summary on a device that meets Chrome's requirements: first run downloads the model (progress
+   shown), then summarise a long real-world report in each style; check streaming, Copy, Download
+   and Cancel. On an unsupported device, confirm the status message and the Quick summary.
+7. Disconnect from the network and repeat one tool (and AI Summary, once the model is installed) to
+   confirm offline operation.
+8. Check `chrome://extensions` shows only the expected permission (“storage” has no warning).
 
 ## Writing new tests
 
