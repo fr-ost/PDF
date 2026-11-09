@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://uniquepdf.vercel.app/sitemap.xml
+Sitemap: https://pdf.uniquelabs.org/sitemap.xml

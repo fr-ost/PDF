@@ -12,8 +12,8 @@
 | Screenshots | `../screenshot-1-chat.png` … `../screenshot-5-private.png`, in that order |
 | Small promo tile | `../promo-small-440x280.png` |
 | Marquee promo tile | `../promo-marquee-1400x560.png` |
-| Official URL | none (needs a verified domain in Google Search Console) |
-| Homepage URL | https://www.shahriarahmed.net |
+| Official URL | https://pdf.uniquelabs.org — available once uniquelabs.org is verified in Google Search Console with the same Google account |
+| Homepage URL | https://pdf.uniquelabs.org |
 | Support URL | https://t.me/igfrostt |
 | Mature content | No |
 | Visibility | Public |

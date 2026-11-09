@@ -4,7 +4,7 @@
  */
 export const SITE = {
   /** Public address of the website, without a trailing slash (canonical URLs, sitemap, social cards). */
-  url: (process.env.SITE_URL || 'https://uniquepdf.vercel.app').replace(/\/+$/, ''),
+  url: (process.env.SITE_URL || 'https://pdf.uniquelabs.org').replace(/\/+$/, ''),
   name: 'Unique PDF',
   tagline: 'Free PDF editor for Chrome with AI chat',
   /**

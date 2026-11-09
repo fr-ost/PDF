@@ -34,6 +34,5 @@ Tick all three certifications:
 
 **Privacy policy URL**
 
-Host `privacy-policy.html` (this folder; generated from `PRIVACY.md` by
-`store-assets/source/privacy-page.mjs`) at a public address — for example on
-www.shahriarahmed.net or GitHub Pages — and paste that URL.
+https://pdf.uniquelabs.org/privacy — the website's privacy page, generated from `PRIVACY.md`.
+(`privacy-policy.html` in this folder is a standalone copy, if you ever need to host it elsewhere.)

@@ -352,7 +352,8 @@ ${pageHero([['Home', '/'], ['Blog', '/blog']], `${await icon('file-text', 16)} B
 }
 
 export async function blogPost(post, posts) {
-  const related = posts.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const others = posts.filter((p) => p.slug !== post.slug);
+  const related = [...others.filter((p) => p.tag === post.tag), ...others.filter((p) => p.tag !== post.tag)].slice(0, 3);
   const date = new Date(`${post.date}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   const path = `/blog/${post.slug}`;
   const body = `<main id="main">

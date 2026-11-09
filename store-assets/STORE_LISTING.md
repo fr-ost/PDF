@@ -60,6 +60,6 @@ remote code, no data collected, the three certifications). For the **privacy pol
 - [ ] Extension loaded unpacked from `dist/` and smoke-tested manually in current stable Chrome
 - [ ] Store kit regenerated for the current UI (`npm run store:kit`)
 - [ ] Official Unique Labs icon artwork in place (optional, recommended)
-- [ ] `listing/privacy-policy.html` published at a public URL
+- [ ] Privacy policy URL set to https://pdf.uniquelabs.org/privacy
 - [ ] Homepage and support URLs set (see `listing/store-settings.md`)
 - [ ] Promo video uploaded to YouTube and linked
