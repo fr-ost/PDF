@@ -11,7 +11,7 @@ export const SITE = {
    * "Add to Chrome" link. Replace with the Chrome Web Store listing URL once the
    * extension is approved (or set STORE_URL when building).
    */
-  storeUrl: process.env.STORE_URL || 'https://chromewebstore.google.com/search/Unique%20PDF',
+  storeUrl: process.env.STORE_URL || 'https://chromewebstore.google.com/detail/ogajiapfmheeiadeflajlkikpfkoobfl',
   brand: 'Unique Labs',
   developer: { name: 'Shahriar Ahmed', url: 'https://www.shahriarahmed.net', telegram: 'https://t.me/igfrostt', handle: '@igfrostt' },
   locale: 'en',
