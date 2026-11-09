@@ -292,6 +292,41 @@ ASSETS['social/developer-card-1200x630'] = {
     ),
 };
 
+// ---- LinkedIn ---------------------------------------------------------------------
+ASSETS['linkedin/project-banner-1200x627'] = {
+  w: 1200,
+  h: 627,
+  html: () =>
+    doc(
+      1200,
+      627,
+      `<div class="abs" style="left:68px;top:66px;width:520px">
+         ${brand(54)}
+         <h1 class="h" style="font-size:54px;margin-top:30px">Free PDF editor for Chrome with <span class="grad">AI chat</span></h1>
+         <p class="muted" style="font-size:19px;margin-top:16px;line-height:1.45">20 tools: chat, summarize, edit, merge, compress, sign, protect and more. Files never leave the device.</p>
+         <div style="margin-top:24px">${chips([['sparkles', 'Unique AI'], ['lock', 'Nothing uploaded'], ['zap', '100% free']], 15)}</div>
+         <p style="font-size:17px;margin-top:22px;font-weight:650;color:#4f5bff">pdf.uniquelabs.org</p>
+       </div>
+       ${shot('chat-light', [290, 18, 1130, 860], { left: 640, top: 64, width: 680 })}
+       ${chatCallout({ left: 600, top: 392, width: 340, fontSize: 15, question: 'What are the main risks?', answer: '<b>Supplier concentration, rising interest rates</b> and stricter data rules', page: 3 })}`,
+    ),
+};
+ASSETS['linkedin/profile-cover-1584x396'] = {
+  w: 1584,
+  h: 396,
+  html: () =>
+    doc(
+      1584,
+      396,
+      `<div class="abs" style="left:540px;top:70px;width:600px">
+         ${brand(50)}
+         <h1 class="h" style="font-size:40px;margin-top:22px;white-space:nowrap">The free PDF editor with <span class="grad">AI chat</span></h1>
+         <p class="muted" style="font-size:18px;margin-top:12px">Built by Shahriar Ahmed · pdf.uniquelabs.org</p>
+       </div>
+       ${shot('chat-light', [290, 18, 1130, 860], { left: 1160, top: 46, width: 470 })}`,
+    ),
+};
+
 const only = process.argv[2];
 const names = Object.keys(ASSETS).filter((n) => !only || n.includes(only));
 if (names.length === 0) throw new Error(`No asset matches "${only}"`);

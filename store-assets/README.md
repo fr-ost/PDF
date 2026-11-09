@@ -35,6 +35,7 @@ designed ones.
 | Video thumbnail (YouTube, Full HD) | `social/youtube-thumbnail-1920x1080.png`, `social/youtube-thumbnail-1280x720.png` | 1920×1080, 1280×720 |
 | X (Twitter) profile header — words clear of the profile photo and mobile buttons | `social/x-header-1500x500.png` | 1500×500 |
 | Link preview (Open Graph) for a website or posts | `social/og-image-1200x630.png` | 1200×630 |
+| LinkedIn project media and profile cover | `linkedin/project-banner-1200x627.png`, `linkedin/profile-cover-1584x396.png` | 1200×627, 1584×396 |
 | Developer card (website, posts) | `social/developer-card-1200x630.png` | 1200×630 |
 | Google Ads, landscape (1.91:1) | `google-ads/ad-landscape-1-chat.png`, `google-ads/ad-landscape-2-tools.png` | 1200×628 |
 | Google Ads, square (1:1) | `google-ads/ad-square-1-chat.png`, `google-ads/ad-square-2-private.png` | 1200×1200 |
