@@ -39,6 +39,7 @@ designed ones.
 | Google Ads, landscape (1.91:1) | `google-ads/ad-landscape-1-chat.png`, `google-ads/ad-landscape-2-tools.png` | 1200×628 |
 | Google Ads, square (1:1) | `google-ads/ad-square-1-chat.png`, `google-ads/ad-square-2-private.png` | 1200×1200 |
 | Google Ads, portrait (4:5) | `google-ads/ad-portrait-1-popup.png` | 960×1200 |
+| Google Ads search keywords (100, in 11 ad groups) and negatives — import with Google Ads Editor | `google-ads/keywords.csv`, `google-ads/negative-keywords.csv` | CSV |
 | Google Ads logos | `google-ads/logo-square-1200.png`, `google-ads/logo-landscape-1200x300.png` | 1200×1200, 1200×300 |
 | Music of the video (original, synthesized from code) | `unique-pdf-showcase-music.mp3` | 44.6 s, 192 kbps |
 | Large app icon | `icon-512.png` | 512×512 |
