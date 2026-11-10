@@ -3,6 +3,7 @@ import { Monitor, Moon, Settings as SettingsIcon, Sun, Trash2 } from 'lucide-rea
 import { resetSettings, updateSettings, useSettings } from '../../services/settings-service/settings';
 import { clearHistory, useHistory } from '../../services/history-service/history';
 import { resetReviewPrompt } from '../../services/support/reviewPrompt';
+import { resetUsageStats, setUsageStatsConsent, useUsageStats } from '../../services/telemetry/usageStats';
 import { DeveloperLink } from '../../components/Developer';
 import { COMPRESSION_PRESETS } from '../../pdf/compressionPresets';
 import { PAPER_SIZES, type PaperSize } from '../../pdf/paper';
@@ -27,6 +28,7 @@ function Group({ title, description, children }: { title: string; description?: 
 export function SettingsPage() {
   const s = useSettings();
   const history = useHistory();
+  const stats = useUsageStats();
   const toast = useToast();
   const [confirm, setConfirm] = useState<'history' | 'all' | null>(null);
   const hasPicker = typeof (globalThis as { showSaveFilePicker?: unknown }).showSaveFilePicker === 'function';
@@ -94,8 +96,14 @@ export function SettingsPage() {
         />
       </Group>
 
-      <Group title="Privacy and local data" description="Unique PDF never uploads files. The only data it keeps is listed here.">
+      <Group title="Privacy and local data" description="Unique PDF never uploads files. Everything it keeps or sends is listed here.">
         <Switch checked={s.historyEnabled} onChange={(v) => void updateSettings({ historyEnabled: v })} label="Remember recent tasks" description="File names and sizes only, never file contents." />
+        <Switch
+          checked={stats.consent === 'on'}
+          onChange={(v) => void setUsageStatsConsent(v)}
+          label="Share anonymous usage stats"
+          description="Off unless you turn it on. Sends counts of which tools you use, Unique AI questions asked and minutes the app is open, with the version, operating system, language and a random id. Never files, file names or anything you type."
+        />
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" icon={Trash2} disabled={history.length === 0} onClick={() => setConfirm('history')}>
             Clear history ({history.length})
@@ -131,6 +139,7 @@ export function SettingsPage() {
             await clearHistory();
             await resetSettings();
             await resetReviewPrompt();
+            await resetUsageStats();
             toast.show('All local data was cleared.', 'success');
           } else {
             await clearHistory();
@@ -139,7 +148,7 @@ export function SettingsPage() {
           setConfirm(null);
         }}
         title={confirm === 'all' ? 'Clear all local data?' : 'Clear history?'}
-        message={confirm === 'all' ? 'This resets all settings to their defaults and removes your recent-task history (and the review-prompt counter) from this browser.' : 'This removes the list of recent tasks from this browser.'}
+        message={confirm === 'all' ? 'This resets all settings to their defaults, turns usage stats off and removes your recent-task history (and the review-prompt counter) from this browser.' : 'This removes the list of recent tasks from this browser.'}
         confirmLabel="Clear"
         tone="danger"
       />

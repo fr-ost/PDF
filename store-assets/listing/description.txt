@@ -56,7 +56,7 @@ WHO IT IS FOR
 
 PRIVACY IN DETAIL
 
-Unique PDF asks Chrome for a single permission: storing your settings on your computer. It has no access to the websites you visit, your browsing history or your other tabs. The extension contains all of its code, so nothing is downloaded while you work, and there is no analytics or tracking of any kind. Passwords you type are used only for the task at hand and are never saved.
+Unique PDF asks Chrome for a single permission: storing your settings on your computer. It has no access to the websites you visit, your browsing history or your other tabs. The extension contains all of its code, so nothing is downloaded while you work. Anonymous usage stats are optional and off unless you turn them on, and they never include your files, file names or anything you type. Passwords you type are used only for the task at hand and are never saved.
 
 HOW TO USE UNIQUE PDF
 
@@ -105,7 +105,7 @@ Is Unique PDF really free?
 Yes. Every tool is free, with no trial period, no paid plan, no daily limits and no watermark on your files. If you would like to support development, there is an optional donation page.
 
 Are my files uploaded anywhere?
-No. Your documents are processed inside your browser on your own computer. They are never sent to Unique Labs or to any other server, and the extension is built so that the browser blocks any attempt to send data out.
+No. Your documents are processed inside your browser on your own computer. They are never sent to Unique Labs or to any other server. The browser itself blocks connections to anywhere except the optional usage-stats server, which receives only anonymous counts, and only if you turn usage stats on.
 
 Does Unique PDF work offline?
 Yes. After installation, all the PDF tools work without an internet connection.

@@ -9,7 +9,7 @@
 
 | Permission | Justification |
 | --- | --- |
-| `storage` | Saves the user's preferences (theme, default formats), an optional list of recent file names and sizes, and a count of finished tasks used to decide when to ask for a review — all on the device. |
+| `storage` | Saves the user's preferences (theme, default formats), an optional list of recent file names and sizes, a count of finished tasks used to decide when to ask for a review, and the user's choice about optional anonymous usage stats — all on the device. |
 
 No host permissions are requested.
 
@@ -22,9 +22,27 @@ Policy is used only to compile the bundled PDF.js image decoders.)
 
 **Data usage**
 
-Select **none** of the data types: the extension does not collect or transmit user data. Unique AI
-(chat and summaries) uses Chrome's built-in AI APIs (Prompt API, Summarizer API), which run in the
-browser; no document text, question or answer is sent to the developer or any third party.
+Tick **User activity** only. Leave every other data type unticked.
+
+Reason: the optional anonymous usage stats (off by default, opt-in from Settings or a one-time card)
+send counts of which tools finished a task, Unique AI questions asked and minutes the app was open,
+with the version, OS, browser language, Chrome AI availability, install age and a random install id,
+to the developer's own server (https://unique-pdf.shahriarahmed614.workers.dev). The server keeps a
+2-letter country code derived by Cloudflare, never the IP address. No personally identifiable
+information, website content, web history, location beyond a country, communications,
+authentication, health or financial data is collected.
+
+Documents never leave the device. Unique AI (chat and summaries) uses Chrome's built-in AI APIs
+(Prompt API, Summarizer API), which run in the browser; no document text, question or answer is
+sent to the developer or any third party.
+
+If the dashboard asks for a description of the data use, paste:
+
+> Optional and off by default. If the user turns on "Share anonymous usage stats", the extension
+> sends anonymous counts of feature use (tools used, AI questions asked, minutes open), the
+> extension version, OS type, browser language and a random install id to the developer's server,
+> to understand which features are used. No documents, file names or typed text are ever sent.
+> Users can turn it off at any time in Settings.
 
 Tick all three certifications:
 

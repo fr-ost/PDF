@@ -13,7 +13,7 @@ const ORBIT = ['btc', 'eth', 'sol', 'usdt', 'bnb', 'avax'] as const;
 
 const WHY: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: Gift, title: 'Free, with no limits', text: 'Every tool, Unique AI included — no sign-up, no quotas, no watermarks. Donations help keep it that way.' },
-  { icon: ShieldCheck, title: 'Private by design', text: 'Your files never leave your device. No ads, no tracking, nothing sold. Your support keeps it independent.' },
+  { icon: ShieldCheck, title: 'Private by design', text: 'Your files never leave your device. No ads, nothing sold. Your support keeps it independent.' },
   { icon: RefreshCw, title: 'Always improving', text: 'Chrome and the PDF format keep changing. Your support pays for the hours spent fixing bugs and building new tools.' },
   { icon: Coffee, title: 'Independent developer', text: 'Built by an independent developer at Unique Labs. Your tip goes straight to the person who fixes bugs and answers your messages.' },
 ];
@@ -139,7 +139,7 @@ export function DonatePage() {
         <div className="relative grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_250px]">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1 text-[12px] font-medium text-fg-muted">
-              <Heart size={12} className="text-rose-500" fill="currentColor" aria-hidden /> Free forever · No ads · No tracking
+              <Heart size={12} className="text-rose-500" fill="currentColor" aria-hidden /> Free forever · No ads · Files stay on your device
             </span>
             <h1 id="donate-title" className="display mt-4 text-[32px] leading-[1.1] sm:text-[40px]">
               Keep Unique PDF <span className="text-gradient sm:block">free for everyone</span>

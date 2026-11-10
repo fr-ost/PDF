@@ -55,7 +55,12 @@ const csp = manifest.content_security_policy?.extension_pages ?? '';
 if (!csp) fail('extension_pages CSP missing');
 if (/unsafe-eval(?!')|'unsafe-eval'/.test(csp.replace("'wasm-unsafe-eval'", ''))) fail("CSP must not contain 'unsafe-eval'");
 if (/script-src[^;]*https?:/.test(csp)) fail('CSP must not allow remote scripts');
-if (!/connect-src 'self' blob: data:/.test(csp)) fail('CSP must restrict connect-src to local sources');
+// connect-src: local sources plus exactly one remote host, the opt-in usage-stats tracker.
+const TRACKER = 'https://unique-pdf.shahriarahmed614.workers.dev';
+const connect = (csp.match(/connect-src ([^;]*)/)?.[1] ?? '').trim().split(/\s+/);
+const allowedConnect = new Set(["'self'", 'blob:', 'data:', TRACKER]);
+if (!connect.includes("'self'")) fail('CSP must set connect-src');
+for (const src of connect) if (!allowedConnect.has(src)) fail(`CSP connect-src allows an unexpected source: ${src}`);
 if (!/object-src 'none'/.test(csp)) fail("CSP must set object-src 'none'");
 
 // ---- code checks -----------------------------------------------------------

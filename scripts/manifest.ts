@@ -1,3 +1,5 @@
+import { USAGE_STATS_ENDPOINT } from '../src/services/telemetry/endpoint';
+
 /**
  * Single source of truth for the Chrome extension manifest (Manifest V3).
  * The version is taken from package.json so releases stay consistent.
@@ -12,8 +14,10 @@ export interface ManifestOptions {
  * - Only bundled scripts may run ('self'); no remote code, no eval.
  * - 'wasm-unsafe-eval' is required so PDF.js can compile its bundled image
  *   decoders (JPEG 2000, JBIG2) and colour-management WebAssembly modules.
- * - connect-src only allows the extension's own files plus local blob/data
- *   URLs, so the browser itself blocks any attempt to send data to a server.
+ * - connect-src only allows the extension's own files, local blob/data URLs
+ *   and the usage-stats tracker, so the browser itself blocks any attempt to
+ *   send data anywhere else. The tracker is contacted only while the user has
+ *   turned on anonymous usage stats (off by default); documents never are.
  */
 export const EXTENSION_CSP = [
   "default-src 'self'",
@@ -24,7 +28,7 @@ export const EXTENSION_CSP = [
   "frame-ancestors 'none'",
   "frame-src 'none'",
   "worker-src 'self'",
-  "connect-src 'self' blob: data:",
+  `connect-src 'self' blob: data: ${USAGE_STATS_ENDPOINT}`,
   "img-src 'self' blob: data:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",

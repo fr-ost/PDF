@@ -170,7 +170,7 @@ export async function home({ tools, faq, posts }) {
           <p class="lead">Online PDF sites upload your documents to their servers. Unique PDF does the work right inside your browser, so contracts, IDs and bank statements stay with you.</p>
           <ul class="privacy-list">
             <li>${check}No uploads, no cloud storage, no account</li>
-            <li>${check}No analytics, no tracking and no ads</li>
+            <li>${check}No ads, and usage stats only if you opt in</li>
             <li>${check}One permission only: saving your settings</li>
             <li>${check}Works offline once installed</li>
           </ul>
@@ -178,8 +178,8 @@ export async function home({ tools, faq, posts }) {
         <div class="meter" aria-label="What Unique PDF sends while you work">
           <div class="meter-head">${await icon('gauge', 18)} While you work</div>
           <div class="meter-row">Files uploaded <b class="ok" data-count="0">0</b></div>
-          <div class="meter-row">Bytes sent to servers <b class="ok" data-count="0">0</b></div>
-          <div class="meter-row">Trackers <b class="ok" data-count="0">0</b></div>
+          <div class="meter-row">Document bytes sent <b class="ok" data-count="0">0</b></div>
+          <div class="meter-row">Ad trackers <b class="ok" data-count="0">0</b></div>
           <div class="meter-row">Accounts required <b class="ok" data-count="0">0</b></div>
           <div class="meter-row">Tools available <b data-count="20">20</b></div>
         </div>
@@ -399,7 +399,7 @@ export async function privacy({ html }) {
 ${pageHero([['Home', '/'], ['Privacy policy', '/privacy']], `${await icon('shield-check', 16)} Privacy`, 'Privacy policy', 'Unique PDF is built so that your documents never leave your device. Here are the details, in plain language.')}
 <section class="section-sm" style="padding-top:24px"><div class="container narrow"><div class="card" style="padding:clamp(24px,5vw,48px)"><div class="prose">${html}</div></div></div></section>
 </main>`;
-  return { path: '/privacy', title: 'Privacy Policy | Unique PDF', description: 'Unique PDF processes your files in your browser. Nothing is collected, uploaded or shared. Read the full privacy policy.', body, jsonLd: [breadcrumbLd([['Home', '/'], ['Privacy policy', '/privacy']])] };
+  return { path: '/privacy', title: 'Privacy Policy | Unique PDF', description: 'Unique PDF processes your files in your browser. Documents are never uploaded, and usage stats are optional. Read the full privacy policy.', body, jsonLd: [breadcrumbLd([['Home', '/'], ['Privacy policy', '/privacy']])] };
 }
 
 export async function about() {
@@ -418,7 +418,7 @@ ${pageHero([['Home', '/'], ['About', '/about']], `${await icon('heart', 16)} Abo
   </div>
   <div class="prose" style="margin-top:56px">
     <h2>What we believe</h2>
-    <p><strong>Your documents are yours.</strong> Unique PDF processes every file inside your browser. There is no server that receives your documents, no account and no tracking.</p>
+    <p><strong>Your documents are yours.</strong> Unique PDF processes every file inside your browser. There is no server that receives your documents and no account. Anonymous usage stats are off unless you turn them on.</p>
     <p><strong>Good tools should be free.</strong> Every feature, including Unique AI, is free for everyone, with no daily limits and no watermarks. If Unique PDF helps you, you can support it with a <a href="/donate">donation</a> or a review.</p>
     <p><strong>Details matter.</strong> Light and dark themes, keyboard support, accessible design, careful handling of password-protected and unusual files, and redaction that really removes text — not just covers it.</p>
     <h2>Get in touch</h2>

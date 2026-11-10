@@ -1,0 +1,17 @@
+# Cloudflare Worker config for the Unique PDF tracker (D1).
+# Only needed if you deploy from a terminal. The no-terminal way (Cloudflare
+# dashboard only) is in README.md.
+#
+#   cp wrangler.toml.example wrangler.toml
+#   npx wrangler d1 create unique-pdf-tracker   -> paste the database_id below
+#   npx wrangler deploy
+#   npx wrangler secret put STATS_KEY           (optional: protects the dashboard)
+
+name = "unique-pdf"                    # the URL becomes https://unique-pdf.<your-subdomain>.workers.dev
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"                         # the Worker reads env.DB - keep this name
+database_name = "unique-pdf-tracker"
+database_id = "PASTE_YOUR_D1_DATABASE_ID_HERE"

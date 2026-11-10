@@ -3,6 +3,25 @@
 All notable changes to Unique PDF are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses semantic versioning.
 
+## [1.3.0] — 2026-11-10
+
+### Added
+
+- **Optional anonymous usage stats** (off by default). A one-time “Help improve Unique PDF?” card
+  after the first finished task, and a switch in Settings, let people share anonymous counts: which
+  tools finish tasks, how many Unique AI questions are asked, minutes the app is open, version, OS,
+  language, Chrome AI availability and a random install id. Never documents, file names, sizes or
+  anything typed. Turning it off deletes the id and unsent counts.
+- **Tracker** (`tracker/`): a Cloudflare Worker with a D1 database and a built-in dashboard (users
+  per day/week/month, tool usage, AI questions, time open, installs, updates, uninstalls and how
+  long the extension is kept, countries, platforms, versions, languages, Chrome AI availability).
+
+### Changed
+
+- The Content Security Policy now allows exactly one remote host, the tracker, which is contacted
+  only while usage stats are on. The privacy policy, the in-app Privacy page and the store
+  disclosures describe it.
+
 ## [1.2.0] — 2026-11-08
 
 ### Added

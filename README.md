@@ -5,7 +5,8 @@
 Unique PDF is a Chrome extension (Manifest V3) that brings 20 PDF tools into a full-tab
 application, including **Unique AI** by Unique Labs: **chat with any PDF** (answers link to the pages
 they come from) and **AI Summary**. Every file is processed in your browser — nothing is uploaded,
-there is no account, no quota, no watermark and no tracking. It keeps working offline once installed.
+there is no account, no quota, no watermark and no ads. Anonymous usage stats are optional and off
+unless you turn them on. It keeps working offline once installed.
 
 > Unique Labs — *Useful technology. Accessible to everyone.*
 >
@@ -48,7 +49,7 @@ See [FEATURES.md](FEATURES.md) for the precise behaviour of every tool.
 ## Install in Chrome (unpacked)
 
 **Option A — prebuilt package (no tools needed):** a production build of the current version is
-included at `release/unique-pdf-1.2.0.zip`. Extract it to a folder you will keep (for example
+included at `release/unique-pdf-1.3.0.zip`. Extract it to a folder you will keep (for example
 `Documents/unique-pdf`), then follow steps 2–5 below and select that folder.
 
 **Option B — build it yourself:** run `npm install` and `npm run build`; the extension is written to
@@ -109,7 +110,8 @@ This copies the PDF.js runtime assets, type-checks, bundles with Vite into **`di
 - the manifest is not valid MV3, versions disagree, or referenced files/icons are missing;
 - any permission other than `storage`, any host permission, content script or web-accessible
   resource appears;
-- the CSP allows remote scripts or `unsafe-eval`, or network connections beyond the extension;
+- the CSP allows remote scripts or `unsafe-eval`, or network connections beyond the extension and
+  the opt-in usage-stats tracker;
 - any bundle contains `eval`, `new Function`, CDN or telemetry URLs, inline scripts, source maps,
   test fixtures, the PDF.js scripting engine, or pdf-lib outside the processing worker.
 
@@ -144,7 +146,10 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Privacy
 
-- No uploads, no servers, no analytics, no account. The CSP blocks network connections outright.
+- No uploads, no account, no ads. Documents never leave the device.
+- Anonymous usage stats are **opt-in** (off by default): counts of tool use, Unique AI questions and
+  minutes open, sent to the developer's own Cloudflare Worker ([`tracker/`](tracker/README.md)).
+  The CSP allows no other remote host. Details in [PRIVACY.md](PRIVACY.md).
 - Unique AI (chat and summaries) is built on the AI APIs built into Chrome: the document text is
   processed in the browser and never sent to Unique Labs or any server. Chrome downloads and manages
   the AI model itself on first use.

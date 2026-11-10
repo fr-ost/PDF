@@ -111,6 +111,7 @@ test.describe('application shell', () => {
     await app.evaluate(() => (location.hash = '#/settings'));
     await app.getByTestId('clear-all-data').click();
     await app.getByRole('dialog').getByRole('button', { name: 'Clear' }).click();
+    await expect(app.getByText('All local data was cleared.')).toBeVisible();
     const after = await app.evaluate(async () => Object.keys(await chrome.storage.local.get(null)));
     expect(after).toEqual([]);
     expectNoErrors(errors);

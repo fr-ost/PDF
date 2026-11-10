@@ -36,16 +36,16 @@ npm run typecheck
 
 `npm run build` also runs `scripts/validate-build.mjs` (manifest, permission, CSP and bundle audit).
 
-## Latest results (v1.2.0, executed 2026-11-08)
+## Latest results (v1.3.0, executed 2026-11-10)
 
 | Suite | Result |
 | --- | --- |
 | ESLint | 0 errors, 0 warnings |
 | TypeScript (strict) | 0 errors |
-| Unit + component (Vitest) | **176 passed** in 16 files |
-| End-to-end (Playwright, Chromium with extension) | **79 passed** in 12 files (two consecutive full runs) |
+| Unit + component (Vitest) | **190 passed** in 18 files (includes the tracker Worker against SQLite) |
+| End-to-end (Playwright, Chromium with extension) | **81 passed** in 13 files |
 | Accessibility (axe-core, WCAG 2.2 AA + best practices) | 0 violations on every audited page and state, light and dark |
-| Build validation | Passed (permissions `["storage"]`, no host permissions, strict CSP, no eval/remote code/source maps/fixtures) |
+| Build validation | Passed (permissions `["storage"]`, no host permissions, strict CSP with the opt-in tracker as the only remote host, no eval/remote code/source maps/fixtures) |
 | `npm audit` (all dependencies) | 0 vulnerabilities |
 | Packaged ZIP | Extracted, loaded in Chromium and exercised successfully |
 

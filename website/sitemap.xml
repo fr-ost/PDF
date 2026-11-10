@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://pdf.uniquelabs.org/</loc><lastmod>2026-11-09</lastmod><priority>1.0</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/features</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/faq</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/blog</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/</loc><lastmod>2026-11-10</lastmod><priority>1.0</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/features</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/faq</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/blog</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
   <url><loc>https://pdf.uniquelabs.org/blog/add-a-watermark-to-a-pdf</loc><lastmod>2026-11-09</lastmod><priority>0.7</priority></url>
   <url><loc>https://pdf.uniquelabs.org/blog/add-page-numbers-to-a-pdf</loc><lastmod>2026-11-09</lastmod><priority>0.7</priority></url>
   <url><loc>https://pdf.uniquelabs.org/blog/jpg-to-pdf-and-pdf-to-jpg</loc><lastmod>2026-11-09</lastmod><priority>0.7</priority></url>
@@ -21,7 +21,7 @@
   <url><loc>https://pdf.uniquelabs.org/blog/sign-a-pdf-in-chrome</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
   <url><loc>https://pdf.uniquelabs.org/blog/summarize-a-long-pdf-with-ai</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
   <url><loc>https://pdf.uniquelabs.org/blog/stop-uploading-private-pdfs</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/privacy</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/about</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
-  <url><loc>https://pdf.uniquelabs.org/donate</loc><lastmod>2026-11-09</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/privacy</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/about</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://pdf.uniquelabs.org/donate</loc><lastmod>2026-11-10</lastmod><priority>0.8</priority></url>
 </urlset>

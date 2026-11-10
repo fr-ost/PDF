@@ -3,6 +3,7 @@ import type { ToolDefinition } from '../../features/registry';
 import { useFileList, type FileEntry } from '../../hooks/useFileList';
 import { addHistoryEntry } from '../../services/history-service/history';
 import { noteSuccessfulTask } from '../../services/support/reviewPrompt';
+import { noteToolUsed } from '../../services/telemetry/usageStats';
 import type { OutputFile } from '../../services/export-service/download';
 import { readBytes } from '../../services/file-service/files';
 import type { PdfSource } from '../../pdf/engines/load';
@@ -29,6 +30,7 @@ export async function toSource(entry: FileEntry): Promise<PdfSource> {
 
 export function recordHistory(tool: ToolDefinition, inputs: { name: string; size: number }[], outputs: OutputFile[]): void {
   void noteSuccessfulTask();
+  void noteToolUsed(tool.id);
   void addHistoryEntry({ toolId: tool.id, toolName: tool.name, inputs, outputs: outputs.map((o) => ({ name: o.name, size: o.size })) });
 }
 

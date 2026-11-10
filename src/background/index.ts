@@ -1,6 +1,8 @@
 /**
  * Background service worker. It has a single job: opening (or focusing) the
  * full Unique PDF tab. It never touches documents and makes no network calls.
+ * On install it notes the install time locally (used only for the install
+ * age in the optional usage stats, which are off unless the user turns them on).
  */
 const APP_PATH = 'app.html';
 
@@ -27,7 +29,10 @@ chrome.commands.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) void openApp('#/');
+  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+    void chrome.storage.local.set({ installedAt: Date.now() }).catch(() => {});
+    void openApp('#/');
+  }
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {

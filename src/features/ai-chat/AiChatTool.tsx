@@ -16,6 +16,7 @@ import { Alert, Skeleton } from '../../components/ui/Feedback';
 import { ConfirmDialog, Dialog } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import { noteSuccessfulTask } from '../../services/support/reviewPrompt';
+import { noteAiQuestion, noteToolUsed } from '../../services/telemetry/usageStats';
 import { CHAT_LANGUAGES, DocumentChat, checkChatStatus, citedPages, getLanguageModelApi, searchAnswer, type AskResult, type ChatTurn } from '../../ai/chat';
 import { buildIndex, buildPassages, type Passage } from '../../ai/retrieval';
 import { suggestQuestions } from '../../ai/suggestions';
@@ -160,12 +161,14 @@ export default function AiChatTool({ tool, initialFiles }: ToolProps) {
     if (!entry || countedDoc.current === entry.id) return;
     countedDoc.current = entry.id;
     void noteSuccessfulTask();
+    void noteToolUsed('ai-chat');
   };
 
   /** Must run synchronously inside the click/key handler (the one-time model download needs a user activation). */
   const answer = (question: string, history: ChatTurn[]) => {
     if (!index || !entry) return;
     const id = nextId();
+    void noteAiQuestion();
     if (!aiMode) {
       setMessages((ms) => [...ms, { id, role: 'assistant', kind: 'search', question, content: '', status: 'done', results: searchAnswer(index, question) }]);
       countAnswer();

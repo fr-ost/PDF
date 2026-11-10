@@ -13,6 +13,7 @@ import { cn } from '../../utils/cn';
 import { ToolCard, trackSpotlight } from './ToolCard';
 import { isMac, openCommandPalette } from '../shell/CommandPalette';
 import { UniqueAiMark } from '../../features/ai-shared/UniqueAiMark';
+import { UsageStatsAsk } from '../shell/UsageStatsAsk';
 
 const CATEGORIES: Category[] = ['organize', 'convert', 'edit', 'security', 'ai'];
 type Filter = 'all' | Category;
@@ -169,6 +170,7 @@ export function HomePage() {
         </div>
       </section>
       {error ? <Alert tone="warning" className="mt-6" title="Unsupported files">{error}</Alert> : null}
+      <UsageStatsAsk />
 
       <FeaturedAi />
 
